@@ -5,6 +5,7 @@ import '../models/coupon.dart';
 import '../models/gym_class.dart';
 import '../models/member.dart';
 import '../models/promo.dart';
+import '../models/sponsor_ad.dart';
 import '../models/store_product.dart';
 import '../models/trainer.dart';
 
@@ -42,6 +43,7 @@ const mockBranches = <Branch>[
     name: 'Carranza',
     maxCapacity: 120,
     currentCapacity: 41,
+    status: 'CLOSED',
     address: 'C. Carranza #1235',
     imageUrl: 'https://picsum.photos/seed/cf-carranza/800/500',
   ),
@@ -196,6 +198,79 @@ final mockPromos = <Promo>[
     subtitle: 'Bebidas de recepción todo el mes',
     badge: '2x1',
     imageUrl: 'https://picsum.photos/seed/cf-promo3/700/400',
+  ),
+];
+
+final mockSponsorAds = <SponsorAd>[
+  SponsorAd(
+    id: 'ad1',
+    advertiser: 'NutriShop',
+    title: 'Whey X-Treme -20%',
+    subtitle: 'Solo con tu credencial de socio',
+    imageUrl: 'https://picsum.photos/seed/ad-nutri/700/400',
+    ctaLabel: 'Ver oferta',
+    description:
+        'Tienda de suplementos deportivos. Muestra tu credencial de socio y obtén 20% de descuento en proteínas, creatina y pre-entrenos.',
+    address: 'Av. Tecnológico 1200, Plaza San Carlos, Metepec',
+    lat: 19.2547,
+    lng: -99.6285,
+    phone: '+52 722 555 0101',
+    socials: const SponsorAdSocials(
+      instagram: 'https://instagram.com/nutrishop.metepec',
+      facebook: 'https://facebook.com/nutrishopmx',
+      website: 'https://nutrishop.mx',
+      whatsapp: '+52 722 555 0101',
+    ),
+    photos: const [
+      'https://picsum.photos/seed/ad-nutri-1/600/400',
+      'https://picsum.photos/seed/ad-nutri-2/600/400',
+      'https://picsum.photos/seed/ad-nutri-3/600/400',
+    ],
+  ),
+  SponsorAd(
+    id: 'ad2',
+    advertiser: 'SportLine',
+    title: 'Guantes y straps -15%',
+    subtitle: 'En sucursal Plaza o online',
+    imageUrl: 'https://picsum.photos/seed/ad-sport/700/400',
+    ctaLabel: 'Comprar',
+    branchId: 'select',
+    description:
+        'Tienda de artículos deportivos. Descuento en guantes, straps, cinturones y accesorios de entrenamiento para socios.',
+    address: 'Plaza Metepec, Local 214, Metepec',
+    lat: 19.2598,
+    lng: -99.6012,
+    phone: '+52 722 555 0202',
+    socials: const SponsorAdSocials(
+      instagram: 'https://instagram.com/sportline.mx',
+      facebook: 'https://facebook.com/sportlinemx',
+      tiktok: 'https://tiktok.com/@sportlinemx',
+      website: 'https://sportline.mx',
+    ),
+    photos: const [
+      'https://picsum.photos/seed/ad-sport-1/600/400',
+      'https://picsum.photos/seed/ad-sport-2/600/400',
+    ],
+  ),
+  SponsorAd(
+    id: 'ad3',
+    advertiser: 'Café Verde',
+    title: 'Cold brew 2x1 post-entreno',
+    subtitle: 'A dos cuadras de sede Centro',
+    imageUrl: 'https://picsum.photos/seed/ad-cafe/700/400',
+    ctaLabel: 'Cómo llegar',
+    branchId: 'centro',
+    description:
+        'Cafetería de especialidad con opciones saludables: cold brew, bowls y snacks post-entreno. 2x1 para socios de lunes a viernes.',
+    address: 'Calle Juárez 45, Centro, Metepec',
+    lat: 19.2511,
+    lng: -99.6049,
+    phone: '+52 722 555 0303',
+    socials: const SponsorAdSocials(
+      instagram: 'https://instagram.com/cafeverde.mtp',
+      whatsapp: '+52 722 555 0303',
+    ),
+    photos: const ['https://picsum.photos/seed/ad-cafe-1/600/400'],
   ),
 ];
 

@@ -8,6 +8,7 @@ import '../../core/widgets/primary_button.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../payments/checkout_screen.dart';
 import '../payments/providers/membership_provider.dart';
+import 'providers/notification_prefs_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -117,6 +118,29 @@ class ProfileScreen extends ConsumerWidget {
           icon: Icons.credit_card_rounded,
           onTap: () => Navigator.of(context)
               .pushNamed(MembershipCheckoutScreen.routeName),
+        ),
+        const SizedBox(height: 24),
+        Text('Notificaciones', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _SwitchRow(
+                icon: Icons.notifications_active_rounded,
+                label: 'Avisos del gimnasio',
+                subtitle: 'Clases, aforo y tu membresía',
+                provider: gymNotifsEnabledProvider,
+              ),
+              Divider(height: 1, indent: 56, color: brand.cardBorder),
+              _SwitchRow(
+                icon: Icons.campaign_rounded,
+                label: 'Promos de aliados',
+                subtitle: 'Ofertas de marcas aliadas del gym',
+                provider: sponsorPromosOptInProvider,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
         Text('Cuenta', style: Theme.of(context).textTheme.titleLarge),
@@ -277,6 +301,73 @@ class _ActionRow extends StatelessWidget {
                 size: 20, color: brand.textSecondary),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SwitchRow extends ConsumerWidget {
+  const _SwitchRow({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.provider,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final NotifierProvider<PrefToggleNotifier, bool> provider;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brand = context.brand;
+    final enabled = ref.watch(provider);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: brand.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: brand.cardBorder),
+            ),
+            child: Icon(icon, size: 16, color: brand.accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: brand.textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: brand.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: enabled,
+            activeTrackColor: brand.accent,
+            onChanged: (value) =>
+                ref.read(provider.notifier).setEnabled(value),
+          ),
+        ],
       ),
     );
   }

@@ -9,11 +9,13 @@ class ClassTile extends StatelessWidget {
     required this.gymClass,
     required this.reserved,
     this.onToggle,
+    this.onTap,
   });
 
   final GymClass gymClass;
   final bool reserved;
   final VoidCallback? onToggle;
+  final VoidCallback? onTap;
 
   IconData _iconFor(String category) => switch (category) {
         'spinning' => Icons.directions_bike_rounded,
@@ -32,14 +34,17 @@ class ClassTile extends StatelessWidget {
     final brand = context.brand;
     final full = gymClass.isFull;
     final active = reserved && !full;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: brand.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: brand.cardBorder),
-      ),
-      child: Row(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: brand.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: brand.cardBorder),
+        ),
+        child: Row(
         children: [
           SizedBox(
             width: 56,
@@ -151,6 +156,7 @@ class ClassTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

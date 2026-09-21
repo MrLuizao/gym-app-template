@@ -4,11 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/branding/brands.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/branch.dart';
+import 'data/models/sponsor_ad.dart';
 import 'data/models/trainer.dart';
 import 'features/branch_detail/branch_detail_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/payments/checkout_screen.dart';
 import 'features/shell/main_shell.dart';
+import 'features/sponsor_detail/sponsor_detail_screen.dart';
 import 'features/trainers/trainer_profile_screen.dart';
 
 class MembersApp extends StatelessWidget {
@@ -50,13 +52,15 @@ class MembersApp extends StatelessWidget {
     );
   }
 
-  static final Map<String, Widget Function(Object? arguments)> _routes = {
+  static Map<String, Widget Function(Object? arguments)> get _routes => {
     BranchDetailScreen.routeName: (arguments) =>
         BranchDetailScreen(branch: arguments! as Branch),
     TrainerProfileScreen.routeName: (arguments) =>
         TrainerProfileScreen(trainer: arguments! as Trainer),
     MembershipCheckoutScreen.routeName: (arguments) =>
         const MembershipCheckoutScreen(),
+    SponsorDetailScreen.routeName: (arguments) =>
+        SponsorDetailScreen(ad: arguments! as SponsorAd),
   };
 }
 

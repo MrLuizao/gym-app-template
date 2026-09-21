@@ -30,10 +30,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   });
 
-  testWidgets('el botón central de Check-in navega al Pase de Acceso',
+  testWidgets('el botón de Check-in de una sede abre el Pase de Acceso',
       (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'onboarding_done': true,
+      'favorite_branches': <String>['select'],
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -44,11 +45,14 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Inicio'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.qr_code_2_rounded));
+    await tester.ensureVisible(find.text('CHECK-IN · SELECT'));
     await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('CHECK-IN · SELECT'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Pase de Acceso'), findsOneWidget);
 

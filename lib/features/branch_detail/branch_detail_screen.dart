@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/widgets/badge_chip.dart';
-import '../../core/widgets/capacity_bar.dart';
-import '../../core/widgets/capacity_ring.dart';
 import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/hourly_forecast_chart.dart';
 import '../../core/widgets/skeleton_box.dart';
 import '../../data/models/branch.dart';
 import 'providers/catalog_providers.dart';
 import 'providers/reservation_provider.dart';
+import '../checkin/widgets/checkin_sheet.dart';
+import '../home/providers/favorite_branches_provider.dart';
+import 'widgets/class_detail_sheet.dart';
 import 'widgets/class_tile.dart';
 import 'widgets/trainer_card.dart';
 import '../trainers/trainer_profile_screen.dart';
@@ -42,6 +44,9 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
     final classesAsync = ref.watch(branchClassesProvider(branch.id));
     final trainersAsync = ref.watch(branchTrainersProvider(branch.id));
     final reserved = ref.watch(reservedClassesProvider);
+    final isFavorite = ref.watch(
+      favoriteBranchesProvider.select((ids) => ids.contains(branch.id)),
+    );
 
     return Scaffold(
       body: CustomScrollView(
@@ -70,6 +75,34 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                 ),
               ),
             ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: GestureDetector(
+                  onTap: () => ref
+                      .read(favoriteBranchesProvider.notifier)
+                      .toggle(branch.id),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.35),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.14),
+                      ),
+                    ),
+                    child: Icon(
+                      isFavorite
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      size: 17,
+                      color: isFavorite ? brand.accent : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -224,6 +257,8 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                     onToggle: () => ref
                         .read(reservedClassesProvider.notifier)
                         .toggle(classes[index].id),
+                    onTap: () =>
+                        ClassDetailSheet.show(context, classes[index]),
                   ),
                 ),
                 childCount: classes.length,
@@ -364,39 +399,84 @@ class _OccupancyCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: brand.cardBorder),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CapacityRing(value: ratio, size: 70, strokeWidth: 7),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'OCUPACIÓN EN VIVO',
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(letterSpacing: 1.4),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AFORO · PRONÓSTICO POR HORA',
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(letterSpacing: 1.4),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Ahora ${branch.currentCapacity} de '
+                      '${branch.maxCapacity} cupos',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: brand.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  '${branch.currentCapacity} de ${branch.maxCapacity} cupos',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: brand.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                CapacityBar(value: ratio, height: 6),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              BadgeChip(
+                label: brand.occupancyLabelFor(ratio),
+                color: brand.occupancyFor(ratio),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          BadgeChip(
-            label: brand.occupancyLabelFor(ratio),
-            color: brand.occupancyFor(ratio),
+          const SizedBox(height: 16),
+          HourlyForecastChart(
+            currentRatio: ratio,
+            drift: (branch.id.hashCode % 9 - 4) / 100,
+          ),
+          const SizedBox(height: 12),
+          const ForecastLegend(),
+          const SizedBox(height: 14),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => CheckInSheet.show(context),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: brand.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: brand.accent.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.qr_code_scanner_rounded,
+                    size: 16,
+                    color: brand.accent,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'CHECK-IN AQUÍ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                      color: brand.accent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

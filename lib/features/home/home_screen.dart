@@ -7,13 +7,16 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/skeleton_box.dart';
+import '../checkin/widgets/checkin_sheet.dart';
 import '../trainers/providers/following_trainers_provider.dart';
 import '../trainers/trainer_profile_screen.dart';
 import 'providers/branch_providers.dart';
 import 'providers/favorite_branches_provider.dart';
+import 'providers/sponsor_ads_provider.dart';
 import 'widgets/branch_card.dart';
 import 'widgets/goal_progress_card.dart';
 import 'widgets/home_header.dart';
+import 'widgets/sponsor_carousel.dart';
 import 'widgets/weekly_summary_card.dart';
 import '../shell/bottom_nav_provider.dart';
 
@@ -38,6 +41,16 @@ class HomeScreen extends ConsumerWidget {
               curve: Curves.easeOutCubic,
             ),
         const SizedBox(height: 16),
+        const _SponsorsSection()
+            .animate(delay: const Duration(milliseconds: 100))
+            .fadeIn(duration: const Duration(milliseconds: 420))
+            .slideY(
+              begin: 0.06,
+              end: 0,
+              duration: const Duration(milliseconds: 480),
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: 24),
         // const GoalProgressSection()
         //     .animate(delay: const Duration(milliseconds: 140))
         //     .fadeIn(duration: const Duration(milliseconds: 420))
@@ -51,7 +64,7 @@ class HomeScreen extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Text('Sedes favoritas',
+              child: Text('Mi sede favorita',
                   style: Theme.of(context).textTheme.titleLarge),
             ),
             TextButton(
@@ -80,23 +93,31 @@ class HomeScreen extends ConsumerWidget {
                 .where((branch) => favorites.contains(branch.id))
                 .toList();
             if (favoriteBranches.isEmpty) {
-              return const _EmptyFavoritesCard();
+              return _EmptyFavoritesCard(
+                onTap: () =>
+                    ref.read(bottomNavIndexProvider.notifier).go(1),
+              );
             }
             return Column(
               children: [
                 for (var i = 0; i < favoriteBranches.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: BranchCard(
-                      branch: favoriteBranches[i],
-                      isFavorite: true,
-                      onToggleFavorite: () => ref
-                          .read(favoriteBranchesProvider.notifier)
-                          .toggle(favoriteBranches[i].id),
-                      onTap: () => Navigator.of(context).pushNamed(
-                        '/branch',
-                        arguments: favoriteBranches[i],
-                      ),
+                    child: Column(
+                      children: [
+                        BranchCard(
+                          branch: favoriteBranches[i],
+                          onTap: () => Navigator.of(context).pushNamed(
+                            '/branch',
+                            arguments: favoriteBranches[i],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _BranchCheckInButton(
+                          branchName: favoriteBranches[i].name,
+                          onTap: () => CheckInSheet.show(context),
+                        ),
+                      ],
                     )
                         .animate(delay: Duration(milliseconds: 140 + i * 100))
                         .fadeIn(duration: const Duration(milliseconds: 420))
@@ -118,6 +139,46 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+class _SponsorsSection extends ConsumerWidget {
+  const _SponsorsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final adsAsync = ref.watch(sponsorAdsProvider);
+    return adsAsync.maybeWhen(
+      data: (ads) {
+        if (ads.isEmpty) return const SizedBox.shrink();
+        // TODO(Firebase): registrar impresión por anuncio visible
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Nuestros aliados',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                Text(
+                  'PUBLICIDAD',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        letterSpacing: 1.4,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SponsorCarousel(ads: ads),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
 class _MyTrainersSection extends ConsumerWidget {
   const _MyTrainersSection();
 
@@ -131,46 +192,72 @@ class _MyTrainersSection extends ConsumerWidget {
         Text('Mis entrenadores', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         if (followed.isEmpty)
-          AppCard(
-            child: Column(
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        brand.accent.withValues(alpha: 0.22),
-                        brand.accent.withValues(alpha: 0),
-                      ],
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                ref.read(bottomNavIndexProvider.notifier).go(1),
+            child: AppCard(
+              child: Column(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          brand.accent.withValues(alpha: 0.22),
+                          brand.accent.withValues(alpha: 0),
+                        ],
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.sports_rounded,
+                      size: 40,
+                      color: brand.accent,
                     ),
                   ),
-                  child: Icon(
-                    Icons.sports_rounded,
-                    size: 40,
-                    color: brand.accent,
+                  const SizedBox(height: 14),
+                  Text(
+                    'Aún no sigues a ningún entrenador',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Aún no sigues a ningún entrenador',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Entra al detalle de tu sede, abre el perfil de un entrenador '
-                  'y toca "Seguir" para verlo aquí.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    'Toca aquí para explorar tu sede, abrir el perfil de un '
+                    'entrenador y tocar "Seguir" para verlo aquí.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'EXPLORAR SEDES',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.8,
+                          color: brand.accent,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: brand.accent,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           )
         else
           SizedBox(
-            height: 148,
+            height: 156,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: followed.length,
@@ -183,8 +270,8 @@ class _MyTrainersSection extends ConsumerWidget {
                     arguments: trainer,
                   ),
                   child: Container(
-                    width: 140,
-                    padding: const EdgeInsets.all(14),
+                    width: 152,
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: brand.surface,
                       borderRadius: BorderRadius.circular(24),
@@ -249,46 +336,73 @@ class _MyTrainersSection extends ConsumerWidget {
 }
 
 class _EmptyFavoritesCard extends StatelessWidget {
-  const _EmptyFavoritesCard();
+  const _EmptyFavoritesCard({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return AppCard(
-      child: Column(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  brand.accent.withValues(alpha: 0.22),
-                  brand.accent.withValues(alpha: 0),
-                ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AppCard(
+        child: Column(
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    brand.accent.withValues(alpha: 0.22),
+                    brand.accent.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+              child: Icon(
+                Icons.favorite_rounded,
+                size: 40,
+                color: brand.accent,
               ),
             ),
-            child: Icon(
-              Icons.favorite_rounded,
-              size: 40,
-              color: brand.accent,
+            const SizedBox(height: 14),
+            Text(
+              'Aún no tienes sedes favoritas',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Aún no tienes sedes favoritas',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Ve a la pestaña Explorar, busca tu sede y tócale el corazón '
-            'para tenerla siempre a mano aquí.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              'Toca aquí para explorar las sedes y marca tu favorita '
+              'con el corazón para tenerla siempre a mano.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'EXPLORAR SEDES',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                    color: brand.accent,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 14,
+                  color: brand.accent,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -358,6 +472,55 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
+      ),
+    );
+  }
+}
+
+class _BranchCheckInButton extends StatelessWidget {
+  const _BranchCheckInButton({required this.branchName, required this.onTap});
+
+  final String branchName;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: brand.accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: brand.accent.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.qr_code_scanner_rounded,
+              size: 16,
+              color: brand.accent,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'CHECK-IN · ${branchName.toUpperCase()}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
+                  color: brand.accent,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

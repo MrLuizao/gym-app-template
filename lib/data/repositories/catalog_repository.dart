@@ -6,6 +6,7 @@ import '../mock/mock_data.dart';
 import '../models/coupon.dart';
 import '../models/gym_class.dart';
 import '../models/promo.dart';
+import '../models/sponsor_ad.dart';
 import '../models/trainer.dart';
 
 abstract class CatalogRepository {
@@ -13,6 +14,7 @@ abstract class CatalogRepository {
   Future<List<Trainer>> fetchTrainers(String branchId);
   Stream<List<Promo>> watchPromotions();
   Stream<List<Coupon>> watchCoupons();
+  Stream<List<SponsorAd>> watchSponsorAds();
 }
 
 class FirestoreCatalogRepository implements CatalogRepository {
@@ -68,6 +70,19 @@ class FirestoreCatalogRepository implements CatalogRepository {
               .toList(),
         );
   }
+
+  @override
+  Stream<List<SponsorAd>> watchSponsorAds() {
+    return _db
+        .collection('sponsorAds')
+        .where('status', isEqualTo: 'ACTIVE')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => SponsorAd.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
+  }
 }
 
 class MockCatalogRepository implements CatalogRepository {
@@ -91,6 +106,11 @@ class MockCatalogRepository implements CatalogRepository {
   @override
   Stream<List<Coupon>> watchCoupons() async* {
     yield mockCoupons;
+  }
+
+  @override
+  Stream<List<SponsorAd>> watchSponsorAds() async* {
+    yield mockSponsorAds;
   }
 }
 

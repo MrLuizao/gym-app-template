@@ -16,9 +16,7 @@ class FavoriteBranchesNotifier extends Notifier<Set<String>> {
   }
 
   void toggle(String branchId) {
-    state = state.contains(branchId)
-        ? (<String>{...state}..remove(branchId))
-        : <String>{...state, branchId};
+    state = state.contains(branchId) ? const {} : {branchId};
     _persist();
   }
 
