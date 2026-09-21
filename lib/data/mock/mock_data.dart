@@ -1,0 +1,345 @@
+import 'package:flutter/material.dart';
+
+import '../models/branch.dart';
+import '../models/coupon.dart';
+import '../models/gym_class.dart';
+import '../models/member.dart';
+import '../models/promo.dart';
+import '../models/store_product.dart';
+import '../models/trainer.dart';
+
+const mockBranches = <Branch>[
+  Branch(
+    id: 'select',
+    brandId: 'capital_fitness',
+    name: 'Select',
+    maxCapacity: 180,
+    currentCapacity: 96,
+    address: 'Av. Arce · Zona Central',
+    imageUrl: 'https://picsum.photos/seed/cf-select/800/500',
+  ),
+  Branch(
+    id: 'xpress',
+    brandId: 'capital_fitness',
+    name: 'Xpress Sopocachi',
+    maxCapacity: 90,
+    currentCapacity: 31,
+    address: 'C. Belisario Salinas #412',
+    imageUrl: 'https://picsum.photos/seed/cf-xpress/800/500',
+  ),
+  Branch(
+    id: 'centro',
+    brandId: 'capital_fitness',
+    name: 'Centro',
+    maxCapacity: 140,
+    currentCapacity: 122,
+    address: 'Pla. San Francisco · Centro',
+    imageUrl: 'https://picsum.photos/seed/cf-centro/800/500',
+  ),
+  Branch(
+    id: 'carranza',
+    brandId: 'capital_fitness',
+    name: 'Carranza',
+    maxCapacity: 120,
+    currentCapacity: 41,
+    address: 'C. Carranza #1235',
+    imageUrl: 'https://picsum.photos/seed/cf-carranza/800/500',
+  ),
+];
+
+const mockMember = Member(
+  id: 'demo-user-001',
+  name: 'Luis Rojas',
+  photoUrl: 'https://picsum.photos/seed/cf-member/300/400',
+  membershipStatus: 'ACTIVE',
+  memberNumber: 'CF-00421',
+  plan: 'Plan Black',
+  membershipUntil: null,
+);
+
+final mockClasses = <GymClass>[
+  GymClass(
+    id: 'c1',
+    branchId: 'select',
+    name: 'Spinning Extreme',
+    coach: 'Marcos Villalba',
+    room: 'Sala Cycle 1',
+    startMinutes: 6 * 60,
+    endMinutes: 7 * 60,
+    capacity: 24,
+    booked: 19,
+    category: 'spinning',
+  ),
+  GymClass(
+    id: 'c2',
+    branchId: 'select',
+    name: 'Yoga Flow',
+    coach: 'Lucía Ortega',
+    room: 'Sala Mind',
+    startMinutes: 7 * 60 + 30,
+    endMinutes: 8 * 60 + 30,
+    capacity: 18,
+    booked: 9,
+    category: 'yoga',
+  ),
+  GymClass(
+    id: 'c3',
+    branchId: 'select',
+    name: 'Funcional HIIT',
+    coach: 'Diego Salas',
+    room: 'Sala Cross',
+    startMinutes: 12 * 60 + 15,
+    endMinutes: 13 * 60 + 15,
+    capacity: 20,
+    booked: 17,
+    category: 'crossfit',
+  ),
+  GymClass(
+    id: 'c4',
+    branchId: 'select',
+    name: 'Body Pump',
+    coach: 'Carla Mendoza',
+    room: 'Sala Power',
+    startMinutes: 18 * 60,
+    endMinutes: 19 * 60,
+    capacity: 26,
+    booked: 26,
+    category: 'fuerza',
+  ),
+  GymClass(
+    id: 'c5',
+    branchId: 'select',
+    name: 'Zumba Party',
+    coach: 'Roxana Medina',
+    room: 'Sala Ritmo',
+    startMinutes: 19 * 60 + 30,
+    endMinutes: 20 * 60 + 30,
+    capacity: 30,
+    booked: 22,
+    category: 'zumba',
+  ),
+  GymClass(
+    id: 'c6',
+    branchId: 'select',
+    name: 'Box Training',
+    coach: 'Iván Paredes',
+    room: 'Ring Central',
+    startMinutes: 20 * 60,
+    endMinutes: 21 * 60,
+    capacity: 16,
+    booked: 11,
+    category: 'boxeo',
+  ),
+];
+
+final mockTrainers = <Trainer>[
+  Trainer(
+    id: 't1',
+    branchId: 'select',
+    name: 'Marcos Villalba',
+    specialty: 'Fuerza · Hipertrofia',
+    shift: 'MAÑANA',
+    photoUrl: 'https://picsum.photos/seed/cf-t1/300/300',
+  ),
+  Trainer(
+    id: 't2',
+    branchId: 'select',
+    name: 'Lucía Ortega',
+    specialty: 'Movilidad · Yoga',
+    shift: 'MAÑANA',
+    photoUrl: 'https://picsum.photos/seed/cf-t2/300/300',
+  ),
+  Trainer(
+    id: 't3',
+    branchId: 'select',
+    name: 'Diego Salas',
+    specialty: 'Cross Training',
+    shift: 'TARDE',
+    photoUrl: 'https://picsum.photos/seed/cf-t3/300/300',
+  ),
+  Trainer(
+    id: 't4',
+    branchId: 'select',
+    name: 'Carla Mendoza',
+    specialty: 'Pérdida de grasa',
+    shift: 'TARDE',
+    photoUrl: 'https://picsum.photos/seed/cf-t4/300/300',
+  ),
+  Trainer(
+    id: 't5',
+    branchId: 'select',
+    name: 'Iván Paredes',
+    specialty: 'Boxeo · Acondicionamiento',
+    shift: 'NOCHE',
+    photoUrl: 'https://picsum.photos/seed/cf-t5/300/300',
+  ),
+];
+
+final mockPromos = <Promo>[
+  Promo(
+    id: 'p1',
+    title: 'Whey X-Treme 2 lb',
+    subtitle: '25% OFF en toda la línea de suplementos',
+    badge: '-25%',
+    imageUrl: 'https://picsum.photos/seed/cf-promo1/700/400',
+  ),
+  Promo(
+    id: 'p2',
+    title: 'Nueva Colección CF',
+    subtitle: 'Merchandising exclusivo para socios',
+    badge: 'NUEVO',
+    imageUrl: 'https://picsum.photos/seed/cf-promo2/700/400',
+  ),
+  Promo(
+    id: 'p3',
+    title: 'Hidrátate 2x1',
+    subtitle: 'Bebidas de recepción todo el mes',
+    badge: '2x1',
+    imageUrl: 'https://picsum.photos/seed/cf-promo3/700/400',
+  ),
+];
+
+final mockProducts = <StoreProduct>[
+  StoreProduct(
+    id: 's1',
+    name: 'Whey Protein X-Treme',
+    category: 'Suplementos',
+    price: 520,
+    oldPrice: 650,
+    tag: '-20%',
+    imageUrl: 'https://picsum.photos/seed/cf-whey/400/300',
+  ),
+  StoreProduct(
+    id: 's2',
+    name: 'Creatina 300g',
+    category: 'Suplementos',
+    price: 240,
+    imageUrl: 'https://picsum.photos/seed/cf-creatine/400/400',
+  ),
+  StoreProduct(
+    id: 'sp3',
+    name: 'Pre-Entreno Blast',
+    category: 'Suplementos',
+    price: 310,
+    oldPrice: 380,
+    tag: 'OFERTA',
+    imageUrl: 'https://picsum.photos/seed/cf-preworkout/400/400',
+  ),
+  StoreProduct(
+    id: 'sp4',
+    name: 'Camiseta Dry-Fit CF',
+    category: 'Merchandising',
+    price: 149,
+    tag: 'NUEVO',
+    imageUrl: 'https://picsum.photos/seed/cf-shirt/400/400',
+  ),
+  StoreProduct(
+    id: 'sp5',
+    name: 'Shaker CF 700ml',
+    category: 'Merchandising',
+    price: 89,
+    imageUrl: 'https://picsum.photos/seed/cf-shaker/400/400',
+  ),
+  StoreProduct(
+    id: 'sp6',
+    name: 'Gorra Snapback',
+    category: 'Merchandising',
+    price: 95,
+    imageUrl: 'https://picsum.photos/seed/cf-cap/400/400',
+  ),
+  StoreProduct(
+    id: 'sp7',
+    name: 'Energizante X-Treme',
+    category: 'Bebidas',
+    price: 15,
+    tag: '2x1',
+    imageUrl: 'https://picsum.photos/seed/cf-drink/400/400',
+  ),
+  StoreProduct(
+    id: 'sp8',
+    name: 'Barrita Proteica',
+    category: 'Suplementos',
+    price: 18,
+    imageUrl: 'https://picsum.photos/seed/cf-bar/400/400',
+  ),
+  StoreProduct(
+    id: 's9',
+    name: 'Guantes Training',
+    category: 'Merchandising',
+    price: 140,
+    oldPrice: 180,
+    tag: '-22%',
+    imageUrl: 'https://picsum.photos/seed/cf-gloves/400/400',
+  ),
+  StoreProduct(
+    id: 's10',
+    name: 'Agua Mineral 600ml',
+    category: 'Bebidas',
+    price: 8,
+    imageUrl: 'https://picsum.photos/seed/cf-water/400/400',
+  ),
+];
+
+final mockCoupons = <Coupon>[
+  Coupon(
+    id: 'c1',
+    brandId: 'capital_fitness',
+    title: 'Proteína X-Treme -25%',
+    description: 'En suplementos de recepción · 2kg',
+    badge: '-25%',
+    code: 'CF-PRO25',
+    levels: <String>['PLUS', 'BLACK'],
+    expiresAt: DateTime.now().add(const Duration(days: 7)),
+  ),
+  Coupon(
+    id: 'c2',
+    brandId: 'capital_fitness',
+    title: 'Invita a un amigo',
+    description: 'Clase grupal gratis para un acompañante',
+    badge: '1 FREE',
+    code: 'CF-GUEST1',
+    levels: <String>['BLACK'],
+    expiresAt: DateTime.now().add(const Duration(days: 14)),
+  ),
+  Coupon(
+    id: 'c3',
+    brandId: 'capital_fitness',
+    title: 'Bebidas 2x1',
+    description: 'Bebidas de recepción después de las 18:00',
+    badge: '2x1',
+    code: 'CF-BEB2X1',
+    levels: <String>['CLASSIC', 'PLUS'],
+    expiresAt: DateTime.now().add(const Duration(days: 30)),
+  ),
+  Coupon(
+    id: 'c4',
+    brandId: 'capital_fitness',
+    title: 'Merch Capital -15%',
+    description: 'Camisetas, guantes y accesorios',
+    badge: '-15%',
+    code: 'CF-MERCH15',
+    levels: <String>['CLASSIC'],
+    expiresAt: DateTime.now().add(const Duration(days: 21)),
+  ),
+];
+
+final mockNotices = <(IconData, String, String, String)>[
+  (
+    Icons.campaign_rounded,
+    'Spin Night este viernes',
+    'Reserva tu bici antes de las 18:00, cupos limitados.',
+    'Hace 2 h',
+  ),
+  (
+    Icons.local_fire_department_rounded,
+    'Reto Capital 30 días',
+    'Suma 12 entrenamientos y gana merchandising exclusivo.',
+    'Ayer',
+  ),
+  (
+    Icons.verified_rounded,
+    'Membresía al día',
+    'Tu renovación automática está programada para el 30/09.',
+    'Ayer',
+  ),
+];
