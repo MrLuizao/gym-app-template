@@ -46,6 +46,7 @@ class SponsorAd {
     required this.title,
     required this.subtitle,
     this.badge = 'ALIADO',
+    this.brandColor,
     this.imageUrl,
     this.ctaLabel = 'Ver oferta',
     this.branchId,
@@ -63,6 +64,7 @@ class SponsorAd {
   final String title;
   final String subtitle;
   final String badge;
+  final int? brandColor;
   final String? imageUrl;
   final String ctaLabel;
   final String? branchId;
@@ -82,6 +84,7 @@ class SponsorAd {
         title: map['title'] as String? ?? '',
         subtitle: map['subtitle'] as String? ?? '',
         badge: map['badge'] as String? ?? 'ALIADO',
+        brandColor: (map['brand_color'] as num?)?.toInt(),
         imageUrl: map['image_url'] as String?,
         ctaLabel: map['cta_label'] as String? ?? 'Ver oferta',
         branchId: map['branch_id'] as String?,
@@ -103,6 +106,7 @@ class SponsorAd {
         'title': title,
         'subtitle': subtitle,
         'badge': badge,
+        'brand_color': brandColor,
         'image_url': imageUrl,
         'cta_label': ctaLabel,
         'branch_id': branchId,

@@ -1,12 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
+import '../../data/models/coupon.dart';
 import '../../data/models/sponsor_ad.dart';
+import '../metrics/ad_metrics_provider.dart';
+import '../promotions/providers/promotions_providers.dart';
+import '../promotions/widgets/coupon_qr_sheet.dart';
 
 class SponsorDetailScreen extends StatefulWidget {
   const SponsorDetailScreen({super.key, required this.ad});
@@ -56,6 +63,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                 icon: Icons.navigation_rounded,
                 label: 'Waze',
                 detail: 'Navegación con tráfico en vivo',
+                accent: context.brand.allyAccent(widget.ad.brandColor),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _open(
@@ -70,6 +78,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                 icon: Icons.map_rounded,
                 label: 'Google Maps',
                 detail: 'Abrir en el mapa',
+                accent: context.brand.allyAccent(widget.ad.brandColor),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _open(
@@ -107,6 +116,8 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
   Widget build(BuildContext context) {
     final brand = context.brand;
     final ad = widget.ad;
+    final ally = brand.allyAccent(ad.brandColor);
+    final onAlly = brand.readableOn(ally);
     final gallery = ad.photos.isNotEmpty
         ? ad.photos
         : [if (ad.imageUrl != null) ad.imageUrl!];
@@ -198,7 +209,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                       children: [
                         BadgeChip(
                           label: 'PUBLICIDAD · ${ad.badge}',
-                          color: brand.accent,
+                          color: ally,
                           icon: Icons.campaign_rounded,
                         ),
                         const SizedBox(height: 8),
@@ -229,10 +240,10 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: brand.accent.withValues(alpha: 0.12),
+                      color: ally.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: brand.accent.withValues(alpha: 0.35),
+                        color: ally.withValues(alpha: 0.35),
                       ),
                     ),
                     child: Column(
@@ -243,7 +254,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: brand.accent,
+                            color: ally,
                           ),
                         ),
                         if (ad.subtitle.isNotEmpty) ...[
@@ -260,6 +271,8 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _GenerateCouponButton(ad: ad),
                   if (ad.description.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     _SectionTitle('SOBRE ${ad.advertiser.toUpperCase()}'),
@@ -287,6 +300,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                               label: 'Llamar',
                               detail: ad.phone,
                               onTap: _call,
+                              accent: ally,
                             ),
                           ),
                         if (ad.phone.isNotEmpty &&
@@ -299,6 +313,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                               label: 'WhatsApp',
                               detail: ad.socials.whatsapp,
                               onTap: _openWhatsapp,
+                              accent: ally,
                             ),
                           ),
                       ],
@@ -317,24 +332,28 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                             icon: Icons.camera_alt_rounded,
                             label: 'Instagram',
                             onTap: () => _openUrl(ad.socials.instagram),
+                            accent: ally,
                           ),
                         if (ad.socials.facebook.isNotEmpty)
                           _SocialChip(
                             icon: Icons.facebook_rounded,
                             label: 'Facebook',
                             onTap: () => _openUrl(ad.socials.facebook),
+                            accent: ally,
                           ),
                         if (ad.socials.tiktok.isNotEmpty)
                           _SocialChip(
                             icon: Icons.music_note_rounded,
                             label: 'TikTok',
                             onTap: () => _openUrl(ad.socials.tiktok),
+                            accent: ally,
                           ),
                         if (ad.socials.website.isNotEmpty)
                           _SocialChip(
                             icon: Icons.language_rounded,
                             label: 'Sitio web',
                             onTap: () => _openUrl(ad.socials.website),
+                            accent: ally,
                           ),
                       ],
                     ),
@@ -385,7 +404,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                                           child: Icon(
                                             Icons.location_on_rounded,
                                             size: 36,
-                                            color: brand.accent,
+                                            color: ally,
                                           ),
                                         ),
                                       ],
@@ -402,7 +421,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                                 Icon(
                                   Icons.place_rounded,
                                   size: 16,
-                                  color: brand.accent,
+                                  color: ally,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -424,26 +443,26 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                               child: Container(
                                 height: 42,
                                 decoration: BoxDecoration(
-                                  color: brand.accent,
+                                  color: ally,
                                   borderRadius: BorderRadius.circular(99),
                                 ),
-                                child: const Center(
+                                child: Center(
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Icons.directions_rounded,
                                         size: 16,
-                                        color: Colors.white,
+                                        color: onAlly,
                                       ),
-                                      SizedBox(width: 8),
+                                      const SizedBox(width: 8),
                                       Text(
                                         'CÓMO LLEGAR',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.8,
-                                          color: Colors.white,
+                                          color: onAlly,
                                         ),
                                       ),
                                     ],
@@ -491,12 +510,14 @@ class _MapAppOption extends StatelessWidget {
     required this.label,
     required this.detail,
     required this.onTap,
+    required this.accent,
   });
 
   final IconData icon;
   final String label;
   final String detail;
   final VoidCallback onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -517,10 +538,10 @@ class _MapAppOption extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: brand.accent.withValues(alpha: 0.15),
+                color: accent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 20, color: brand.accent),
+              child: Icon(icon, size: 20, color: accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -564,12 +585,14 @@ class _ContactButton extends StatelessWidget {
     required this.label,
     required this.detail,
     required this.onTap,
+    required this.accent,
   });
 
   final IconData icon;
   final String label;
   final String detail;
   final VoidCallback onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -585,7 +608,7 @@ class _ContactButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: brand.accent),
+            Icon(icon, size: 18, color: accent),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -624,11 +647,13 @@ class _SocialChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.accent,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -645,7 +670,7 @@ class _SocialChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: brand.accent),
+            Icon(icon, size: 14, color: accent),
             const SizedBox(width: 6),
             Text(
               label,
@@ -653,6 +678,103 @@ class _SocialChip extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GenerateCouponButton extends ConsumerWidget {
+  const _GenerateCouponButton({required this.ad});
+
+  final SponsorAd ad;
+
+  static const _chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+  Coupon _buildCoupon(BuildContext context) {
+    final random = Random();
+    final suffix =
+        List.generate(4, (_) => _chars[random.nextInt(_chars.length)]).join();
+    return Coupon(
+      id: 'coupon-${ad.id}',
+      brandId: context.brand.id,
+      title: ad.title,
+      description: ad.subtitle.isNotEmpty ? ad.subtitle : ad.description,
+      badge: ad.badge,
+      code: 'ALI-${ad.id.toUpperCase()}-$suffix',
+      levels: const ['ALL'],
+      branchId: ad.branchId,
+      expiresAt: DateTime.now().add(const Duration(days: 7)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brand = context.brand;
+    final ally = brand.allyAccent(ad.brandColor);
+    final onAlly = brand.readableOn(ally);
+    final existing = ref.watch(
+      generatedCouponsProvider.select((map) => map[ad.id]),
+    );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final coupon = existing ??
+            ref
+                .read(generatedCouponsProvider.notifier)
+                .generate(ad.id, _buildCoupon(context));
+        if (existing == null) {
+          ref.read(adMetricsProvider.notifier).track(ad.id, 'coupon');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+              content: const Text(
+                'Cupón generado · encuéntralo en Promociones',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+        }
+        CouponQrSheet.show(context, coupon);
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        decoration: BoxDecoration(
+          color: existing != null ? ally : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ally, width: 1.4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              existing != null
+                  ? Icons.qr_code_2_rounded
+                  : Icons.confirmation_num_outlined,
+              size: 18,
+              color: existing != null ? onAlly : ally,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              existing != null ? 'VER MI CUPÓN' : 'GENERAR CUPÓN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+                color: existing != null ? onAlly : ally,
               ),
             ),
           ],

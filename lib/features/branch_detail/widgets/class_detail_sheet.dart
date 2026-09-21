@@ -343,7 +343,7 @@ class _ReserveButton extends ConsumerWidget {
             Icon(
               reserved ? Icons.check_circle_rounded : Icons.event_seat_rounded,
               size: 18,
-              color: reserved ? brand.accent : Colors.white,
+              color: reserved ? brand.accent : brand.background,
             ),
             const SizedBox(width: 8),
             Text(
@@ -352,7 +352,7 @@ class _ReserveButton extends ConsumerWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.6,
-                color: reserved ? brand.accent : Colors.white,
+                color: reserved ? brand.accent : brand.background,
               ),
             ),
           ],

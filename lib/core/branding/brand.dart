@@ -44,6 +44,14 @@ class BrandConfig extends ThemeExtension<BrandConfig> {
     return 'ALTO';
   }
 
+  /// Color del aliado si lo define, o el acento de la marca.
+  Color allyAccent(int? brandColor) =>
+      brandColor != null ? Color(brandColor) : accent;
+
+  /// Texto legible sobre [bg]: oscuro en fondos claros, blanco en oscuros.
+  Color readableOn(Color bg) =>
+      bg.computeLuminance() > 0.45 ? background : Colors.white;
+
   @override
   BrandConfig copyWith() => this;
 

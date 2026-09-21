@@ -17,6 +17,9 @@ const mockBranches = <Branch>[
     maxCapacity: 180,
     currentCapacity: 96,
     address: 'Av. Arce · Zona Central',
+    schedule: 'Lun–Vie 5:30–23:00 · Sáb 7:00–20:00',
+    lat: -16.5030,
+    lng: -68.1290,
     imageUrl: 'https://picsum.photos/seed/cf-select/800/500',
   ),
   Branch(
@@ -26,6 +29,9 @@ const mockBranches = <Branch>[
     maxCapacity: 90,
     currentCapacity: 31,
     address: 'C. Belisario Salinas #412',
+    schedule: 'Lun–Vie 6:00–22:00 · Sáb 8:00–14:00',
+    lat: -16.5140,
+    lng: -68.1245,
     imageUrl: 'https://picsum.photos/seed/cf-xpress/800/500',
   ),
   Branch(
@@ -35,6 +41,9 @@ const mockBranches = <Branch>[
     maxCapacity: 140,
     currentCapacity: 122,
     address: 'Pla. San Francisco · Centro',
+    schedule: 'Lun–Vie 6:00–22:30 · Sáb 8:00–18:00',
+    lat: -16.4955,
+    lng: -68.1336,
     imageUrl: 'https://picsum.photos/seed/cf-centro/800/500',
   ),
   Branch(
@@ -45,6 +54,9 @@ const mockBranches = <Branch>[
     currentCapacity: 41,
     status: 'CLOSED',
     address: 'C. Carranza #1235',
+    schedule: 'Lun–Vie 6:00–21:00',
+    lat: -16.5010,
+    lng: -68.1180,
     imageUrl: 'https://picsum.photos/seed/cf-carranza/800/500',
   ),
 ];
@@ -205,6 +217,7 @@ final mockSponsorAds = <SponsorAd>[
   SponsorAd(
     id: 'ad1',
     advertiser: 'NutriShop',
+    brandColor: 0xFFF97316,
     title: 'Whey X-Treme -20%',
     subtitle: 'Solo con tu credencial de socio',
     imageUrl: 'https://picsum.photos/seed/ad-nutri/700/400',
@@ -230,6 +243,7 @@ final mockSponsorAds = <SponsorAd>[
   SponsorAd(
     id: 'ad2',
     advertiser: 'SportLine',
+    brandColor: 0xFFEF4444,
     title: 'Guantes y straps -15%',
     subtitle: 'En sucursal Plaza o online',
     imageUrl: 'https://picsum.photos/seed/ad-sport/700/400',
@@ -255,6 +269,7 @@ final mockSponsorAds = <SponsorAd>[
   SponsorAd(
     id: 'ad3',
     advertiser: 'Café Verde',
+    brandColor: 0xFF22C55E,
     title: 'Cold brew 2x1 post-entreno',
     subtitle: 'A dos cuadras de sede Centro',
     imageUrl: 'https://picsum.photos/seed/ad-cafe/700/400',

@@ -1,21 +1,24 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/cover_image.dart';
 import '../../../data/models/sponsor_ad.dart';
+import '../../metrics/ad_metrics_provider.dart';
 
-class SponsorCarousel extends StatefulWidget {
+class SponsorCarousel extends ConsumerStatefulWidget {
   const SponsorCarousel({super.key, required this.ads});
 
   final List<SponsorAd> ads;
 
   @override
-  State<SponsorCarousel> createState() => _SponsorCarouselState();
+  ConsumerState<SponsorCarousel> createState() => _SponsorCarouselState();
 }
 
-class _SponsorCarouselState extends State<SponsorCarousel> {
+class _SponsorCarouselState extends ConsumerState<SponsorCarousel> {
   late final PageController _controller = PageController(viewportFraction: 0.94);
   Timer? _timer;
   int _page = 0;
@@ -44,7 +47,7 @@ class _SponsorCarouselState extends State<SponsorCarousel> {
   }
 
   void _openAd(SponsorAd ad) {
-    // TODO(Firebase): POST /ads/{id}/track {event: 'tap'}
+    ref.read(adMetricsProvider.notifier).track(ad.id, 'tap');
     Navigator.of(context).pushNamed('/sponsor', arguments: ad);
   }
 
@@ -55,7 +58,7 @@ class _SponsorCarouselState extends State<SponsorCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: 150,
+          height: 172,
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.ads.length,
@@ -78,101 +81,20 @@ class _SponsorCarouselState extends State<SponsorCarousel> {
                         DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
+                              begin: Alignment.topCenter,
+                              end: Alignment.center,
                               colors: [
-                                Colors.black.withValues(alpha: 0.85),
-                                Colors.black.withValues(alpha: 0.25),
+                                Colors.black.withValues(alpha: 0.18),
                                 Colors.transparent,
                               ],
                             ),
                           ),
                         ),
                         Positioned(
-                          top: 12,
-                          left: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.55),
-                              borderRadius: BorderRadius.circular(99),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Text(
-                              'PUBLICIDAD · ${ad.advertiser.toUpperCase()}',
-                              style: const TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 14,
-                          right: 14,
-                          bottom: 12,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      ad.title,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.15,
-                                        color: Colors.white,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      ad.subtitle,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.75),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: brand.accent,
-                                  borderRadius: BorderRadius.circular(99),
-                                ),
-                                child: const Text(
-                                  'Ver oferta',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _AllyStrip(ad: ad),
                         ),
                       ],
                     ),
@@ -200,6 +122,95 @@ class _SponsorCarouselState extends State<SponsorCarousel> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _AllyStrip extends StatelessWidget {
+  const _AllyStrip({required this.ad});
+
+  final SponsorAd ad;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    final allyColor = brand.allyAccent(ad.brandColor);
+    final onAlly = brand.readableOn(allyColor);
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          color: allyColor.withValues(alpha: 0.62),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      ad.advertiser.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
+                        color: onAlly.withValues(alpha: 0.75),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      ad.title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                        color: onAlly,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      ad.subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: onAlly.withValues(alpha: 0.75),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: onAlly.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(
+                    color: onAlly.withValues(alpha: 0.55),
+                    width: 1.2,
+                  ),
+                ),
+                child: Text(
+                  'Ver oferta',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: onAlly,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -31,36 +31,6 @@ class HomeScreen extends ConsumerWidget {
       children: [
         const HomeHeader(),
         const SizedBox(height: 22),
-        const WeeklySummarySection()
-            .animate(delay: const Duration(milliseconds: 60))
-            .fadeIn(duration: const Duration(milliseconds: 420))
-            .slideY(
-              begin: 0.06,
-              end: 0,
-              duration: const Duration(milliseconds: 480),
-              curve: Curves.easeOutCubic,
-            ),
-        const SizedBox(height: 16),
-        const _SponsorsSection()
-            .animate(delay: const Duration(milliseconds: 100))
-            .fadeIn(duration: const Duration(milliseconds: 420))
-            .slideY(
-              begin: 0.06,
-              end: 0,
-              duration: const Duration(milliseconds: 480),
-              curve: Curves.easeOutCubic,
-            ),
-        const SizedBox(height: 24),
-        // const GoalProgressSection()
-        //     .animate(delay: const Duration(milliseconds: 140))
-        //     .fadeIn(duration: const Duration(milliseconds: 420))
-        //     .slideY(
-        //       begin: 0.06,
-        //       end: 0,
-        //       duration: const Duration(milliseconds: 480),
-        //       curve: Curves.easeOutCubic,
-        //     ),
-        // const SizedBox(height: 26),
         Row(
           children: [
             Expanded(
@@ -115,6 +85,7 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                         _BranchCheckInButton(
                           branchName: favoriteBranches[i].name,
+                          isOpen: favoriteBranches[i].isOpen,
                           onTap: () => CheckInSheet.show(context),
                         ),
                       ],
@@ -132,6 +103,26 @@ class HomeScreen extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: 24),
+        const _SponsorsSection()
+            .animate(delay: const Duration(milliseconds: 100))
+            .fadeIn(duration: const Duration(milliseconds: 420))
+            .slideY(
+              begin: 0.06,
+              end: 0,
+              duration: const Duration(milliseconds: 480),
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: 24),
+        const WeeklySummarySection()
+            .animate(delay: const Duration(milliseconds: 140))
+            .fadeIn(duration: const Duration(milliseconds: 420))
+            .slideY(
+              begin: 0.06,
+              end: 0,
+              duration: const Duration(milliseconds: 480),
+              curve: Curves.easeOutCubic,
+            ),
         const SizedBox(height: 26),
         const _MyTrainersSection(),
       ],
@@ -152,24 +143,24 @@ class _SponsorsSection extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Nuestros aliados',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Text(
-                  'PUBLICIDAD',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        letterSpacing: 1.4,
-                        color: Theme.of(context).dividerColor,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: Text(
+            //         'Nuestros aliados',
+            //         style: Theme.of(context).textTheme.titleLarge,
+            //       ),
+            //     ),
+            //     Text(
+            //       'PUBLICIDAD',
+            //       style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            //             letterSpacing: 1.4,
+            //             color: Theme.of(context).dividerColor,
+            //           ),
+            //     ),
+            //   ],
+            // ),
+            // const SizedBox(height: 12),
             SponsorCarousel(ads: ads),
           ],
         );
@@ -478,42 +469,58 @@ class _ErrorCard extends StatelessWidget {
 }
 
 class _BranchCheckInButton extends StatelessWidget {
-  const _BranchCheckInButton({required this.branchName, required this.onTap});
+  const _BranchCheckInButton({
+    required this.branchName,
+    required this.isOpen,
+    required this.onTap,
+  });
 
   final String branchName;
+  final bool isOpen;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
+    final fg = isOpen ? brand.accent : brand.textSecondary;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: onTap,
+      onTap: isOpen ? onTap : null,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: brand.accent.withValues(alpha: 0.12),
+          color: isOpen
+              ? brand.accent.withValues(alpha: 0.12)
+              : brand.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: brand.accent.withValues(alpha: 0.35)),
+          border: Border.all(
+            color: isOpen
+                ? brand.accent.withValues(alpha: 0.35)
+                : brand.cardBorder,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.qr_code_scanner_rounded,
+              isOpen
+                  ? Icons.qr_code_scanner_rounded
+                  : Icons.lock_outline_rounded,
               size: 16,
-              color: brand.accent,
+              color: fg,
             ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                'CHECK-IN · ${branchName.toUpperCase()}',
+                isOpen
+                    ? 'CHECK-IN · ${branchName.toUpperCase()}'
+                    : 'CERRADA · ${branchName.toUpperCase()}',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.8,
-                  color: brand.accent,
+                  color: fg,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

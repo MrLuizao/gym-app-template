@@ -8,14 +8,16 @@ class CouponCard extends StatelessWidget {
     super.key,
     required this.coupon,
     this.locked = false,
-    this.redeemed = false,
-    this.onRedeem,
+    this.onTap,
   });
 
   final Coupon coupon;
   final bool locked;
-  final bool redeemed;
-  final VoidCallback? onRedeem;
+  final VoidCallback? onTap;
+
+  bool get _isActive =>
+      coupon.expiresAt == null ||
+      coupon.expiresAt!.isAfter(DateTime.now());
 
   String _expiryLabel() {
     final expires = coupon.expiresAt;
@@ -31,7 +33,10 @@ class CouponCard extends StatelessWidget {
     final accent = locked ? brand.textSecondary : brand.accent;
     return Opacity(
       opacity: locked ? 0.55 : 1,
-      child: Container(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: locked ? null : onTap,
+        child: Container(
         decoration: BoxDecoration(
           color: brand.surface,
           borderRadius: BorderRadius.circular(24),
@@ -164,26 +169,30 @@ class CouponCard extends StatelessWidget {
                             ),
                           ],
                         )
-                      : GestureDetector(
-                          onTap: redeemed ? null : onRedeem,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                            decoration: BoxDecoration(
-                              color: redeemed ? brand.accent : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: redeemed ? brand.accent : brand.accent.withValues(alpha: 0.6),
-                              ),
+                      : Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: (_isActive
+                                    ? brand.occupancyLow
+                                    : brand.occupancyHigh)
+                                .withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(
+                              color: (_isActive
+                                      ? brand.occupancyLow
+                                      : brand.occupancyHigh)
+                                  .withValues(alpha: 0.4),
                             ),
-                            child: Text(
-                              redeemed ? 'CANJEADO' : 'CANJEAR',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.4,
-                                color: redeemed ? Colors.white : brand.accent,
-                              ),
+                          ),
+                          child: Text(
+                            _isActive ? 'ACTIVO' : 'VENCIDO',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                              color: _isActive
+                                  ? brand.occupancyLow
+                                  : brand.occupancyHigh,
                             ),
                           ),
                         ),
@@ -191,6 +200,7 @@ class CouponCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

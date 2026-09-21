@@ -9,6 +9,9 @@ class Branch {
     this.status = 'OPEN',
     this.imageUrl,
     this.address,
+    this.schedule,
+    this.lat,
+    this.lng,
   });
 
   final String id;
@@ -19,8 +22,12 @@ class Branch {
   final String status;
   final String? imageUrl;
   final String? address;
+  final String? schedule;
+  final double? lat;
+  final double? lng;
 
   bool get isOpen => status == 'OPEN';
+  bool get hasLocation => lat != null && lng != null;
   double get occupancy =>
       maxCapacity <= 0 ? 0 : (currentCapacity / maxCapacity).clamp(0.0, 1.0);
 
@@ -33,6 +40,9 @@ class Branch {
         status: map['status'] as String? ?? 'OPEN',
         imageUrl: map['image_url'] as String?,
         address: map['address'] as String?,
+        schedule: map['schedule'] as String?,
+        lat: (map['lat'] as num?)?.toDouble(),
+        lng: (map['lng'] as num?)?.toDouble(),
       );
 
   Map<String, dynamic> toMap() => {
@@ -43,6 +53,9 @@ class Branch {
         'status': status,
         'image_url': imageUrl,
         'address': address,
+        'schedule': schedule,
+        'lat': lat,
+        'lng': lng,
       };
 
   Branch copyWith({int? currentCapacity}) => Branch(
@@ -54,5 +67,8 @@ class Branch {
         status: status,
         imageUrl: imageUrl,
         address: address,
+        schedule: schedule,
+        lat: lat,
+        lng: lng,
       );
 }

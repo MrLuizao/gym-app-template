@@ -3,47 +3,24 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
-import '../../core/widgets/badge_chip.dart';
-import '../../data/mock/mock_data.dart';
-import '../../data/models/coupon.dart';
 import '../../data/repositories/gym_repositories.dart';
+import '../home/providers/sponsor_ads_provider.dart';
+import '../home/widgets/sponsor_carousel.dart';
 import 'providers/promotions_providers.dart';
 import 'widgets/coupon_card.dart';
-import 'widgets/promo_carousel.dart';
+import 'widgets/coupon_qr_sheet.dart';
 
 class PromotionsScreen extends ConsumerWidget {
   const PromotionsScreen({super.key});
-
-  void _redeem(BuildContext context, WidgetRef ref, Coupon coupon) {
-    ref.read(redeemedCouponsProvider.notifier).redeem(coupon.id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        content: Text(
-          'Cupón canjeado · muestra ${coupon.code} en recepción',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final member = ref.watch(memberProvider).value;
-    final available = ref.watch(availableCouponsProvider);
+    final generated = ref.watch(generatedCouponsProvider).values.toList();
+    final memberCoupons = ref.watch(availableCouponsProvider);
     final locked = ref.watch(lockedCouponsProvider);
-    final redeemed = ref.watch(redeemedCouponsProvider);
-    final promos = ref.watch(promotionsProvider).value ?? mockPromos;
+    final ads = ref.watch(sponsorAdsProvider).value ?? const [];
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
@@ -55,27 +32,63 @@ class PromotionsScreen extends ConsumerWidget {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 20),
-        PromoCarousel(promos: promos),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: Text('Tus cupones', style: Theme.of(context).textTheme.titleLarge),
-            ),
-            BadgeChip(
-              label: member?.level ?? 'CLASSIC',
-              color: member?.isActive ?? false ? brand.occupancyLow : brand.occupancyHigh,
-            ),
-          ],
+        if (ads.isNotEmpty) ...[
+          Text(
+            'OFERTAS DE NUESTROS ALIADOS',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.4,
+                  color: brand.textSecondary,
+                ),
+          ),
+          const SizedBox(height: 12),
+          SponsorCarousel(ads: ads),
+          const SizedBox(height: 24),
+        ],
+        Text('Cupones de aliados', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          'Los que generas desde el detalle de cada aliado',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
-        for (var i = 0; i < available.length; i++)
+        if (generated.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: brand.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: brand.cardBorder),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.confirmation_num_outlined,
+                  size: 30,
+                  color: brand.textSecondary,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Aún no tienes cupones',
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Genera uno desde el detalle de un aliado '
+                  'con "Generar cupón".',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        for (var i = 0; i < generated.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: CouponCard(
-              coupon: available[i],
-              redeemed: redeemed.contains(available[i].id),
-              onRedeem: () => _redeem(context, ref, available[i]),
+              coupon: generated[i],
+              onTap: () => CouponQrSheet.show(context, generated[i]),
             )
                 .animate(delay: Duration(milliseconds: 120 + i * 100))
                 .fadeIn(duration: const Duration(milliseconds: 420))
@@ -86,6 +99,28 @@ class PromotionsScreen extends ConsumerWidget {
                   curve: Curves.easeOutCubic,
                 ),
           ),
+        if (memberCoupons.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Text('Beneficios de tu membresía',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          for (var i = 0; i < memberCoupons.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: CouponCard(
+                coupon: memberCoupons[i],
+                onTap: () => CouponQrSheet.show(context, memberCoupons[i]),
+              )
+                  .animate(delay: Duration(milliseconds: 140 + i * 100))
+                  .fadeIn(duration: const Duration(milliseconds: 420))
+                  .slideY(
+                    begin: 0.06,
+                    end: 0,
+                    duration: const Duration(milliseconds: 480),
+                    curve: Curves.easeOutCubic,
+                  ),
+            ),
+        ],
         if (locked.isNotEmpty) ...[
           const SizedBox(height: 14),
           Text('Con otro nivel de membresía', style: Theme.of(context).textTheme.titleLarge),
@@ -108,3 +143,4 @@ class PromotionsScreen extends ConsumerWidget {
     );
   }
 }
+

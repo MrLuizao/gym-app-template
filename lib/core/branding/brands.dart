@@ -9,8 +9,8 @@ const capitalFitness = BrandConfig(
   background: Color(0xFF050505),
   surface: Color(0xFF111411),
   cardBorder: Color(0xFF232823),
-  accent: Color(0xFFC6F53C),
-  accentDark: Color(0xFF8FCB1F),
+  accent: Color(0xFFF4E701),
+  accentDark: Color(0xFF9E8E00),
   textPrimary: Color(0xFFFFFFFF),
   textSecondary: Color(0xFF9AA39A),
 );

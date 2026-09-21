@@ -49,7 +49,7 @@ class GlassIconButton extends StatelessWidget {
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     height: 1.1,
-                    color: brand.textPrimary,
+                    color: brand.background,
                   ),
                 ),
               ),

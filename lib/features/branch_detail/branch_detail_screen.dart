@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/widgets/badge_chip.dart';
@@ -128,14 +131,6 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        BadgeChip(
-                          label: branch.isOpen ? 'ABIERTA AHORA' : 'CERRADA',
-                          color: branch.isOpen
-                              ? brand.occupancyLow
-                              : brand.occupancyHigh,
-                          icon: Icons.access_time_rounded,
-                        ),
-                        const SizedBox(height: 8),
                         Text(
                           branch.name,
                           style: const TextStyle(
@@ -146,6 +141,74 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                             color: Colors.white,
                           ),
                         ),
+                        if (branch.address != null) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: branch.hasLocation
+                                ? () => _BranchMapSheet.show(context, branch)
+                                : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.place_rounded,
+                                  size: 12,
+                                  color: brand.accent,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  branch.address!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: brand.accent,
+                                    decoration: branch.hasLocation
+                                        ? TextDecoration.underline
+                                        : null,
+                                    decorationColor: brand.accent,
+                                  ),
+                                ),
+
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (branch.schedule != null) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  size: 11,
+                                  color: brand.accent,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  branch.schedule!,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -192,7 +255,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.8,
                                 color: selected
-                                    ? Colors.white
+                                    ? brand.background
                                     : brand.textSecondary,
                               ),
                             ),
@@ -203,7 +266,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
                                 color: selected
-                                    ? Colors.white
+                                    ? brand.background
                                     : brand.textPrimary,
                               ),
                             ),
@@ -445,33 +508,39 @@ class _OccupancyCard extends StatelessWidget {
           const SizedBox(height: 14),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => CheckInSheet.show(context),
+            onTap: branch.isOpen ? () => CheckInSheet.show(context) : null,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: brand.accent.withValues(alpha: 0.12),
+                color: branch.isOpen
+                    ? brand.accent.withValues(alpha: 0.12)
+                    : brand.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: brand.accent.withValues(alpha: 0.35),
+                  color: branch.isOpen
+                      ? brand.accent.withValues(alpha: 0.35)
+                      : brand.cardBorder,
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.qr_code_scanner_rounded,
+                    branch.isOpen
+                        ? Icons.qr_code_scanner_rounded
+                        : Icons.lock_outline_rounded,
                     size: 16,
-                    color: brand.accent,
+                    color: branch.isOpen ? brand.accent : brand.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'CHECK-IN AQUÍ',
+                    branch.isOpen ? 'CHECK-IN AQUÍ' : 'SEDE CERRADA',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.8,
-                      color: brand.accent,
+                      color: branch.isOpen ? brand.accent : brand.textSecondary,
                     ),
                   ),
                 ],
@@ -479,6 +548,180 @@ class _OccupancyCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BranchMapSheet extends StatelessWidget {
+  const _BranchMapSheet({required this.branch});
+
+  final Branch branch;
+
+  static void show(BuildContext context, Branch branch) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BranchMapSheet(branch: branch),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    final center = LatLng(branch.lat!, branch.lng!);
+    return Container(
+      decoration: BoxDecoration(
+        color: brand.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: brand.cardBorder,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            branch.name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          if (branch.address != null)
+            Text(
+              branch.address!,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.65),
+              ),
+            ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: SizedBox(
+              height: 240,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: center,
+                  initialZoom: 15.5,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.prototipo.gym',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: center,
+                        width: 36,
+                        height: 36,
+                        child: Icon(
+                          Icons.location_on_rounded,
+                          size: 36,
+                          color: brand.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _NavButton(
+                  icon: Icons.navigation_rounded,
+                  label: 'WAZE',
+                  onTap: () => launchUrl(
+                    Uri.parse(
+                      'https://waze.com/ul?ll=${branch.lat},${branch.lng}&navigate=yes',
+                    ),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _NavButton(
+                  icon: Icons.map_rounded,
+                  label: 'GOOGLE MAPS',
+                  onTap: () => launchUrl(
+                    Uri.parse(
+                      'https://www.google.com/maps/search/?api=1&query=${branch.lat},${branch.lng}',
+                    ),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          color: brand.accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: brand.accent.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 15, color: brand.accent),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+                color: brand.accent,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

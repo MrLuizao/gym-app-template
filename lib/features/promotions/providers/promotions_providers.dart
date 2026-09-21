@@ -27,16 +27,20 @@ final lockedCouponsProvider = Provider<List<Coupon>>((ref) {
   return coupons.where((coupon) => !coupon.allowsLevel(level)).toList();
 });
 
-class RedeemedCouponsNotifier extends Notifier<Set<String>> {
+/// Cupones que el socio generó desde el detalle de un aliado.
+/// Clave = adId (un cupón por anuncio).
+/// TODO(Firebase): persistir en `/members/{uid}/coupons`.
+class GeneratedCouponsNotifier extends Notifier<Map<String, Coupon>> {
   @override
-  Set<String> build() => const {};
+  Map<String, Coupon> build() => const {};
 
-  void redeem(String couponId) {
-    state = <String>{...state, couponId};
+  Coupon generate(String adId, Coupon coupon) {
+    return state[adId] ?? (state = {...state, adId: coupon})[adId]!;
   }
 }
 
-final redeemedCouponsProvider =
-    NotifierProvider<RedeemedCouponsNotifier, Set<String>>(
-  RedeemedCouponsNotifier.new,
+final generatedCouponsProvider =
+    NotifierProvider<GeneratedCouponsNotifier, Map<String, Coupon>>(
+  GeneratedCouponsNotifier.new,
 );
+

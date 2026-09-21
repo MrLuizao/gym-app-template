@@ -147,7 +147,7 @@ class ClassTile extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.4,
                   color: active
-                      ? Colors.white
+                      ? brand.background
                       : full
                           ? brand.textSecondary
                           : brand.accent,
