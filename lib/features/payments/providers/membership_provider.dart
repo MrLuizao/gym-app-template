@@ -5,14 +5,14 @@ class MembershipPlan {
     required this.id,
     required this.name,
     required this.level,
-    required this.priceBs,
+    required this.price,
     this.tag,
   });
 
   final String id;
   final String name;
   final String level;
-  final double priceBs;
+  final double price;
   final String? tag;
 }
 
@@ -21,20 +21,20 @@ const membershipPlans = <MembershipPlan>[
     id: 'classic',
     name: 'Plan Classic',
     level: 'CLASSIC',
-    priceBs: 199,
+    price: 199,
   ),
   MembershipPlan(
     id: 'plus',
     name: 'Plan Plus',
     level: 'PLUS',
-    priceBs: 299,
+    price: 299,
     tag: 'MÁS POPULAR',
   ),
   MembershipPlan(
     id: 'black',
     name: 'Plan Black',
     level: 'BLACK',
-    priceBs: 399,
+    price: 399,
     tag: 'TODO INCLUIDO',
   ),
 ];
@@ -98,7 +98,7 @@ class PaymentResult {
 class MockPaymentGateway {
   Future<PaymentResult> charge({
     required String cardNumber,
-    required double amountBs,
+    required double amount,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 1800));
     final digits = cardNumber.replaceAll(' ', '');
@@ -115,4 +115,4 @@ class MockPaymentGateway {
   }
 }
 
-double planPrice(MembershipPlan plan) => plan.priceBs;
+double planPrice(MembershipPlan plan) => plan.price;

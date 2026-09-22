@@ -71,7 +71,7 @@ class _MembershipCheckoutScreenState
     final plan = membershipPlans[_selectedPlan];
     final result = await MockPaymentGateway().charge(
       cardNumber: _cardCtrl.text,
-      amountBs: plan.priceBs,
+      amount: plan.price,
     );
     if (!mounted) return;
     if (result.success) {
@@ -297,7 +297,7 @@ class _MembershipCheckoutScreenState
               ),
               const Spacer(),
               Text(
-                'Bs ${plan.priceBs.toStringAsFixed(0)}',
+                '\$${plan.price.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -339,7 +339,7 @@ class _MembershipCheckoutScreenState
             )
           else
             PrimaryButton(
-              label: 'PAGAR Bs ${plan.priceBs.toStringAsFixed(0)}',
+              label: 'PAGAR \$${plan.price.toStringAsFixed(0)}',
               icon: Icons.lock_rounded,
               onTap: _formValid ? _pay : null,
             ),
@@ -439,7 +439,7 @@ class _PlanCard extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Bs ${plan.priceBs.toStringAsFixed(0)}',
+                    text: '\$${plan.price.toStringAsFixed(0)}',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
