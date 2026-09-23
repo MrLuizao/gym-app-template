@@ -109,6 +109,29 @@ class _RootGateState extends State<RootGate> {
   }
 }
 
+/// Error visible del gate — antes los errores rebotaban al login
+/// sin decir por qué; ahora se ve el fallo real (permisos, red, etc.).
+class _GateError extends StatelessWidget {
+  const _GateError({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'No se pudo cargar tu sesión:\n$error',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Con Firebase: la sesión decide si se ve login o la app.
 /// Sin Firebase (demo): directo a MainShell.
 class AuthGate extends ConsumerWidget {
@@ -121,7 +144,7 @@ class AuthGate extends ConsumerWidget {
     return auth.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, _) => const LoginScreen(),
+      error: (e, _) => _GateError(error: e),
       data: (user) {
         if (user == null) return const LoginScreen();
 
@@ -133,7 +156,7 @@ class AuthGate extends ConsumerWidget {
               loading: () => const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, _) => const LoginScreen(),
+              error: (e, _) => _GateError(error: e),
               data: (exists) =>
                   exists ? const MainShell() : const ClaimMemberScreen(),
             );
