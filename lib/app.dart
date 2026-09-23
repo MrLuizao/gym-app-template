@@ -10,7 +10,7 @@ import 'data/models/branch.dart';
 import 'data/models/sponsor_ad.dart';
 import 'data/models/trainer.dart';
 import 'data/repositories/gym_repositories.dart';
-import 'features/auth/complete_profile_screen.dart';
+import 'features/auth/claim_member_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/branch_detail/branch_detail_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -119,7 +119,8 @@ class AuthGate extends ConsumerWidget {
       data: (user) {
         if (user == null) return const LoginScreen();
 
-        /// Login social OK pero sin /users/{uid} → completar perfil.
+        /// Login social OK pero sin doc de socio → reclamar el
+        /// número que le dieron en recepción.
         return ref
             .watch(memberDocExistsProvider)
             .when(
@@ -128,7 +129,7 @@ class AuthGate extends ConsumerWidget {
               ),
               error: (_, _) => const LoginScreen(),
               data: (exists) =>
-                  exists ? const MainShell() : const CompleteProfileScreen(),
+                  exists ? const MainShell() : const ClaimMemberScreen(),
             );
       },
     );

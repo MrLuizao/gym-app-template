@@ -59,6 +59,24 @@ abstract class MemberRepository {
   Stream<Member> watchMember(String userId);
 }
 
+/// Doc del socio — por id directo (cuentas seed) o por `auth_uid`
+/// (dado de alta en recepción, reclamado desde la app con su número).
+/// Reactivo: cuando el claim escribe auth_uid, el stream emite solo.
+Stream<DocumentSnapshot<Map<String, dynamic>>> _memberDocStream(
+  FirebaseFirestore db,
+  String uid,
+) {
+  final users = db.collection('users');
+  return users.doc(uid).snapshots().asyncExpand((doc) {
+    if (doc.exists) return Stream.value(doc);
+    return users
+        .where('auth_uid', isEqualTo: uid)
+        .limit(1)
+        .snapshots()
+        .map((q) => q.docs.isEmpty ? doc : q.docs.first);
+  });
+}
+
 class FirestoreMemberRepository implements MemberRepository {
   FirestoreMemberRepository({FirebaseFirestore? firestore})
     : _db = firestore ?? FirebaseFirestore.instance;
@@ -67,11 +85,10 @@ class FirestoreMemberRepository implements MemberRepository {
 
   @override
   Stream<Member> watchMember(String userId) {
-    return _db
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map((doc) => Member.fromMap(doc.id, doc.data() ?? const {}));
+    return _memberDocStream(
+      _db,
+      userId,
+    ).map((doc) => Member.fromMap(doc.id, doc.data() ?? const {}));
   }
 }
 
@@ -129,17 +146,16 @@ final todayForecastProvider = StreamProvider.family<List<double>?, String>((
   return ref.watch(forecastRepositoryProvider).watchTodayForecast(branchId);
 });
 
-/// ¿Existe ya /users/{uid}? Con registro social el primer login llega
-/// sin doc — el gate usa esto para mandar a completar perfil.
+/// ¿El usuario autenticado ya tiene doc de socio? — por id directo o
+/// auth_uid. Sin doc → el gate manda a reclamar el número de recepción.
 final memberDocExistsProvider = StreamProvider<bool>((ref) {
   if (!AppConfig.firebaseActive) return Stream.value(true);
   final uid = ref.watch(authUidProvider);
   if (uid == null) return Stream.value(false);
-  return FirebaseFirestore.instance
-      .collection('users')
-      .doc(uid)
-      .snapshots()
-      .map((doc) => doc.exists);
+  return _memberDocStream(
+    FirebaseFirestore.instance,
+    uid,
+  ).map((doc) => doc.exists);
 });
 
 /// El socio logueado — su uid de Firebase Auth es el doc /users/{uid}.
