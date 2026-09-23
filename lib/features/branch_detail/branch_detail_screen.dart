@@ -319,9 +319,23 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                   child: ClassTile(
                     gymClass: classes[index],
                     reserved: reserved.contains(classes[index].id),
-                    onToggle: () => ref
-                        .read(reservedClassesProvider.notifier)
-                        .toggle(classes[index].id),
+                    onToggle: () async {
+                      try {
+                        await ref
+                            .read(reservedClassesProvider.notifier)
+                            .toggle(classes[index].id);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'No se pudo completar la reserva',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
                     onTap: () => ClassDetailSheet.show(context, classes[index]),
                   ),
                 ),

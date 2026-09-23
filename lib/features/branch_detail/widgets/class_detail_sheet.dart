@@ -284,7 +284,7 @@ class _InfoCell extends StatelessWidget {
   }
 }
 
-class _ReserveButton extends ConsumerWidget {
+class _ReserveButton extends ConsumerStatefulWidget {
   const _ReserveButton({
     required this.gymClass,
     required this.reserved,
@@ -296,8 +296,35 @@ class _ReserveButton extends ConsumerWidget {
   final bool full;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ReserveButton> createState() => _ReserveButtonState();
+}
+
+class _ReserveButtonState extends ConsumerState<_ReserveButton> {
+  bool _busy = false;
+
+  Future<void> _toggle() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(reservedClassesProvider.notifier)
+          .toggle(widget.gymClass.id);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo completar la reserva')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final brand = context.brand;
+    final reserved = widget.reserved;
+    final full = widget.full;
     if (full && !reserved) {
       return Container(
         height: 54,
@@ -318,8 +345,7 @@ class _ReserveButton extends ConsumerWidget {
       );
     }
     return GestureDetector(
-      onTap: () =>
-          ref.read(reservedClassesProvider.notifier).toggle(gymClass.id),
+      onTap: _toggle,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: 54,
@@ -338,11 +364,23 @@ class _ReserveButton extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              reserved ? Icons.check_circle_rounded : Icons.event_seat_rounded,
-              size: 18,
-              color: reserved ? brand.accent : brand.background,
-            ),
+            if (_busy)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: reserved ? brand.accent : brand.background,
+                ),
+              )
+            else
+              Icon(
+                reserved
+                    ? Icons.check_circle_rounded
+                    : Icons.event_seat_rounded,
+                size: 18,
+                color: reserved ? brand.accent : brand.background,
+              ),
             const SizedBox(width: 8),
             Text(
               reserved

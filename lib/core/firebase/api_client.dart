@@ -31,6 +31,21 @@ class ApiClient {
     final decoded = jsonDecode(response.body);
     return decoded is Map<String, dynamic> ? decoded : const {};
   }
+
+  static Future<Map<String, dynamic>> del(String path) async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    final response = await http.delete(
+      uri,
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode >= 400) {
+      throw ApiException(response.statusCode, response.body);
+    }
+    if (response.body.isEmpty) return const {};
+    final decoded = jsonDecode(response.body);
+    return decoded is Map<String, dynamic> ? decoded : const {};
+  }
 }
 
 class ApiException implements Exception {
