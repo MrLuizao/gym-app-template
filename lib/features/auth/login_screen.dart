@@ -11,6 +11,9 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../app.dart';
 import '../../core/branding/brand.dart';
 import '../../core/firebase/auth_provider.dart';
+import '../../core/firebase/google_sign_in_button_stub.dart'
+    if (dart.library.js_interop)
+        '../../core/firebase/google_sign_in_button_web.dart';
 
 /// Login del socio — registro self-service con Google/Apple.
 /// El doc /users/{uid} en Firestore define membresía, sede y número;
@@ -115,6 +118,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
+    /// En web el botón GIS completa el sign-in sin callback — al llegar
+    /// la sesión por authState navegamos como tras el login por correo.
+    ref.listen(authStateProvider, (_, next) {
+      if (next.value != null && mounted) _afterSignIn();
+    });
     return Scaffold(
       backgroundColor: brand.background,
       body: Stack(
@@ -161,15 +169,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    _SocialButton(
-                      label: 'Continuar con Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      onTap: () => _socialSignIn(
-                        () =>
-                            ref.read(authControllerProvider).signInWithGoogle(),
-                        'Google',
+                    /// En web Google exige su botón oficial (FedCM);
+                    /// el evento llega por authenticationEvents.
+                    if (kIsWeb)
+                      Center(child: googleSignInWebButton())
+                    else
+                      _SocialButton(
+                        label: 'Continuar con Google',
+                        icon: Icons.g_mobiledata_rounded,
+                        onTap: () => _socialSignIn(
+                          () => ref
+                              .read(authControllerProvider)
+                              .signInWithGoogle(),
+                          'Google',
+                        ),
                       ),
-                    ),
                     if (!kIsWeb && Platform.isIOS) ...[
                       const SizedBox(height: 12),
                       _SocialButton(

@@ -12,6 +12,9 @@ import '../../app.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/auth_provider.dart';
+import '../../core/firebase/google_sign_in_button_stub.dart'
+    if (dart.library.js_interop)
+        '../../core/firebase/google_sign_in_button_web.dart';
 import '../auth/login_screen.dart';
 import '../shell/main_shell.dart';
 
@@ -73,6 +76,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   Widget build(BuildContext context) {
     final brand = context.brand;
     final firebase = AppConfig.firebaseActive;
+    /// En web el botón GIS completa el sign-in sin callback — cuando
+    /// llega la sesión por authState entramos directo al gate.
+    ref.listen(authStateProvider, (_, next) {
+      if (next.value != null && mounted) _finish(context);
+    });
     return Scaffold(
       backgroundColor: brand.background,
       body: Stack(
@@ -160,17 +168,23 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
                   else ...[
-                    _SocialButton(
-                      label: 'Continuar con Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      iconColor: const Color(0xFF4285F4),
-                      filled: true,
-                      onTap: () => _social(
-                        () =>
-                            ref.read(authControllerProvider).signInWithGoogle(),
-                        'Google',
+                    /// En web Google exige su botón oficial (FedCM);
+                    /// el evento llega por authenticationEvents.
+                    if (kIsWeb)
+                      Center(child: googleSignInWebButton())
+                    else
+                      _SocialButton(
+                        label: 'Continuar con Google',
+                        icon: Icons.g_mobiledata_rounded,
+                        iconColor: const Color(0xFF4285F4),
+                        filled: true,
+                        onTap: () => _social(
+                          () => ref
+                              .read(authControllerProvider)
+                              .signInWithGoogle(),
+                          'Google',
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 14),
                     if (!kIsWeb && Platform.isIOS)
                       _SocialButton(

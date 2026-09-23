@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
@@ -23,13 +24,21 @@ class AppBootstrap {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       if (kIsWeb) {
-        /// Completa un sign-in por redirect pendiente (Google en web
-        /// navega fuera y vuelve — sin esto la sesión se pierde).
-        try {
-          await FirebaseAuth.instance.getRedirectResult();
-        } catch (error) {
-          debugPrint('Redirect sign-in falló: $error');
-        }
+        /// En web el sign-in de Google va por el botón oficial GIS
+        /// (FedCM): popup/redirect pierden la sesión por las políticas
+        /// de storage de terceros de Chrome. Los eventos del botón se
+        /// convierten aquí en credencial Firebase.
+        await GoogleSignIn.instance.initialize(
+          clientId: AppConfig.googleWebClientId,
+        );
+        GoogleSignIn.instance.authenticationEvents.listen((event) async {
+          if (event is GoogleSignInAuthenticationEventSignIn) {
+            final credential = GoogleAuthProvider.credential(
+              idToken: event.user.authentication.idToken,
+            );
+            await FirebaseAuth.instance.signInWithCredential(credential);
+          }
+        });
       }
       await PushNotificationService.initialize();
     } catch (error) {
