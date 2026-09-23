@@ -25,11 +25,19 @@ class AuthController {
   /// Registro/login con Google — google_sign_in v7 usa singleton
   /// `instance` + `authenticate()`; el idToken se cambia por
   /// credencial de Firebase.
-  Future<UserCredential> signInWithGoogle() async {
+  Future<UserCredential?> signInWithGoogle() async {
     /// En web el plugin google_sign_in va por FedCM y exige clientId —
     /// el popup de Firebase Auth funciona sin configuración extra.
     if (kIsWeb) {
-      return _auth.signInWithPopup(GoogleAuthProvider());
+      try {
+        return await _auth.signInWithPopup(GoogleAuthProvider());
+      } catch (_) {
+        /// El SDK web a veces rechaza la promesa en su reload interno
+        /// (getAccountInfo/_reloadWithoutSaving) aunque el sign-in ya
+        /// completó — si currentUser existe, la sesión es válida.
+        if (_auth.currentUser == null) rethrow;
+        return null;
+      }
     }
     await GoogleSignIn.instance.initialize();
     final account = await GoogleSignIn.instance.authenticate();
