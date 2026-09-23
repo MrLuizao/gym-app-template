@@ -20,233 +20,238 @@ class TrainerProfileScreen extends ConsumerWidget {
     final following = ref.watch(followingTrainersProvider).contains(trainer.id);
     return Scaffold(
       backgroundColor: brand.background,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
-        children: [
-          Row(
-            children: [
-              GlassIconButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              const Spacer(),
-              Text(
-                'Perfil',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: brand.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              const GlassIconButton(icon: Icons.more_vert_rounded),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: SizedBox(
-                  height: 170,
-                  width: double.infinity,
-                  child: CoverImage(
-                    url:
-                        'https://picsum.photos/seed/cf-trainer-${trainer.id}/800/500',
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 16,
-                bottom: -26,
-                child: Container(
-                  width: 84,
-                  height: 84,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                  child: ClipOval(
-                    child: CoverImage(
-                      url: trainer.photoUrl,
-                      icon: Icons.person_rounded,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 34),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trainer.name,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: brand.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      trainer.specialty,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: brand.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () => ref
-                    .read(followingTrainersProvider.notifier)
-                    .toggle(trainer.id),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: following ? Colors.transparent : brand.accent,
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(
-                      color: following
-                          ? brand.accent.withValues(alpha: 0.6)
-                          : brand.accent,
-                    ),
-                  ),
-                  child: Text(
-                    following ? 'Siguiendo' : 'Seguir',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: following ? brand.accent : brand.background,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: brand.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: brand.cardBorder),
-            ),
-            child: Row(
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+          children: [
+            Row(
               children: [
-                _Stat(label: 'Seguidores', value: '12.1', unit: 'k'),
-                const _VerticalDivider(),
-                _Stat(label: 'Clases', value: '18', unit: 'Set'),
-                _VerticalDivider(),
-                _Stat(label: 'Alumnos', value: '580', unit: ''),
+                GlassIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                const Spacer(),
+                Text(
+                  'Perfil',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: brand.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+
+                /// Mismo ancho que el GlassIconButton para centrar el título.
+                const SizedBox(width: 42),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-          const _OfferCard(),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Clases Populares',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              TextButton(onPressed: () {}, child: const Text('Ver todas')),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 210,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _popularClasses.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final item = _popularClasses[index];
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+            const SizedBox(height: 16),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
                   child: SizedBox(
-                    width: 160,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          'https://picsum.photos/seed/cf-class-${trainer.id}-$index/400/600',
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [brand.surface, brand.background],
+                    height: 170,
+                    width: double.infinity,
+                    child: CoverImage(
+                      url:
+                          'https://picsum.photos/seed/cf-trainer-${trainer.id}/800/500',
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  bottom: -26,
+                  child: Container(
+                    width: 84,
+                    height: 84,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: ClipOval(
+                      child: CoverImage(
+                        url: trainer.photoUrl,
+                        icon: Icons.person_rounded,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 34),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        trainer.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: brand.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        trainer.specialty,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: brand.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => ref
+                      .read(followingTrainersProvider.notifier)
+                      .toggle(trainer.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: following ? Colors.transparent : brand.accent,
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(
+                        color: following
+                            ? brand.accent.withValues(alpha: 0.6)
+                            : brand.accent,
+                      ),
+                    ),
+                    child: Text(
+                      following ? 'Siguiendo' : 'Seguir',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: following ? brand.accent : brand.background,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: brand.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: brand.cardBorder),
+              ),
+              child: Row(
+                children: [
+                  _Stat(label: 'Seguidores', value: '12.1', unit: 'k'),
+                  const _VerticalDivider(),
+                  _Stat(label: 'Clases', value: '18', unit: 'Set'),
+                  _VerticalDivider(),
+                  _Stat(label: 'Alumnos', value: '580', unit: ''),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const _OfferCard(),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Clases Populares',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                TextButton(onPressed: () {}, child: const Text('Ver todas')),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 210,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _popularClasses.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final item = _popularClasses[index];
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: 160,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            'https://picsum.photos/seed/cf-class-${trainer.id}-$index/400/600',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [brand.surface, brand.background],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.85),
-                                Colors.transparent,
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.85),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 12,
+                            right: 12,
+                            bottom: 12,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Entrenamiento',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  item.title,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: 12,
-                          right: 12,
-                          bottom: 12,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Entrenamiento',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
