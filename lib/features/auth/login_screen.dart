@@ -103,6 +103,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
+          Positioned(
+            bottom: -160,
+            left: -130,
+            child: Container(
+              width: 360,
+              height: 360,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    brand.accentDark.withValues(alpha: 0.4),
+                    brand.accentDark.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -111,15 +128,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Center(
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: brand.accent,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: brand.accent.withValues(alpha: 0.35),
+                              blurRadius: 32,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.fitness_center_rounded,
+                          color: brand.background,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
                     Text(
                       brand.appName,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: brand.textPrimary,
+                      style: TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: 3.5,
+                        color: brand.accent,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 14),
+                    Text(
+                      'ENTRENA.\nRESERVA.\nREPITE.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        color: brand.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        height: 1.02,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     Text(
                       brand.tagline,
                       textAlign: TextAlign.center,
@@ -165,6 +218,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 28),
+                    Text(
+                      '¿Aún no eres socio? Regístrate en recepción —\nte darán tu número de miembro.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: brand.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
