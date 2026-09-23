@@ -31,12 +31,12 @@ class SponsorAdSocials {
       );
 
   Map<String, dynamic> toMap() => {
-        'instagram': instagram,
-        'facebook': facebook,
-        'tiktok': tiktok,
-        'website': website,
-        'whatsapp': whatsapp,
-      };
+    'instagram': instagram,
+    'facebook': facebook,
+    'tiktok': tiktok,
+    'website': website,
+    'whatsapp': whatsapp,
+  };
 }
 
 class SponsorAd {
@@ -79,43 +79,41 @@ class SponsorAd {
   bool get hasLocation => lat != null && lng != null;
 
   factory SponsorAd.fromMap(String id, Map<String, dynamic> map) => SponsorAd(
-        id: id,
-        advertiser: map['advertiser'] as String? ?? '',
-        title: map['title'] as String? ?? '',
-        subtitle: map['subtitle'] as String? ?? '',
-        badge: map['badge'] as String? ?? 'ALIADO',
-        brandColor: (map['brand_color'] as num?)?.toInt(),
-        imageUrl: map['image_url'] as String?,
-        ctaLabel: map['cta_label'] as String? ?? 'Ver oferta',
-        branchId: map['branch_id'] as String?,
-        description: map['description'] as String? ?? '',
-        address: map['address'] as String? ?? '',
-        lat: (map['lat'] as num?)?.toDouble(),
-        lng: (map['lng'] as num?)?.toDouble(),
-        phone: map['phone'] as String? ?? '',
-        socials: SponsorAdSocials.fromMap(
-          map['socials'] as Map<String, dynamic>?,
-        ),
-        photos: (map['photos'] as List<dynamic>? ?? const [])
-            .whereType<String>()
-            .toList(),
-      );
+    id: id,
+    advertiser: map['advertiser'] as String? ?? '',
+    title: map['title'] as String? ?? '',
+    subtitle: map['subtitle'] as String? ?? '',
+    badge: map['badge'] as String? ?? 'ALIADO',
+    brandColor: (map['brand_color'] as num?)?.toInt(),
+    imageUrl: map['image_url'] as String?,
+    ctaLabel: map['cta_label'] as String? ?? 'Ver oferta',
+    branchId: map['branch_id'] as String?,
+    description: map['description'] as String? ?? '',
+    address: map['address'] as String? ?? '',
+    lat: (map['lat'] as num?)?.toDouble(),
+    lng: (map['lng'] as num?)?.toDouble(),
+    phone: map['phone'] as String? ?? '',
+    socials: SponsorAdSocials.fromMap(map['socials'] as Map<String, dynamic>?),
+    photos: (map['photos'] as List<dynamic>? ?? const [])
+        .whereType<String>()
+        .toList(),
+  );
 
   Map<String, dynamic> toMap() => {
-        'advertiser': advertiser,
-        'title': title,
-        'subtitle': subtitle,
-        'badge': badge,
-        'brand_color': brandColor,
-        'image_url': imageUrl,
-        'cta_label': ctaLabel,
-        'branch_id': branchId,
-        'description': description,
-        'address': address,
-        'lat': lat,
-        'lng': lng,
-        'phone': phone,
-        'socials': socials.toMap(),
-        'photos': photos,
-      };
+    'advertiser': advertiser,
+    'title': title,
+    'subtitle': subtitle,
+    'badge': badge,
+    'brand_color': brandColor,
+    'image_url': imageUrl,
+    'cta_label': ctaLabel,
+    'branch_id': branchId,
+    'description': description,
+    'address': address,
+    'lat': lat,
+    'lng': lng,
+    'phone': phone,
+    'socials': socials.toMap(),
+    'photos': photos,
+  };
 }

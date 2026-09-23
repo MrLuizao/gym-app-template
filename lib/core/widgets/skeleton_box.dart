@@ -19,13 +19,13 @@ class SkeletonBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final brand = context.brand;
     return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: brand.surface,
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    )
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: brand.surface,
+            borderRadius: BorderRadius.circular(radius),
+          ),
+        )
         .animate(onPlay: (controller) => controller.repeat())
         .shimmer(
           duration: const Duration(milliseconds: 1500),

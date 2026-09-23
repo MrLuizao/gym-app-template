@@ -11,19 +11,43 @@ class HourlyForecastChart extends StatelessWidget {
     super.key,
     required this.currentRatio,
     this.drift = 0,
+    this.forecast,
   });
 
   final double currentRatio;
   final double drift;
 
+  /// 24 valores (check-ins por hora) de /forecasts/{branchId} — cuando
+  /// existe reemplaza la curva mock. Se normaliza contra su pico.
+  final List<double>? forecast;
+
   static const _curve = {
-    6: 0.30, 7: 0.55, 8: 0.78, 9: 0.70, 10: 0.48, 11: 0.38,
-    12: 0.45, 13: 0.40, 14: 0.34, 15: 0.42, 16: 0.55, 17: 0.72,
-    18: 0.86, 19: 0.95, 20: 0.88, 21: 0.65, 22: 0.42,
+    6: 0.30,
+    7: 0.55,
+    8: 0.78,
+    9: 0.70,
+    10: 0.48,
+    11: 0.38,
+    12: 0.45,
+    13: 0.40,
+    14: 0.34,
+    15: 0.42,
+    16: 0.55,
+    17: 0.72,
+    18: 0.86,
+    19: 0.95,
+    20: 0.88,
+    21: 0.65,
+    22: 0.42,
   };
 
   double forecastFor(int hour, int now) {
     if (hour == now) return currentRatio;
+    final real = forecast;
+    if (real != null && hour < real.length) {
+      final peak = real.reduce((a, b) => a > b ? a : b);
+      if (peak > 0) return (real[hour] / peak).clamp(0.0, 1.0);
+    }
     return ((_curve[hour] ?? 0.3) + drift).clamp(0.0, 1.0);
   }
 
@@ -44,16 +68,15 @@ class HourlyForecastChart extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: FractionallySizedBox(
-                      heightFactor:
-                          forecastFor(hour, now).clamp(0.08, 1.0),
+                      heightFactor: forecastFor(hour, now).clamp(0.08, 1.0),
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         decoration: BoxDecoration(
                           color: hour == now
                               ? brand.accent
                               : brand
-                                  .occupancyFor(forecastFor(hour, now))
-                                  .withValues(alpha: 0.55),
+                                    .occupancyFor(forecastFor(hour, now))
+                                    .withValues(alpha: 0.55),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(5),
                           ),
@@ -79,8 +102,7 @@ class HourlyForecastChart extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w800,
-                    color:
-                        hour == now ? brand.accent : brand.textSecondary,
+                    color: hour == now ? brand.accent : brand.textSecondary,
                   ),
                 ),
               ),

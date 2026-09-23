@@ -6,25 +6,29 @@ import '../../../data/repositories/catalog_repository.dart';
 import '../../../data/repositories/gym_repositories.dart';
 
 final promotionsProvider = StreamProvider<List<Promo>>((ref) {
-  return ref.watch(catalogRepositoryProvider).watchPromotions();
+  final branchId = ref.watch(memberProvider).value?.branchId;
+  return ref.watch(catalogRepositoryProvider).watchPromotions(branchId);
 });
 
 final couponsProvider = StreamProvider<List<Coupon>>((ref) {
-  return ref.watch(catalogRepositoryProvider).watchCoupons();
+  final branchId = ref.watch(memberProvider).value?.branchId;
+  return ref.watch(catalogRepositoryProvider).watchCoupons(branchId);
 });
 
 final availableCouponsProvider = Provider<List<Coupon>>((ref) {
   final member = ref.watch(memberProvider).value;
   final coupons = ref.watch(couponsProvider).value ?? const <Coupon>[];
-  final level = member?.membershipLevel ?? 'CLASSIC';
-  return coupons.where((coupon) => coupon.allowsLevel(level)).toList();
+  return coupons
+      .where((coupon) => coupon.allowsPlan(member?.planId ?? ''))
+      .toList();
 });
 
 final lockedCouponsProvider = Provider<List<Coupon>>((ref) {
   final member = ref.watch(memberProvider).value;
   final coupons = ref.watch(couponsProvider).value ?? const <Coupon>[];
-  final level = member?.membershipLevel ?? 'CLASSIC';
-  return coupons.where((coupon) => !coupon.allowsLevel(level)).toList();
+  return coupons
+      .where((coupon) => !coupon.allowsPlan(member?.planId ?? ''))
+      .toList();
 });
 
 /// Cupones que el socio generó desde el detalle de un aliado.
@@ -41,6 +45,5 @@ class GeneratedCouponsNotifier extends Notifier<Map<String, Coupon>> {
 
 final generatedCouponsProvider =
     NotifierProvider<GeneratedCouponsNotifier, Map<String, Coupon>>(
-  GeneratedCouponsNotifier.new,
-);
-
+      GeneratedCouponsNotifier.new,
+    );

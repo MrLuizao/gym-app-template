@@ -20,8 +20,7 @@ class WeeklySummarySection extends StatelessWidget {
     final now = DateTime.now();
     final todayIndex = now.weekday - 1;
     final monday = now.subtract(Duration(days: todayIndex));
-    final visits =
-        _visitedWeekdays.where((d) => d <= todayIndex).length;
+    final visits = _visitedWeekdays.where((d) => d <= todayIndex).length;
     final remaining = (_weeklyGoal - visits).clamp(0, _weeklyGoal);
 
     return AppCard(
@@ -69,7 +68,7 @@ class WeeklySummarySection extends StatelessWidget {
                   remaining == 0
                       ? 'Meta semanal cumplida — buen trabajo'
                       : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} '
-                          'para tu meta de $_weeklyGoal por semana',
+                            'para tu meta de $_weeklyGoal por semana',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -161,9 +160,7 @@ class _DayPill extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
-                          color: isToday
-                              ? brand.background
-                              : brand.textPrimary,
+                          color: isToday ? brand.background : brand.textPrimary,
                         ),
                       ),
               ),

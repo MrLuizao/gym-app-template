@@ -10,6 +10,7 @@ import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/hourly_forecast_chart.dart';
 import '../../core/widgets/skeleton_box.dart';
 import '../../data/models/branch.dart';
+import '../../data/repositories/gym_repositories.dart';
 import 'providers/catalog_providers.dart';
 import 'providers/reservation_provider.dart';
 import '../checkin/widgets/checkin_sheet.dart';
@@ -169,7 +170,6 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                                     decorationColor: brand.accent,
                                   ),
                                 ),
-
                               ],
                             ),
                           ),
@@ -282,8 +282,10 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
-              child: Text('Clases grupales',
-                  style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Clases grupales',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
           classesAsync.when(
@@ -320,8 +322,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                     onToggle: () => ref
                         .read(reservedClassesProvider.notifier)
                         .toggle(classes[index].id),
-                    onTap: () =>
-                        ClassDetailSheet.show(context, classes[index]),
+                    onTap: () => ClassDetailSheet.show(context, classes[index]),
                   ),
                 ),
                 childCount: classes.length,
@@ -331,8 +332,10 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-              child: Text('Entrenadores en turno',
-                  style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Entrenadores en turno',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
           trainersAsync.when(
@@ -446,13 +449,13 @@ class _TrainerSkeleton extends StatelessWidget {
   }
 }
 
-class _OccupancyCard extends StatelessWidget {
+class _OccupancyCard extends ConsumerWidget {
   const _OccupancyCard({required this.branch});
 
   final Branch branch;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final ratio = branch.occupancy;
     return Container(
@@ -473,10 +476,9 @@ class _OccupancyCard extends StatelessWidget {
                   children: [
                     Text(
                       'AFORO · PRONÓSTICO POR HORA',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(letterSpacing: 1.4),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(letterSpacing: 1.4),
                     ),
                     const SizedBox(height: 5),
                     Text(
@@ -502,6 +504,7 @@ class _OccupancyCard extends StatelessWidget {
           HourlyForecastChart(
             currentRatio: ratio,
             drift: (branch.id.hashCode % 9 - 4) / 100,
+            forecast: ref.watch(todayForecastProvider(branch.id)).value,
           ),
           const SizedBox(height: 12),
           const ForecastLegend(),

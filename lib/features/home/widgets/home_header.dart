@@ -25,9 +25,8 @@ class HomeHeader extends ConsumerWidget {
                 ? Image.network(
                     member!.photoUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _InitialsBox(
-                      initials: member.initials,
-                    ),
+                    errorBuilder: (_, _, _) =>
+                        _InitialsBox(initials: member.initials),
                   )
                 : _InitialsBox(initials: member?.initials ?? 'CF'),
           ),

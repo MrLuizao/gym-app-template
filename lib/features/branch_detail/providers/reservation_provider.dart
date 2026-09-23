@@ -13,5 +13,5 @@ class ReservedClassesNotifier extends Notifier<Set<String>> {
 
 final reservedClassesProvider =
     NotifierProvider<ReservedClassesNotifier, Set<String>>(
-  ReservedClassesNotifier.new,
-);
+      ReservedClassesNotifier.new,
+    );

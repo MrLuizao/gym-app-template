@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/branding/brands.dart';
+import 'core/config/app_config.dart';
+import 'core/firebase/auth_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/branch.dart';
 import 'data/models/sponsor_ad.dart';
 import 'data/models/trainer.dart';
+import 'features/auth/login_screen.dart';
 import 'features/branch_detail/branch_detail_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/payments/checkout_screen.dart';
@@ -93,6 +97,24 @@ class _RootGateState extends State<RootGate> {
     if (done == null || size.width < 2 || size.height < 2) {
       return const Scaffold(body: SizedBox.shrink());
     }
-    return done ? const MainShell() : const OnboardingScreen();
+    return done ? const AuthGate() : const OnboardingScreen();
+  }
+}
+
+/// Con Firebase: la sesión decide si se ve login o la app.
+/// Sin Firebase (demo): directo a MainShell.
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!AppConfig.firebaseActive) return const MainShell();
+    final auth = ref.watch(authStateProvider);
+    return auth.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, _) => const LoginScreen(),
+      data: (user) => user == null ? const LoginScreen() : const MainShell(),
+    );
   }
 }

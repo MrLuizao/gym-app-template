@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../app.dart';
 import '../../core/branding/brand.dart';
+import '../../core/config/app_config.dart';
 import '../shell/main_shell.dart';
 
 class RegistrationScreen extends StatelessWidget {
@@ -12,7 +14,10 @@ class RegistrationScreen extends StatelessWidget {
     await prefs.setBool('onboarding_done', true);
     if (!context.mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            AppConfig.firebaseActive ? const AuthGate() : const MainShell(),
+      ),
     );
   }
 

@@ -14,20 +14,39 @@ class AppTheme {
       error: brand.occupancyHigh,
     );
 
-    TextStyle style(double size, FontWeight weight, Color color,
-            {double letterSpacing = 0, double height = 1.2}) =>
-        TextStyle(
-          fontSize: size,
-          fontWeight: weight,
-          color: color,
-          letterSpacing: letterSpacing,
-          height: height,
-        );
+    TextStyle style(
+      double size,
+      FontWeight weight,
+      Color color, {
+      double letterSpacing = 0,
+      double height = 1.2,
+    }) => TextStyle(
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
 
     final textTheme = TextTheme(
-      displaySmall: style(34, FontWeight.w900, brand.textPrimary, letterSpacing: -1),
-      headlineMedium: style(26, FontWeight.w900, brand.textPrimary, letterSpacing: -0.5),
-      headlineSmall: style(21, FontWeight.w900, brand.textPrimary, letterSpacing: -0.3),
+      displaySmall: style(
+        34,
+        FontWeight.w900,
+        brand.textPrimary,
+        letterSpacing: -1,
+      ),
+      headlineMedium: style(
+        26,
+        FontWeight.w900,
+        brand.textPrimary,
+        letterSpacing: -0.5,
+      ),
+      headlineSmall: style(
+        21,
+        FontWeight.w900,
+        brand.textPrimary,
+        letterSpacing: -0.3,
+      ),
       titleLarge: style(17, FontWeight.w900, brand.textPrimary),
       titleMedium: style(14, FontWeight.w900, brand.textPrimary),
       bodyLarge: style(15, FontWeight.w600, brand.textPrimary),

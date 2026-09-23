@@ -19,7 +19,9 @@ class SponsorCarousel extends ConsumerStatefulWidget {
 }
 
 class _SponsorCarouselState extends ConsumerState<SponsorCarousel> {
-  late final PageController _controller = PageController(viewportFraction: 0.94);
+  late final PageController _controller = PageController(
+    viewportFraction: 0.94,
+  );
   Timer? _timer;
   int _page = 0;
 

@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Firestore: `/users/{userId}`
 /// `membership_status`: 'ACTIVE' | 'EXPIRED'
-/// `membership_level`: 'CLASSIC' | 'PLUS' | 'BLACK'
+/// `membership_plan_id`: id del plan (`/plans/{planId}`) — el nombre se
+/// resuelve desde el catálogo solo para display.
 class Member {
   const Member({
     required this.id,
@@ -9,8 +12,8 @@ class Member {
     required this.membershipStatus,
     this.qrCode = '',
     this.memberNumber = '',
-    this.plan = '',
-    this.membershipLevel,
+    this.planId = '',
+    this.branchId,
     this.membershipUntil,
   });
 
@@ -20,13 +23,11 @@ class Member {
   final String membershipStatus;
   final String qrCode;
   final String memberNumber;
-  final String plan;
-  final String? membershipLevel;
+  final String planId;
+  final String? branchId;
   final DateTime? membershipUntil;
 
   bool get isActive => membershipStatus == 'ACTIVE';
-
-  String get level => membershipLevel ?? deriveLevel(plan);
 
   String get initials => name
       .split(' ')
@@ -35,16 +36,8 @@ class Member {
       .join()
       .toUpperCase();
 
-  static String deriveLevel(String plan) {
-    final normalized = plan.toLowerCase();
-    if (normalized.contains('black')) return 'BLACK';
-    if (normalized.contains('plus')) return 'PLUS';
-    return 'CLASSIC';
-  }
-
   factory Member.fromMap(String id, Map<String, dynamic> map) {
     final until = map['membership_until'];
-    final plan = map['plan'] as String? ?? '';
     return Member(
       id: id,
       name: map['name'] as String? ?? 'Socio',
@@ -52,22 +45,24 @@ class Member {
       membershipStatus: map['membership_status'] as String? ?? 'EXPIRED',
       qrCode: map['qr_code'] as String? ?? '',
       memberNumber: map['member_number'] as String? ?? '',
-      plan: plan,
-      membershipLevel: map['membership_level'] as String?,
-      membershipUntil: until is num
+      planId: map['membership_plan_id'] as String? ?? '',
+      branchId: map['branch_id'] as String?,
+      membershipUntil: until is Timestamp
+          ? until.toDate()
+          : until is num
           ? DateTime.fromMillisecondsSinceEpoch(until.toInt())
           : null,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'photo_url': photoUrl,
-        'membership_status': membershipStatus,
-        'membership_level': membershipLevel ?? deriveLevel(plan),
-        'qr_code': qrCode,
-        'member_number': memberNumber,
-        'plan': plan,
-        'membership_until': membershipUntil?.millisecondsSinceEpoch,
-      };
+    'name': name,
+    'photo_url': photoUrl,
+    'membership_status': membershipStatus,
+    'qr_code': qrCode,
+    'member_number': memberNumber,
+    'membership_plan_id': planId,
+    'branch_id': branchId,
+    'membership_until': membershipUntil?.millisecondsSinceEpoch,
+  };
 }

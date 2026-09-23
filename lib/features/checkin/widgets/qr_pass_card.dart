@@ -27,10 +27,9 @@ class QrPassCard extends StatelessWidget {
                 children: [
                   Text(
                     'CÓDIGO DE INGRESO',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(letterSpacing: 1.6),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(letterSpacing: 1.6),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -45,26 +44,26 @@ class QrPassCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: QrImageView(
-              data: token.payload,
-              version: QrVersions.auto,
-              size: 214,
-              backgroundColor: Colors.white,
-              eyeStyle: QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: brand.background,
-              ),
-              dataModuleStyle: QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: brand.background,
-              ),
-            ),
-          )
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: QrImageView(
+                  data: token.payload,
+                  version: QrVersions.auto,
+                  size: 214,
+                  backgroundColor: Colors.white,
+                  eyeStyle: QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: brand.background,
+                  ),
+                  dataModuleStyle: QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: brand.background,
+                  ),
+                ),
+              )
               .animate()
               .scale(
                 duration: const Duration(milliseconds: 380),
@@ -82,8 +81,11 @@ class QrPassCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.qr_code_scanner_rounded,
-                    size: 16, color: brand.accent),
+                Icon(
+                  Icons.qr_code_scanner_rounded,
+                  size: 16,
+                  color: brand.accent,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

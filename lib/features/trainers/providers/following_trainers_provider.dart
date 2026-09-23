@@ -30,8 +30,8 @@ class FollowingTrainersNotifier extends Notifier<Set<String>> {
 
 final followingTrainersProvider =
     NotifierProvider<FollowingTrainersNotifier, Set<String>>(
-  FollowingTrainersNotifier.new,
-);
+      FollowingTrainersNotifier.new,
+    );
 
 final followedTrainersProvider = Provider<List<Trainer>>((ref) {
   final ids = ref.watch(followingTrainersProvider);

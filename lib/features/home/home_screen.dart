@@ -14,7 +14,6 @@ import 'providers/branch_providers.dart';
 import 'providers/favorite_branches_provider.dart';
 import 'providers/sponsor_ads_provider.dart';
 import 'widgets/branch_card.dart';
-import 'widgets/goal_progress_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/sponsor_carousel.dart';
 import 'widgets/weekly_summary_card.dart';
@@ -34,12 +33,13 @@ class HomeScreen extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Text('Mi sede favorita',
-                  style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Mi sede favorita',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).go(1),
+              onPressed: () => ref.read(bottomNavIndexProvider.notifier).go(1),
               child: const Text('Ver todas'),
             ),
           ],
@@ -47,11 +47,7 @@ class HomeScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         branchesAsync.when(
           loading: () => const Column(
-            children: [
-              _SkeletonCard(),
-              SizedBox(height: 16),
-              _SkeletonCard(),
-            ],
+            children: [_SkeletonCard(), SizedBox(height: 16), _SkeletonCard()],
           ),
           error: (error, _) => _ErrorCard(
             message: '$error',
@@ -64,8 +60,7 @@ class HomeScreen extends ConsumerWidget {
                 .toList();
             if (favoriteBranches.isEmpty) {
               return _EmptyFavoritesCard(
-                onTap: () =>
-                    ref.read(bottomNavIndexProvider.notifier).go(1),
+                onTap: () => ref.read(bottomNavIndexProvider.notifier).go(1),
               );
             }
             return Column(
@@ -73,31 +68,34 @@ class HomeScreen extends ConsumerWidget {
                 for (var i = 0; i < favoriteBranches.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Column(
-                      children: [
-                        BranchCard(
-                          branch: favoriteBranches[i],
-                          onTap: () => Navigator.of(context).pushNamed(
-                            '/branch',
-                            arguments: favoriteBranches[i],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _BranchCheckInButton(
-                          branchName: favoriteBranches[i].name,
-                          isOpen: favoriteBranches[i].isOpen,
-                          onTap: () => CheckInSheet.show(context),
-                        ),
-                      ],
-                    )
-                        .animate(delay: Duration(milliseconds: 140 + i * 100))
-                        .fadeIn(duration: const Duration(milliseconds: 420))
-                        .slideY(
-                          begin: 0.07,
-                          end: 0,
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.easeOutCubic,
-                        ),
+                    child:
+                        Column(
+                              children: [
+                                BranchCard(
+                                  branch: favoriteBranches[i],
+                                  onTap: () => Navigator.of(context).pushNamed(
+                                    '/branch',
+                                    arguments: favoriteBranches[i],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                _BranchCheckInButton(
+                                  branchName: favoriteBranches[i].name,
+                                  isOpen: favoriteBranches[i].isOpen,
+                                  onTap: () => CheckInSheet.show(context),
+                                ),
+                              ],
+                            )
+                            .animate(
+                              delay: Duration(milliseconds: 140 + i * 100),
+                            )
+                            .fadeIn(duration: const Duration(milliseconds: 420))
+                            .slideY(
+                              begin: 0.07,
+                              end: 0,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOutCubic,
+                            ),
                   ),
               ],
             );
@@ -185,8 +183,7 @@ class _MyTrainersSection extends ConsumerWidget {
         if (followed.isEmpty)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () =>
-                ref.read(bottomNavIndexProvider.notifier).go(1),
+            onTap: () => ref.read(bottomNavIndexProvider.notifier).go(1),
             child: AppCard(
               child: Column(
                 children: [
@@ -310,10 +307,7 @@ class _MyTrainersSection extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const Spacer(),
-                        BadgeChip(
-                          label: 'SIGUIENDO',
-                          color: brand.accent,
-                        ),
+                        BadgeChip(label: 'SIGUIENDO', color: brand.accent),
                       ],
                     ),
                   ),
@@ -416,19 +410,16 @@ class _SkeletonCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              SkeletonBox(
-                width: 120,
-                height: 14,
-                radius: 99,
-              ).animate(onPlay: (c) => c.repeat()).shimmer(
+              SkeletonBox(width: 120, height: 14, radius: 99)
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(
                     duration: const Duration(milliseconds: 1500),
                     colors: [brand.surface, brand.cardBorder, brand.surface],
                   ),
               const SizedBox(height: 10),
-              SkeletonBox(
-                height: 6,
-                radius: 99,
-              ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+              SkeletonBox(height: 6, radius: 99)
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .shimmer(
                     duration: const Duration(milliseconds: 1500),
                     colors: [brand.surface, brand.cardBorder, brand.surface],
                   ),
@@ -490,9 +481,7 @@ class _BranchCheckInButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isOpen
-              ? brand.accent.withValues(alpha: 0.12)
-              : brand.surface,
+          color: isOpen ? brand.accent.withValues(alpha: 0.12) : brand.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isOpen

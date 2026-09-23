@@ -4,12 +4,7 @@ import '../branding/brand.dart';
 import 'pressable_scale.dart';
 
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({
-    super.key,
-    required this.label,
-    this.onTap,
-    this.icon,
-  });
+  const PrimaryButton({super.key, required this.label, this.onTap, this.icon});
 
   final String label;
   final VoidCallback? onTap;

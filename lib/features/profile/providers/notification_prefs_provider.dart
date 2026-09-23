@@ -14,8 +14,8 @@ class GymNotifsEnabledNotifier extends PrefToggleNotifier {
 
 final gymNotifsEnabledProvider =
     NotifierProvider<GymNotifsEnabledNotifier, bool>(
-  GymNotifsEnabledNotifier.new,
-);
+      GymNotifsEnabledNotifier.new,
+    );
 
 /// Opt-in requerido por las guías de las stores para recibir
 /// notificaciones de marketing de terceros ("Promos de aliados").
@@ -27,5 +27,5 @@ class SponsorPromosOptInNotifier extends PrefToggleNotifier {
 
 final sponsorPromosOptInProvider =
     NotifierProvider<SponsorPromosOptInNotifier, bool>(
-  SponsorPromosOptInNotifier.new,
-);
+      SponsorPromosOptInNotifier.new,
+    );

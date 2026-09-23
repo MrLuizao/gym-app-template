@@ -23,9 +23,7 @@ class CoverImage extends StatelessWidget {
           colors: [brand.surface, brand.background],
         ),
       ),
-      child: Center(
-        child: Icon(icon, size: 40, color: brand.cardBorder),
-      ),
+      child: Center(child: Icon(icon, size: 40, color: brand.cardBorder)),
     );
     final url = this.url;
     if (url == null || url.isEmpty) return fallback;

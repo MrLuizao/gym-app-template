@@ -23,9 +23,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   List<Branch> _apply(List<Branch> branches) {
     return switch (_filter) {
       _ExploreFilter.all => branches,
-      _ExploreFilter.open =>
-        branches.where((b) => b.isOpen).toList(),
-      _ExploreFilter.leastBusy => [...branches]..sort((a, b) {
+      _ExploreFilter.open => branches.where((b) => b.isOpen).toList(),
+      _ExploreFilter.leastBusy =>
+        [...branches]..sort((a, b) {
           if (a.isOpen != b.isOpen) return a.isOpen ? -1 : 1;
           return a.occupancy.compareTo(b.occupancy);
         }),
@@ -40,7 +40,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
       children: [
-        Text('Explorar sedes', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          'Explorar sedes',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 6),
         Text(
           'Compara el aforo en vivo y elige a qué sede ir',
@@ -64,8 +67,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             _FilterChip(
               label: 'MENOR AFORO',
               selected: _filter == _ExploreFilter.leastBusy,
-              onTap: () =>
-                  setState(() => _filter = _ExploreFilter.leastBusy),
+              onTap: () => setState(() => _filter = _ExploreFilter.leastBusy),
             ),
           ],
         ),
@@ -103,26 +105,27 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 for (var i = 0; i < visible.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: BranchCard(
-                      branch: visible[i],
-                      isFavorite: favorites.contains(visible[i].id),
-                      onToggleFavorite: () => ref
-                          .read(favoriteBranchesProvider.notifier)
-                          .toggle(visible[i].id),
-                      onTap: () => Navigator.of(context).pushNamed(
-                        '/branch',
-                        arguments: visible[i],
-                      ),
-                    )
-                        .animate(
-                            delay: Duration(milliseconds: 120 + i * 100))
-                        .fadeIn(duration: const Duration(milliseconds: 420))
-                        .slideY(
-                          begin: 0.06,
-                          end: 0,
-                          duration: const Duration(milliseconds: 480),
-                          curve: Curves.easeOutCubic,
-                        ),
+                    child:
+                        BranchCard(
+                              branch: visible[i],
+                              isFavorite: favorites.contains(visible[i].id),
+                              onToggleFavorite: () => ref
+                                  .read(favoriteBranchesProvider.notifier)
+                                  .toggle(visible[i].id),
+                              onTap: () => Navigator.of(
+                                context,
+                              ).pushNamed('/branch', arguments: visible[i]),
+                            )
+                            .animate(
+                              delay: Duration(milliseconds: 120 + i * 100),
+                            )
+                            .fadeIn(duration: const Duration(milliseconds: 420))
+                            .slideY(
+                              begin: 0.06,
+                              end: 0,
+                              duration: const Duration(milliseconds: 480),
+                              curve: Curves.easeOutCubic,
+                            ),
                   ),
               ],
             );

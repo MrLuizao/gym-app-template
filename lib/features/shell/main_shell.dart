@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/config/app_config.dart';
+import '../../core/firebase/push_notification_service.dart';
+import '../../data/repositories/gym_repositories.dart';
 import '../explore/explore_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
@@ -13,6 +16,14 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    /// Topics FCM por sede/estatus — se re-suscribe si el socio cambia.
+    if (AppConfig.firebaseActive) {
+      ref.listen(memberProvider, (prev, next) {
+        if (next.hasValue) {
+          PushNotificationService.syncTopics(next.value, previous: prev?.value);
+        }
+      });
+    }
     final index = ref.watch(bottomNavIndexProvider);
     return Scaffold(
       extendBody: true,

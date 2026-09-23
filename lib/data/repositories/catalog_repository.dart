@@ -12,36 +12,48 @@ import '../models/trainer.dart';
 abstract class CatalogRepository {
   Future<List<GymClass>> fetchClasses(String branchId);
   Future<List<Trainer>> fetchTrainers(String branchId);
-  Stream<List<Promo>> watchPromotions();
-  Stream<List<Coupon>> watchCoupons();
-  Stream<List<SponsorAd>> watchSponsorAds();
+  Stream<List<Promo>> watchPromotions(String? branchId);
+  Stream<List<Coupon>> watchCoupons(String? branchId);
+  Stream<List<SponsorAd>> watchSponsorAds(String? branchId);
+}
+
+bool _isFutureOrNull(dynamic ts) {
+  if (ts == null) return true;
+  final ms = ts is Timestamp ? ts.millisecondsSinceEpoch : ts as num?;
+  return ms == null || ms.toInt() > DateTime.now().millisecondsSinceEpoch;
+}
+
+bool _targetsBranch(Map<String, dynamic> map, String? branchId) {
+  final docBranch = map['branch_id'];
+  return branchId == null || docBranch == null || docBranch == branchId;
 }
 
 class FirestoreCatalogRepository implements CatalogRepository {
   FirestoreCatalogRepository({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
 
   @override
   Future<List<GymClass>> fetchClasses(String branchId) async {
+    /// Clases top-level con branch_ids[] + overrides por sede en
+    /// branch_times[branchId] (horario/sala locales).
     final snapshot = await _db
-        .collection('branches')
-        .doc(branchId)
         .collection('classes')
-        .orderBy('start_minutes')
+        .where('branch_ids', arrayContains: branchId)
         .get();
-    return snapshot.docs
-        .map((doc) => GymClass.fromMap(doc.id, doc.data()))
+    final classes = snapshot.docs
+        .map((doc) => GymClass.fromMap(doc.id, doc.data(), branchId: branchId))
         .toList();
+    classes.sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    return classes;
   }
 
   @override
   Future<List<Trainer>> fetchTrainers(String branchId) async {
     final snapshot = await _db
-        .collection('branches')
-        .doc(branchId)
         .collection('trainers')
+        .where('branch_ids', arrayContains: branchId)
         .where('is_on_duty', isEqualTo: true)
         .get();
     return snapshot.docs
@@ -50,35 +62,54 @@ class FirestoreCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Stream<List<Promo>> watchPromotions() {
-    return _db.collection('promotions').snapshots().map(
+  Stream<List<Promo>> watchPromotions(String? branchId) {
+    return _db
+        .collection('promotions')
+        .where('type', isEqualTo: 'banner')
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs
+              .where(
+                (doc) =>
+                    _isFutureOrNull(doc.data()['expires_at']) &&
+                    _targetsBranch(doc.data(), branchId),
+              )
               .map((doc) => Promo.fromMap(doc.id, doc.data()))
               .toList(),
         );
   }
 
   @override
-  Stream<List<Coupon>> watchCoupons() {
+  Stream<List<Coupon>> watchCoupons(String? branchId) {
     return _db
         .collection('promotions')
         .where('type', isEqualTo: 'coupon')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
+              .where(
+                (doc) =>
+                    _isFutureOrNull(doc.data()['expires_at']) &&
+                    _targetsBranch(doc.data(), branchId),
+              )
               .map((doc) => Coupon.fromMap(doc.id, doc.data()))
               .toList(),
         );
   }
 
   @override
-  Stream<List<SponsorAd>> watchSponsorAds() {
+  Stream<List<SponsorAd>> watchSponsorAds(String? branchId) {
     return _db
         .collection('sponsorAds')
         .where('status', isEqualTo: 'ACTIVE')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
+              .where(
+                (doc) =>
+                    _isFutureOrNull(doc.data()['ends_at']) &&
+                    _targetsBranch(doc.data(), branchId),
+              )
               .map((doc) => SponsorAd.fromMap(doc.id, doc.data()))
               .toList(),
         );
@@ -99,23 +130,23 @@ class MockCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Stream<List<Promo>> watchPromotions() async* {
+  Stream<List<Promo>> watchPromotions(String? branchId) async* {
     yield mockPromos;
   }
 
   @override
-  Stream<List<Coupon>> watchCoupons() async* {
+  Stream<List<Coupon>> watchCoupons(String? branchId) async* {
     yield mockCoupons;
   }
 
   @override
-  Stream<List<SponsorAd>> watchSponsorAds() async* {
+  Stream<List<SponsorAd>> watchSponsorAds(String? branchId) async* {
     yield mockSponsorAds;
   }
 }
 
 final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
-  return AppConfig.useFirebase
+  return AppConfig.firebaseActive
       ? FirestoreCatalogRepository()
       : MockCatalogRepository();
 });

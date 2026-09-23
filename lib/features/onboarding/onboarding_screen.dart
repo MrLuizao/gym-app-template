@@ -209,43 +209,42 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (var i = 0; i < _slides.length; i++)
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            width: i == _page ? 24 : 7,
-                            height: 7,
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(99),
-                              color: i == _page
-                                  ? brand.accent
-                                  : brand.cardBorder,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (var i = 0; i < _slides.length; i++)
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              width: i == _page ? 24 : 7,
+                              height: 7,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(99),
+                                color: i == _page
+                                    ? brand.accent
+                                    : brand.cardBorder,
+                              ),
                             ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    PrimaryButton(
-                      label: isLast ? 'CREAR MI CUENTA' : 'CONTINUAR',
-                      icon: Icons.arrow_forward_rounded,
-                      onTap: _next,
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      PrimaryButton(
+                        label: isLast ? 'CREAR MI CUENTA' : 'CONTINUAR',
+                        icon: Icons.arrow_forward_rounded,
+                        onTap: _next,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }

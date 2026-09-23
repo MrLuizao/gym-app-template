@@ -17,7 +17,9 @@ class PromoCarousel extends StatefulWidget {
 }
 
 class _PromoCarouselState extends State<PromoCarousel> {
-  late final PageController _controller = PageController(viewportFraction: 0.94);
+  late final PageController _controller = PageController(
+    viewportFraction: 0.94,
+  );
   Timer? _timer;
   int _page = 0;
 

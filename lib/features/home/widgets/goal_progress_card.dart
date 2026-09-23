@@ -17,13 +17,12 @@ class GoalProgressSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('Progreso de Meta',
-                  style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Progreso de Meta',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
-            TextButton(
-              onPressed: () {},
-              child: const Text('Ver detalles'),
-            ),
+            TextButton(onPressed: () {}, child: const Text('Ver detalles')),
           ],
         ),
         const SizedBox(height: 12),
@@ -42,8 +41,9 @@ class GoalProgressSection extends StatelessWidget {
                       painter: _GaugePainter(
                         progress: 0.55,
                         activeColor: brand.accent,
-                        inactiveColor:
-                            brand.textSecondary.withValues(alpha: 0.3),
+                        inactiveColor: brand.textSecondary.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                     ),
                     Padding(

@@ -19,21 +19,24 @@ class Trainer {
   final bool isOnDuty;
 
   factory Trainer.fromMap(String id, Map<String, dynamic> map) => Trainer(
-        id: id,
-        branchId: map['branch_id'] as String? ?? '',
-        name: map['name'] as String? ?? '',
-        specialty: map['specialty'] as String? ?? '',
-        photoUrl: map['photo_url'] as String?,
-        shift: map['shift'] as String? ?? 'TARDE',
-        isOnDuty: map['is_on_duty'] as bool? ?? true,
-      );
+    id: id,
+    branchId:
+        map['branch_id'] as String? ??
+        (map['branch_ids'] as List<dynamic>?)?.firstOrNull?.toString() ??
+        '',
+    name: map['name'] as String? ?? '',
+    specialty: map['specialty'] as String? ?? '',
+    photoUrl: map['photo_url'] as String?,
+    shift: map['shift'] as String? ?? 'TARDE',
+    isOnDuty: map['is_on_duty'] as bool? ?? true,
+  );
 
   Map<String, dynamic> toMap() => {
-        'branch_id': branchId,
-        'name': name,
-        'specialty': specialty,
-        'photo_url': photoUrl,
-        'shift': shift,
-        'is_on_duty': isOnDuty,
-      };
+    'branch_id': branchId,
+    'name': name,
+    'specialty': specialty,
+    'photo_url': photoUrl,
+    'shift': shift,
+    'is_on_duty': isOnDuty,
+  };
 }

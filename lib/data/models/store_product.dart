@@ -30,11 +30,11 @@ class StoreProduct {
       );
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'category': category,
-        'price': price,
-        'old_price': oldPrice,
-        'image_url': imageUrl,
-        'tag': tag,
-      };
+    'name': name,
+    'category': category,
+    'price': price,
+    'old_price': oldPrice,
+    'image_url': imageUrl,
+    'tag': tag,
+  };
 }

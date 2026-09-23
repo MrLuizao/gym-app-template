@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../data/models/member.dart';
+import '../../payments/providers/membership_provider.dart';
 
 class VipMemberCard extends StatelessWidget {
   const VipMemberCard({super.key, this.member});
@@ -22,10 +23,7 @@ class VipMemberCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25.4),
         gradient: LinearGradient(
-          colors: [
-            brand.accent,
-            brand.accent.withValues(alpha: 0.05),
-          ],
+          colors: [brand.accent, brand.accent.withValues(alpha: 0.05)],
         ),
       ),
       child: Container(
@@ -53,8 +51,8 @@ class VipMemberCard extends StatelessWidget {
                         ? Image.network(
                             member!.photoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => _PhotoFallback(
-                                initials: member!.initials),
+                            errorBuilder: (_, _, _) =>
+                                _PhotoFallback(initials: member!.initials),
                           )
                         : _PhotoFallback(initials: member?.initials ?? 'CF'),
                   ),
@@ -65,7 +63,9 @@ class VipMemberCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       BadgeChip(
-                        label: active ? 'MEMBRESÍA ACTIVA' : 'MEMBRESÍA VENCIDA',
+                        label: active
+                            ? 'MEMBRESÍA ACTIVA'
+                            : 'MEMBRESÍA VENCIDA',
                         color: statusColor,
                         icon: active
                             ? Icons.verified_rounded
@@ -81,10 +81,9 @@ class VipMemberCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         'SOCIO Nº ${member?.memberNumber ?? '—'}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelMedium
-                            ?.copyWith(letterSpacing: 1.4),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelMedium?.copyWith(letterSpacing: 1.4),
                       ),
                     ],
                   ),
@@ -96,7 +95,7 @@ class VipMemberCard extends StatelessWidget {
               children: [
                 _InfoPill(
                   icon: Icons.card_membership_rounded,
-                  label: member?.plan ?? 'Plan Black',
+                  label: planNameFor(member?.planId ?? 'black'),
                 ),
                 const SizedBox(width: 10),
                 if (member?.membershipUntil != null)

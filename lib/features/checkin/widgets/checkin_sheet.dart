@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/widgets/app_card.dart';
 import '../../../data/repositories/gym_repositories.dart';
-import '../application/qr_token_provider.dart';
-import 'qr_pass_card.dart';
 import 'vip_member_card.dart';
 
 class CheckInSheet extends ConsumerWidget {
@@ -27,7 +27,6 @@ class CheckInSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final memberAsync = ref.watch(memberProvider);
-    final token = ref.watch(qrTokenProvider);
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -54,16 +53,101 @@ class CheckInSheet extends ConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Presenta este código en recepción para registrar tu ingreso',
+                'Dicta tu número de socio en recepción para registrar tu ingreso',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             const SizedBox(height: 18),
             VipMemberCard(member: memberAsync.value),
             const SizedBox(height: 18),
-            QrPassCard(token: token),
+            _MemberNumberCard(number: memberAsync.value?.memberNumber),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Número de socio protagonista — recepción lo teclea en /checkin.
+class _MemberNumberCard extends StatelessWidget {
+  const _MemberNumberCard({this.number});
+
+  final String? number;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    final display = number ?? '—';
+    return AppCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'NÚMERO DE SOCIO',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(letterSpacing: 1.6),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Ingreso manual en recepción',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Icon(Icons.badge_rounded, size: 22, color: brand.accent),
+            ],
+          ),
+          const SizedBox(height: 18),
+          GestureDetector(
+            onTap: number == null
+                ? null
+                : () {
+                    Clipboard.setData(ClipboardData(text: number!));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        content: Text('Número copiado'),
+                      ),
+                    );
+                  },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: brand.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: brand.cardBorder),
+              ),
+              child: Text(
+                display,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 6,
+                  fontFamily: 'monospace',
+                  color: brand.accent,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Toca para copiar',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: brand.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

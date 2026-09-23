@@ -24,7 +24,9 @@ class BranchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brand = context.brand;
     final ratio = branch.occupancy;
-    final statusColor = branch.isOpen ? brand.occupancyLow : brand.occupancyHigh;
+    final statusColor = branch.isOpen
+        ? brand.occupancyLow
+        : brand.occupancyHigh;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -123,9 +125,7 @@ class BranchCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.75),
                   borderRadius: BorderRadius.circular(99),
-                  border: Border.all(
-                    color: statusColor.withValues(alpha: 0.6),
-                  ),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.6)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

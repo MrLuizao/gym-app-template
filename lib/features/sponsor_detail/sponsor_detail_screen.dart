@@ -242,9 +242,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                     decoration: BoxDecoration(
                       color: ally.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: ally.withValues(alpha: 0.35),
-                      ),
+                      border: Border.all(color: ally.withValues(alpha: 0.35)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +285,8 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                       ),
                     ),
                   ],
-                  if (ad.phone.isNotEmpty || ad.socials.whatsapp.isNotEmpty) ...[
+                  if (ad.phone.isNotEmpty ||
+                      ad.socials.whatsapp.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     _SectionTitle('CONTACTO'),
                     const SizedBox(height: 8),
@@ -358,7 +357,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                       ],
                     ),
                   ],
-                                    if (ad.address.isNotEmpty || ad.hasLocation) ...[
+                  if (ad.address.isNotEmpty || ad.hasLocation) ...[
                     const SizedBox(height: 20),
                     _SectionTitle('UBICACIÓN'),
                     const SizedBox(height: 8),
@@ -380,20 +379,18 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                                 height: 150,
                                 child: FlutterMap(
                                   options: MapOptions(
-                                    initialCenter:
-                                        LatLng(ad.lat!, ad.lng!),
+                                    initialCenter: LatLng(ad.lat!, ad.lng!),
                                     initialZoom: 15.5,
                                     interactionOptions:
                                         const InteractionOptions(
-                                      flags: InteractiveFlag.none,
-                                    ),
+                                          flags: InteractiveFlag.none,
+                                        ),
                                   ),
                                   children: [
                                     TileLayer(
                                       urlTemplate:
                                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                      userAgentPackageName:
-                                          'com.prototipo.gym',
+                                      userAgentPackageName: 'com.prototipo.gym',
                                     ),
                                     MarkerLayer(
                                       markers: [
@@ -696,8 +693,10 @@ class _GenerateCouponButton extends ConsumerWidget {
 
   Coupon _buildCoupon(BuildContext context) {
     final random = Random();
-    final suffix =
-        List.generate(4, (_) => _chars[random.nextInt(_chars.length)]).join();
+    final suffix = List.generate(
+      4,
+      (_) => _chars[random.nextInt(_chars.length)],
+    ).join();
     return Coupon(
       id: 'coupon-${ad.id}',
       brandId: context.brand.id,
@@ -705,7 +704,7 @@ class _GenerateCouponButton extends ConsumerWidget {
       description: ad.subtitle.isNotEmpty ? ad.subtitle : ad.description,
       badge: ad.badge,
       code: 'ALI-${ad.id.toUpperCase()}-$suffix',
-      levels: const ['ALL'],
+      planIds: const ['ALL'],
       branchId: ad.branchId,
       expiresAt: DateTime.now().add(const Duration(days: 7)),
     );
@@ -722,7 +721,8 @@ class _GenerateCouponButton extends ConsumerWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        final coupon = existing ??
+        final coupon =
+            existing ??
             ref
                 .read(generatedCouponsProvider.notifier)
                 .generate(ad.id, _buildCoupon(context));

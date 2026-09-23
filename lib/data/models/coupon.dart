@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Firestore: `/promotions/{couponId}` con `type: 'coupon'`
-/// `levels`: niveles de membresía con acceso ('ALL' | 'CLASSIC' | 'PLUS' | 'BLACK')
+/// `plan_ids`: ids de planes con acceso ('ALL' | `/plans/{planId}`).
 class Coupon {
   const Coupon({
     required this.id,
@@ -8,7 +10,7 @@ class Coupon {
     required this.description,
     required this.badge,
     required this.code,
-    required this.levels,
+    required this.planIds,
     this.branchId,
     this.expiresAt,
   });
@@ -19,14 +21,12 @@ class Coupon {
   final String description;
   final String badge;
   final String code;
-  final List<String> levels;
+  final List<String> planIds;
   final String? branchId;
   final DateTime? expiresAt;
 
-  bool allowsLevel(String level) =>
-      levels.contains('ALL') || levels.contains(level.toUpperCase());
-
-  String get minLevelLabel => levels.contains('ALL') ? 'TODOS' : levels.join(' · ');
+  bool allowsPlan(String planId) =>
+      planIds.contains('ALL') || planIds.contains(planId);
 
   factory Coupon.fromMap(String id, Map<String, dynamic> map) {
     final expires = map['expires_at'];
@@ -37,24 +37,26 @@ class Coupon {
       description: map['description'] as String? ?? '',
       badge: map['badge'] as String? ?? '',
       code: map['code'] as String? ?? '',
-      levels: (map['levels'] as List<dynamic>? ?? const <dynamic>[])
-          .map((level) => level.toString().toUpperCase())
+      planIds: (map['plan_ids'] as List<dynamic>? ?? const <dynamic>[])
+          .map((plan) => plan.toString())
           .toList(),
       branchId: map['branch_id'] as String?,
-      expiresAt: expires is num
+      expiresAt: expires is Timestamp
+          ? expires.toDate()
+          : expires is num
           ? DateTime.fromMillisecondsSinceEpoch(expires.toInt())
           : null,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'brand_id': brandId,
-        'title': title,
-        'description': description,
-        'badge': badge,
-        'code': code,
-        'levels': levels,
-        'branch_id': branchId,
-        'expires_at': expiresAt?.millisecondsSinceEpoch,
-      };
+    'brand_id': brandId,
+    'title': title,
+    'description': description,
+    'badge': badge,
+    'code': code,
+    'plan_ids': planIds,
+    'branch_id': branchId,
+    'expires_at': expiresAt?.millisecondsSinceEpoch,
+  };
 }

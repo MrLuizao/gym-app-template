@@ -29,5 +29,5 @@ class FavoriteBranchesNotifier extends Notifier<Set<String>> {
 
 final favoriteBranchesProvider =
     NotifierProvider<FavoriteBranchesNotifier, Set<String>>(
-  FavoriteBranchesNotifier.new,
-);
+      FavoriteBranchesNotifier.new,
+    );

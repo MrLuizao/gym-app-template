@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1081337347174",
+    "project_id": "rir-hub",
+    "storage_bucket": "rir-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081337347174:android:55f347ac0ae7e4209d01a7",
+        "android_client_info": {
+          "package_name": "com.luis.prototipo_gym"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnJ4nfUvkkqQwhKAA7KMOPgqCjAGBdAoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

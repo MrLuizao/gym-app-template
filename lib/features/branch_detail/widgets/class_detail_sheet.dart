@@ -22,43 +22,43 @@ class ClassDetailSheet extends ConsumerWidget {
   }
 
   IconData _iconFor(String category) => switch (category) {
-        'spinning' => Icons.directions_bike_rounded,
-        'yoga' => Icons.self_improvement_rounded,
-        'zumba' => Icons.music_note_rounded,
-        'boxeo' => Icons.sports_mma_rounded,
-        'crossfit' => Icons.bolt_rounded,
-        _ => Icons.fitness_center_rounded,
-      };
+    'spinning' => Icons.directions_bike_rounded,
+    'yoga' => Icons.self_improvement_rounded,
+    'zumba' => Icons.music_note_rounded,
+    'boxeo' => Icons.sports_mma_rounded,
+    'crossfit' => Icons.bolt_rounded,
+    _ => Icons.fitness_center_rounded,
+  };
 
   String _categoryLabel(String category) => switch (category) {
-        'spinning' => 'Cycling',
-        'yoga' => 'Mente & cuerpo',
-        'zumba' => 'Ritmo',
-        'boxeo' => 'Combate',
-        'crossfit' => 'Alta intensidad',
-        _ => 'Fuerza',
-      };
+    'spinning' => 'Cycling',
+    'yoga' => 'Mente & cuerpo',
+    'zumba' => 'Ritmo',
+    'boxeo' => 'Combate',
+    'crossfit' => 'Alta intensidad',
+    _ => 'Fuerza',
+  };
 
   String _categoryDescription(String category) => switch (category) {
-        'spinning' =>
-          'Ciclismo indoor guiado por música e intervalos. Trabajo cardiovascular '
-              'intenso con cambios de resistencia y ritmo.',
-        'yoga' =>
-          'Secuencia de movilidad, respiración y equilibrio para soltar la '
-              'tensión del entrenamiento y mejorar la flexibilidad.',
-        'zumba' =>
-          'Cardio bailado con coreografías fáciles de seguir. Quema calorías '
-              'sin que se sienta como ejercicio.',
-        'boxeo' =>
-          'Técnica de golpes, combinaciones y acondicionamiento físico '
-              'sobre el ring. Guantes disponibles en recepción.',
-        'crossfit' =>
-          'Intervalos funcionales de alta intensidad: fuerza, cardio y '
-              'potencia en un solo bloque.',
-        _ =>
-          'Entrenamiento grupal guiado por un coach certificado, adaptable '
-              'a todos los niveles.',
-      };
+    'spinning' =>
+      'Ciclismo indoor guiado por música e intervalos. Trabajo cardiovascular '
+          'intenso con cambios de resistencia y ritmo.',
+    'yoga' =>
+      'Secuencia de movilidad, respiración y equilibrio para soltar la '
+          'tensión del entrenamiento y mejorar la flexibilidad.',
+    'zumba' =>
+      'Cardio bailado con coreografías fáciles de seguir. Quema calorías '
+          'sin que se sienta como ejercicio.',
+    'boxeo' =>
+      'Técnica de golpes, combinaciones y acondicionamiento físico '
+          'sobre el ring. Guantes disponibles en recepción.',
+    'crossfit' =>
+      'Intervalos funcionales de alta intensidad: fuerza, cardio y '
+          'potencia en un solo bloque.',
+    _ =>
+      'Entrenamiento grupal guiado por un coach certificado, adaptable '
+          'a todos los niveles.',
+  };
 
   String _hhmm(int minutes) =>
       '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
@@ -184,8 +184,11 @@ class ClassDetailSheet extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.person_rounded,
-                        size: 15, color: brand.textSecondary),
+                    Icon(
+                      Icons.person_rounded,
+                      size: 15,
+                      color: brand.textSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -201,8 +204,7 @@ class ClassDetailSheet extends ConsumerWidget {
                       label: full
                           ? 'CUPO LLENO'
                           : '${gymClass.spotsLeft} LUGARES',
-                      color:
-                          full ? brand.occupancyHigh : brand.occupancyLow,
+                      color: full ? brand.occupancyHigh : brand.occupancyLow,
                     ),
                   ],
                 ),
@@ -229,11 +231,7 @@ class ClassDetailSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 18),
-          _ReserveButton(
-            gymClass: gymClass,
-            reserved: reserved,
-            full: full,
-          ),
+          _ReserveButton(gymClass: gymClass, reserved: reserved, full: full),
         ],
       ),
     );
@@ -347,7 +345,9 @@ class _ReserveButton extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              reserved ? 'RESERVA ACTIVA · TOCAR PARA CANCELAR' : 'RESERVAR LUGAR',
+              reserved
+                  ? 'RESERVA ACTIVA · TOCAR PARA CANCELAR'
+                  : 'RESERVAR LUGAR',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,

@@ -7,5 +7,6 @@ class BottomNavIndexNotifier extends Notifier<int> {
   void go(int index) => state = index;
 }
 
-final bottomNavIndexProvider =
-    NotifierProvider<BottomNavIndexNotifier, int>(BottomNavIndexNotifier.new);
+final bottomNavIndexProvider = NotifierProvider<BottomNavIndexNotifier, int>(
+  BottomNavIndexNotifier.new,
+);

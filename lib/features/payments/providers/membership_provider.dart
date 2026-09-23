@@ -1,118 +1,94 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/config/app_config.dart';
+import '../../../data/repositories/gym_repositories.dart';
 
 class MembershipPlan {
   const MembershipPlan({
     required this.id,
     required this.name,
-    required this.level,
     required this.price,
     this.tag,
   });
 
   final String id;
   final String name;
-  final String level;
   final double price;
   final String? tag;
+
+  factory MembershipPlan.fromMap(String id, Map<String, dynamic> map) =>
+      MembershipPlan(
+        id: id,
+        name: map['name'] as String? ?? '',
+        price: (map['price'] as num?)?.toDouble() ?? 0,
+        tag: map['highlight'] == true ? 'DESTACADO' : null,
+      );
 }
 
-const membershipPlans = <MembershipPlan>[
-  MembershipPlan(
-    id: 'classic',
-    name: 'Plan Classic',
-    level: 'CLASSIC',
-    price: 199,
-  ),
-  MembershipPlan(
-    id: 'plus',
-    name: 'Plan Plus',
-    level: 'PLUS',
-    price: 299,
-    tag: 'MÁS POPULAR',
-  ),
+const _fallbackPlans = <MembershipPlan>[
+  MembershipPlan(id: 'classic', name: 'Plan Classic', price: 199),
+  MembershipPlan(id: 'plus', name: 'Plan Plus', price: 299, tag: 'MÁS POPULAR'),
   MembershipPlan(
     id: 'black',
     name: 'Plan Black',
-    level: 'BLACK',
     price: 399,
     tag: 'TODO INCLUIDO',
   ),
 ];
 
+/// Cache module-level para que `planNameFor` (síncrono) resuelva sin
+/// async — lo llena `plansProvider` al primer watch.
+List<MembershipPlan> _plansCache = _fallbackPlans;
+
+/// Catálogo real de planes desde /plans (Firestore).
+final plansProvider = StreamProvider<List<MembershipPlan>>((ref) {
+  if (!AppConfig.firebaseActive) return Stream.value(_fallbackPlans);
+  return FirebaseFirestore.instance
+      .collection('plans')
+      .where('active', isEqualTo: true)
+      .orderBy('price')
+      .snapshots()
+      .map((snap) {
+        final plans = snap.docs
+            .map((doc) => MembershipPlan.fromMap(doc.id, doc.data()))
+            .toList();
+        if (plans.isNotEmpty) _plansCache = plans;
+        return plans.isEmpty ? _fallbackPlans : plans;
+      });
+});
+
+/// Resuelve el nombre del plan desde el catálogo — solo para display.
+String planNameFor(String planId) {
+  for (final plan in _plansCache) {
+    if (plan.id == planId) return plan.name;
+  }
+  return planId.isEmpty ? 'Sin plan' : planId;
+}
+
 class MembershipState {
   const MembershipState({
-    required this.plan,
-    required this.level,
+    required this.planId,
     required this.status,
     this.expiresAt,
   });
 
-  final String plan;
-  final String level;
+  final String planId;
   final String status;
   final DateTime? expiresAt;
 
   bool get isActive => status == 'ACTIVE';
 }
 
-class MembershipNotifier extends Notifier<MembershipState> {
-  @override
-  MembershipState build() {
-    final now = DateTime.now();
-    return MembershipState(
-      plan: 'Plan Black',
-      level: 'BLACK',
-      status: 'ACTIVE',
-      expiresAt: DateTime(now.year, now.month, now.day + 45),
-    );
-  }
-
-  void renew(MembershipPlan plan) {
-    final now = DateTime.now();
-    state = MembershipState(
-      plan: plan.name,
-      level: plan.level,
-      status: 'ACTIVE',
-      expiresAt: DateTime(now.year, now.month, now.day + 30),
-    );
-  }
-}
-
-final membershipProvider =
-    NotifierProvider<MembershipNotifier, MembershipState>(
-  MembershipNotifier.new,
-);
-
-class PaymentResult {
-  const PaymentResult({
-    required this.success,
-    this.transactionId,
-    this.message,
-  });
-
-  final bool success;
-  final String? transactionId;
-  final String? message;
-}
-
-class MockPaymentGateway {
-  Future<PaymentResult> charge({
-    required String cardNumber,
-    required double amount,
-  }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 1800));
-    final digits = cardNumber.replaceAll(' ', '');
-    if (digits.endsWith('0000')) {
-      return const PaymentResult(
-        success: false,
-        message: 'Pago rechazado por el banco emisor',
-      );
-    }
-    return PaymentResult(
-      success: true,
-      transactionId: 'TX-${DateTime.now().millisecondsSinceEpoch}',
-    );
-  }
-}
+/// Membresía del socio — derivada en vivo de /users/{uid}.
+/// La webhook de Stripe la actualiza al confirmarse el cobro.
+final membershipProvider = Provider<MembershipState>((ref) {
+  final member = ref.watch(memberProvider).value;
+  return MembershipState(
+    planId: member?.planId ?? '',
+    status: member?.membershipStatus ?? 'EXPIRED',
+    expiresAt: member?.membershipUntil,
+  );
+});
 
 double planPrice(MembershipPlan plan) => plan.price;

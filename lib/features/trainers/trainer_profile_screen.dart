@@ -112,7 +112,9 @@ class TrainerProfileScreen extends ConsumerWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: following ? Colors.transparent : brand.accent,
                     borderRadius: BorderRadius.circular(99),
@@ -158,13 +160,12 @@ class TrainerProfileScreen extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Text('Clases Populares',
-                    style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  'Clases Populares',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('Ver todas'),
-              ),
+              TextButton(onPressed: () {}, child: const Text('Ver todas')),
             ],
           ),
           const SizedBox(height: 12),
@@ -326,11 +327,7 @@ class _VerticalDivider extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.label,
-    required this.value,
-    required this.unit,
-  });
+  const _Stat({required this.label, required this.value, required this.unit});
 
   final String label;
   final String value;

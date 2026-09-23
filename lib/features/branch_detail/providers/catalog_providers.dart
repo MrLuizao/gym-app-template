@@ -5,7 +5,8 @@ import '../../../data/models/gym_class.dart';
 import '../../../data/models/trainer.dart';
 
 final branchClassesProvider = FutureProvider.family<List<GymClass>, String>(
-  (ref, branchId) => ref.watch(catalogRepositoryProvider).fetchClasses(branchId),
+  (ref, branchId) =>
+      ref.watch(catalogRepositoryProvider).fetchClasses(branchId),
 );
 
 final branchTrainersProvider = FutureProvider.family<List<Trainer>, String>(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/config/app_config.dart';
+import '../../core/firebase/auth_provider.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/primary_button.dart';
@@ -44,9 +46,8 @@ class ProfileScreen extends ConsumerWidget {
                       ? Image.network(
                           member!.photoUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _InitialsFallback(
-                            initials: member.initials,
-                          ),
+                          errorBuilder: (_, _, _) =>
+                              _InitialsFallback(initials: member.initials),
                         )
                       : _InitialsFallback(initials: member?.initials ?? 'CF'),
                 ),
@@ -59,23 +60,17 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 'SOCIO Nº ${member?.memberNumber ?? '—'}',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(letterSpacing: 1.4),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(letterSpacing: 1.4),
               ),
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   BadgeChip(
-                    label: member?.plan ?? 'Plan Classic',
+                    label: planNameFor(member?.planId ?? ''),
                     color: brand.accent,
-                  ),
-                  const SizedBox(width: 8),
-                  BadgeChip(
-                    label: member?.level ?? 'CLASSIC',
-                    color: brand.textSecondary,
                   ),
                 ],
               ),
@@ -92,7 +87,7 @@ class ProfileScreen extends ConsumerWidget {
               _InfoRow(
                 icon: Icons.card_membership_rounded,
                 label: 'Plan',
-                value: membership.plan,
+                value: planNameFor(membership.planId),
               ),
               Divider(height: 1, indent: 56, color: brand.cardBorder),
               _InfoRow(
@@ -116,8 +111,9 @@ class ProfileScreen extends ConsumerWidget {
         PrimaryButton(
           label: 'RENOVAR MEMBRESÍA',
           icon: Icons.credit_card_rounded,
-          onTap: () => Navigator.of(context)
-              .pushNamed(MembershipCheckoutScreen.routeName),
+          onTap: () => Navigator.of(
+            context,
+          ).pushNamed(MembershipCheckoutScreen.routeName),
         ),
         const SizedBox(height: 24),
         Text('Notificaciones', style: Theme.of(context).textTheme.titleLarge),
@@ -172,6 +168,15 @@ class ProfileScreen extends ConsumerWidget {
                 label: 'Ayuda y soporte',
                 onTap: () => _soon(context),
               ),
+              if (AppConfig.firebaseActive) ...[
+                Divider(height: 1, indent: 56, color: brand.cardBorder),
+                _ActionRow(
+                  icon: Icons.logout_rounded,
+                  label: 'Cerrar sesión',
+                  labelColor: brand.occupancyHigh,
+                  onTap: () => ref.read(authControllerProvider).signOut(),
+                ),
+              ],
             ],
           ),
         ),
@@ -261,11 +266,13 @@ class _ActionRow extends StatelessWidget {
     required this.icon,
     required this.label,
     this.onTap,
+    this.labelColor,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final Color? labelColor;
 
   @override
   Widget build(BuildContext context) {
@@ -293,12 +300,15 @@ class _ActionRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: brand.textPrimary,
+                  color: labelColor ?? brand.textPrimary,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                size: 20, color: brand.textSecondary),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: brand.textSecondary,
+            ),
           ],
         ),
       ),
@@ -364,8 +374,7 @@ class _SwitchRow extends ConsumerWidget {
           Switch.adaptive(
             value: enabled,
             activeTrackColor: brand.accent,
-            onChanged: (value) =>
-                ref.read(provider.notifier).setEnabled(value),
+            onChanged: (value) => ref.read(provider.notifier).setEnabled(value),
           ),
         ],
       ),
