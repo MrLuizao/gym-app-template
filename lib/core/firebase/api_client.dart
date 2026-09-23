@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 
 /// Cliente HTTP hacia el backend Nuxt (B2B) con el ID token de Firebase.
-/// Endpoints disponibles para el socio: /api/ads/track, /api/payments/intent.
+/// Usa package:http — dart:io HttpClient no existe en web.
 class ApiClient {
   ApiClient._();
 
@@ -16,19 +16,19 @@ class ApiClient {
   ) async {
     final token = await FirebaseAuth.instance.currentUser?.getIdToken();
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
-    final request = await HttpClient().postUrl(uri);
-    request.headers.contentType = ContentType.json;
-    if (token != null) {
-      request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
-    }
-    request.write(jsonEncode(body));
-    final response = await request.close();
-    final text = await response.transform(utf8.decoder).join();
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
     if (response.statusCode >= 400) {
-      throw ApiException(response.statusCode, text);
+      throw ApiException(response.statusCode, response.body);
     }
-    if (text.isEmpty) return const {};
-    final decoded = jsonDecode(text);
+    if (response.body.isEmpty) return const {};
+    final decoded = jsonDecode(response.body);
     return decoded is Map<String, dynamic> ? decoded : const {};
   }
 }
