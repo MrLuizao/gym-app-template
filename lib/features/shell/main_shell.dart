@@ -25,9 +25,10 @@ class MainShell extends ConsumerWidget {
       });
     }
     final index = ref.watch(bottomNavIndexProvider);
-    /// extendBody remueve el MediaQuery padding del body (notch incluido);
-    /// restauramos el inset superior para que el contenido no se meta
-    /// detrás del status bar. El inferior queda en 0: la barra lo cubre.
+    /// extendBody remueve el MediaQuery padding del body (notch incluido).
+    /// Lo restauramos y envolvemos en SafeArea: los ListView de las
+    /// pantallas traen padding explícito y no consumen el inset solos.
+    /// El inferior queda en 0: la barra lo cubre.
     final padding = MediaQuery.of(context).padding;
     return Scaffold(
       extendBody: true,
@@ -35,14 +36,17 @@ class MainShell extends ConsumerWidget {
         data: MediaQuery.of(context).copyWith(
           padding: padding.copyWith(bottom: 0),
         ),
-        child: IndexedStack(
-          index: index,
-          children: const [
-            HomeScreen(),
-            ExploreScreen(),
-            PromotionsScreen(),
-            ProfileScreen(),
-          ],
+        child: SafeArea(
+          bottom: false,
+          child: IndexedStack(
+            index: index,
+            children: const [
+              HomeScreen(),
+              ExploreScreen(),
+              PromotionsScreen(),
+              ProfileScreen(),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: MainBottomBar(
