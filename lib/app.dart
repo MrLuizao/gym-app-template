@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -99,7 +100,12 @@ class _RootGateState extends State<RootGate> {
     if (done == null || size.width < 2 || size.height < 2) {
       return const Scaffold(body: SizedBox.shrink());
     }
-    return done ? const AuthGate() : const OnboardingScreen();
+    /// Sesión activa → AuthGate aunque onboarding_done no se haya
+    /// marcado (en web el sign-in por redirect recarga la página y
+    /// el flag nunca llega a escribirse).
+    final signedIn =
+        AppConfig.firebaseActive && FirebaseAuth.instance.currentUser != null;
+    return (done || signedIn) ? const AuthGate() : const OnboardingScreen();
   }
 }
 

@@ -27,17 +27,12 @@ class AuthController {
   /// credencial de Firebase.
   Future<UserCredential?> signInWithGoogle() async {
     /// En web el plugin google_sign_in va por FedCM y exige clientId —
-    /// el popup de Firebase Auth funciona sin configuración extra.
+    /// y el popup lo bloquea Chrome por COOP (window.close del handler).
+    /// Redirect: la página navega a Google y getRedirectResult() en el
+    /// bootstrap completa la sesión al regresar.
     if (kIsWeb) {
-      try {
-        return await _auth.signInWithPopup(GoogleAuthProvider());
-      } catch (_) {
-        /// El SDK web a veces rechaza la promesa en su reload interno
-        /// (getAccountInfo/_reloadWithoutSaving) aunque el sign-in ya
-        /// completó — si currentUser existe, la sesión es válida.
-        if (_auth.currentUser == null) rethrow;
-        return null;
-      }
+      await _auth.signInWithRedirect(GoogleAuthProvider());
+      return null;
     }
     await GoogleSignIn.instance.initialize();
     final account = await GoogleSignIn.instance.authenticate();
