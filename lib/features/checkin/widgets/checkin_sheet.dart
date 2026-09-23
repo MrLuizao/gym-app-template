@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/app_card.dart';
@@ -104,6 +105,23 @@ class _MemberNumberCard extends StatelessWidget {
               Icon(Icons.badge_rounded, size: 22, color: brand.accent),
             ],
           ),
+          const SizedBox(height: 18),
+
+          /// QR del número de socio — recepción lo escanea o lo dicta.
+          if (number != null)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: QrImageView(
+                data: number!,
+                version: QrVersions.auto,
+                size: 180,
+                backgroundColor: Colors.white,
+              ),
+            ),
           const SizedBox(height: 18),
           GestureDetector(
             onTap: number == null

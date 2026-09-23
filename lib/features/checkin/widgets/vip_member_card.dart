@@ -19,100 +19,90 @@ class VipMemberCard extends StatelessWidget {
     final active = member?.isActive ?? false;
     final statusColor = active ? brand.occupancyLow : brand.occupancyHigh;
     return Container(
-      padding: const EdgeInsets.all(1.4),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25.4),
-        gradient: LinearGradient(
-          colors: [brand.accent, brand.accent.withValues(alpha: 0.05)],
-        ),
+        color: brand.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: brand.cardBorder),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: brand.surface,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 84,
-                  height: 108,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: brand.cardBorder),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(17),
-                    child: member?.photoUrl != null
-                        ? Image.network(
-                            member!.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _PhotoFallback(initials: member!.initials),
-                          )
-                        : _PhotoFallback(initials: member?.initials ?? 'CF'),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 84,
+                height: 108,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: brand.cardBorder),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      BadgeChip(
-                        label: active
-                            ? 'MEMBRESÍA ACTIVA'
-                            : 'MEMBRESÍA VENCIDA',
-                        color: statusColor,
-                        icon: active
-                            ? Icons.verified_rounded
-                            : Icons.error_rounded,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        member?.name ?? 'Socio Capital',
-                        style: Theme.of(context).textTheme.titleLarge,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'SOCIO Nº ${member?.memberNumber ?? '—'}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(letterSpacing: 1.4),
-                      ),
-                    ],
-                  ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(17),
+                  child: member?.photoUrl != null
+                      ? Image.network(
+                          member!.photoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              _PhotoFallback(initials: member!.initials),
+                        )
+                      : _PhotoFallback(initials: member?.initials ?? 'CF'),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _InfoPill(
-                  icon: Icons.card_membership_rounded,
-                  label: planNameFor(member?.planId ?? 'black'),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BadgeChip(
+                      label: active ? 'MEMBRESÍA ACTIVA' : 'MEMBRESÍA VENCIDA',
+                      color: statusColor,
+                      icon: active
+                          ? Icons.verified_rounded
+                          : Icons.error_rounded,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      member?.name ?? 'Socio Capital',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'SOCIO Nº ${member?.memberNumber ?? '—'}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelMedium?.copyWith(letterSpacing: 1.4),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                if (member?.membershipUntil != null)
-                  Text(
-                    'Vence ${_formatDate(member!.membershipUntil!)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                const Spacer(),
-                Icon(
-                  Icons.fitness_center_rounded,
-                  size: 18,
-                  color: brand.accent.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _InfoPill(
+                icon: Icons.card_membership_rounded,
+                label: planNameFor(member?.planId ?? 'black'),
+              ),
+              const SizedBox(width: 10),
+              if (member?.membershipUntil != null)
+                Text(
+                  'Vence ${_formatDate(member!.membershipUntil!)}',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-              ],
-            ),
-          ],
-        ),
+              const Spacer(),
+              Icon(
+                Icons.fitness_center_rounded,
+                size: 18,
+                color: brand.accent.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
