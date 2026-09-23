@@ -12,7 +12,20 @@
           "package_name": "com.luis.prototipo_gym"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.luis.prototipo_gym",
+            "certificate_hash": "fbc72aec99c5481f8bcbabd77b7f5cecf2339a3e"
+          }
+        },
+        {
+          "client_id": "1081337347174-pcgs538lrc9121pln4tki132iius1ur6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDnJ4nfUvkkqQwhKAA7KMOPgqCjAGBdAoU"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1081337347174-pcgs538lrc9121pln4tki132iius1ur6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1081337347174-o1vrrd76n6m60233mk607ojejreesgdj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.luis.prototipoGym"
+              }
+            }
+          ]
         }
       }
     }
