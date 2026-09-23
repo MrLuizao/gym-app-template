@@ -51,7 +51,10 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       if (mounted) await _finish(context);
     } on GoogleSignInException catch (e) {
       if (e.code != GoogleSignInExceptionCode.canceled) {
-        setState(() => _error = 'No se pudo continuar con $provider');
+        setState(
+          () => _error =
+              'No se pudo continuar con $provider (${e.code.name})',
+        );
       }
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code != AuthorizationErrorCode.canceled) {
@@ -59,8 +62,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _error = 'No se pudo continuar (${e.code})');
-    } catch (_) {
-      setState(() => _error = 'No se pudo continuar con $provider');
+    } catch (e) {
+      setState(() => _error = 'No se pudo continuar con $provider ($e)');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
