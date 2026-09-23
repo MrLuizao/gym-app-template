@@ -26,11 +26,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController();
-  final _password = TextEditingController();
   bool _loading = false;
-  bool _obscure = true;
-  bool _showEmailForm = false;
   String? _error;
 
   /// Google/Apple — el gate de auth en app.dart navega solo.
@@ -64,36 +60,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _submit() async {
-    if (_loading) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref
-          .read(authControllerProvider)
-          .signIn(_email.text, _password.text);
-      await _afterSignIn();
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _error = switch (e.code) {
-          'invalid-credential' ||
-          'wrong-password' ||
-          'user-not-found' => 'Correo o contraseña incorrectos',
-          'invalid-email' => 'Correo inválido',
-          'too-many-requests' => 'Demasiados intentos — espera un momento',
-          'network-request-failed' => 'Sin conexión — revisa tu internet',
-          _ => 'No se pudo iniciar sesión (${e.code})',
-        };
-      });
-    } catch (_) {
-      setState(() => _error = 'No se pudo iniciar sesión');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
   /// Cuando esta pantalla se abrió empujada desde el onboarding hay
   /// que reemplazar la ruta por el gate — si viene del propio gate
   /// (canPop == false) el stream de auth navega solo.
@@ -106,13 +72,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       MaterialPageRoute<void>(builder: (_) => const AuthGate()),
       (_) => false,
     );
-  }
-
-  @override
-  void dispose() {
-    _email.dispose();
-    _password.dispose();
-    super.dispose();
   }
 
   @override
@@ -169,10 +128,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    /// En web Google exige su botón oficial (FedCM);
-                    /// el evento llega por authenticationEvents.
+                    /// Un botón por plataforma: web exige el oficial de
+                    /// Google (FedCM); iOS → Apple; Android → Google.
                     if (kIsWeb)
                       Center(child: googleSignInWebButton())
+                    else if (Platform.isIOS)
+                      _SocialButton(
+                        label: 'Continuar con Apple',
+                        icon: Icons.apple_rounded,
+                        onTap: () => _socialSignIn(
+                          () => ref
+                              .read(authControllerProvider)
+                              .signInWithApple(),
+                          'Apple',
+                        ),
+                      )
                     else
                       _SocialButton(
                         label: 'Continuar con Google',
@@ -184,116 +154,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'Google',
                         ),
                       ),
-                    if (!kIsWeb && Platform.isIOS) ...[
-                      const SizedBox(height: 12),
-                      _SocialButton(
-                        label: 'Continuar con Apple',
-                        icon: Icons.apple_rounded,
-                        onTap: () => _socialSignIn(
-                          () => ref
-                              .read(authControllerProvider)
-                              .signInWithApple(),
-                          'Apple',
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    Center(
-                      child: TextButton(
-                        onPressed: () =>
-                            setState(() => _showEmailForm = !_showEmailForm),
-                        child: Text(
-                          _showEmailForm
-                              ? 'Ocultar correo'
-                              : 'Entrar con correo',
-                          style: TextStyle(
-                            color: brand.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (!_showEmailForm) ...[
-                      if (_error != null) ...[
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: brand.occupancyHigh,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ] else ...[
-                      TextField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        style: TextStyle(color: brand.textPrimary),
-                        decoration: _fieldDecoration(
-                          brand,
-                          hint: 'Correo electrónico',
-                          icon: Icons.mail_outline,
-                        ),
-                      ),
+                    if (_error != null) ...[
                       const SizedBox(height: 14),
-                      TextField(
-                        controller: _password,
-                        obscureText: _obscure,
-                        style: TextStyle(color: brand.textPrimary),
-                        onSubmitted: (_) => _submit(),
-                        decoration: _fieldDecoration(
-                          brand,
-                          hint: 'Contraseña',
-                          icon: Icons.lock_outline,
-                          suffix: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: brand.textSecondary,
-                              size: 20,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                          ),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: brand.occupancyHigh,
+                          fontSize: 13,
                         ),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 14),
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: brand.occupancyHigh,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: _loading ? null : _submit,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: brand.accent,
-                          foregroundColor: brand.background,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Entrar',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
                       ),
                     ],
                   ],
@@ -306,33 +175,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  InputDecoration _fieldDecoration(
-    BrandConfig brand, {
-    required String hint,
-    required IconData icon,
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: brand.textSecondary),
-      prefixIcon: Icon(icon, color: brand.textSecondary, size: 20),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: brand.surface,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: brand.cardBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: brand.cardBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: brand.accent),
-      ),
-    );
-  }
 }
 
 class _SocialButton extends StatelessWidget {
