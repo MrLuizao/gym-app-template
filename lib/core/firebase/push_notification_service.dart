@@ -9,6 +9,9 @@ class PushNotificationService {
   PushNotificationService._();
 
   static Future<void> initialize() async {
+    /// Topics FCM no existen en web — el token va por VAPID y se
+    /// suscribe desde un service worker, no desde el cliente.
+    if (kIsWeb) return;
     final fcm = FirebaseMessaging.instance;
     await fcm.requestPermission(alert: true, badge: true, sound: true);
     FirebaseMessaging.onMessage.listen((message) {
@@ -25,6 +28,7 @@ class PushNotificationService {
   /// Suscribe los topics del perfil del socio — llamar tras login y
   /// cuando cambie su sede/estatus de membresía.
   static Future<void> syncTopics(Member? member, {Member? previous}) async {
+    if (kIsWeb) return;
     final fcm = FirebaseMessaging.instance;
     final next = <String>{
       if (member?.branchId != null) 'branch_${member!.branchId}',

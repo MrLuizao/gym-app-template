@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -25,6 +26,11 @@ class AuthController {
   /// `instance` + `authenticate()`; el idToken se cambia por
   /// credencial de Firebase.
   Future<UserCredential> signInWithGoogle() async {
+    /// En web el plugin google_sign_in va por FedCM y exige clientId —
+    /// el popup de Firebase Auth funciona sin configuración extra.
+    if (kIsWeb) {
+      return _auth.signInWithPopup(GoogleAuthProvider());
+    }
     await GoogleSignIn.instance.initialize();
     final account = await GoogleSignIn.instance.authenticate();
     final credential = GoogleAuthProvider.credential(
