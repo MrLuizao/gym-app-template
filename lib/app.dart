@@ -9,6 +9,8 @@ import 'core/theme/app_theme.dart';
 import 'data/models/branch.dart';
 import 'data/models/sponsor_ad.dart';
 import 'data/models/trainer.dart';
+import 'data/repositories/gym_repositories.dart';
+import 'features/auth/complete_profile_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/branch_detail/branch_detail_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -114,7 +116,21 @@ class AuthGate extends ConsumerWidget {
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, _) => const LoginScreen(),
-      data: (user) => user == null ? const LoginScreen() : const MainShell(),
+      data: (user) {
+        if (user == null) return const LoginScreen();
+
+        /// Login social OK pero sin /users/{uid} → completar perfil.
+        return ref
+            .watch(memberDocExistsProvider)
+            .when(
+              loading: () => const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              ),
+              error: (_, _) => const LoginScreen(),
+              data: (exists) =>
+                  exists ? const MainShell() : const CompleteProfileScreen(),
+            );
+      },
     );
   }
 }

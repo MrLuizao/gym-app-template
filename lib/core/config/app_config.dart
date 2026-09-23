@@ -7,8 +7,7 @@ class AppConfig {
 
   /// Firebase disponible de verdad (inicializado en runtime).
   /// En tests o si el bootstrap falló, la app corre en modo demo/mock.
-  static bool get firebaseActive =>
-      useFirebase && Firebase.apps.isNotEmpty;
+  static bool get firebaseActive => useFirebase && Firebase.apps.isNotEmpty;
 
   /// Backend Nuxt (B2B) — endpoints con lógica de negocio:
   /// /api/ads/track, /api/payments/intent, etc.

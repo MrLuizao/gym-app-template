@@ -1,12 +1,18 @@
+import 'dart:io' show Platform;
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/firebase/auth_provider.dart';
 
-/// Login del socio — email/contraseña contra Firebase Auth.
-/// El doc /users/{uid} en Firestore define membresía, sede y número.
+/// Login del socio — registro self-service con Google/Apple.
+/// El doc /users/{uid} en Firestore define membresía, sede y número;
+/// si no existe, el gate manda a completar perfil.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,7 +25,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  bool _showEmailForm = false;
   String? _error;
+
+  /// Google/Apple — el gate de auth en app.dart navega solo.
+  Future<void> _socialSignIn(
+    Future<void> Function() signIn,
+    String provider,
+  ) async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await signIn();
+    } on GoogleSignInException catch (e) {
+      /// El usuario cerró el sheet — no es error.
+      if (e.code != GoogleSignInExceptionCode.canceled) {
+        setState(() => _error = 'No se pudo entrar con $provider');
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code != AuthorizationErrorCode.canceled) {
+        setState(() => _error = 'No se pudo entrar con $provider');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = 'No se pudo entrar con $provider (${e.code})');
+    } catch (_) {
+      setState(() => _error = 'No se pudo entrar con $provider');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   Future<void> _submit() async {
     if (_loading) return;
@@ -31,8 +68,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authControllerProvider)
           .signIn(_email.text, _password.text);
-
-      /// El gate de auth en app.dart navega solo al cambiar el estado.
     } on FirebaseAuthException catch (e) {
       setState(() {
         _error = switch (e.code) {
@@ -108,72 +143,127 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    TextField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
-                      style: TextStyle(color: brand.textPrimary),
-                      decoration: _fieldDecoration(
-                        brand,
-                        hint: 'Correo electrónico',
-                        icon: Icons.mail_outline,
+                    _SocialButton(
+                      label: 'Continuar con Google',
+                      icon: Icons.g_mobiledata_rounded,
+                      onTap: () => _socialSignIn(
+                        () =>
+                            ref.read(authControllerProvider).signInWithGoogle(),
+                        'Google',
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: _password,
-                      obscureText: _obscure,
-                      style: TextStyle(color: brand.textPrimary),
-                      onSubmitted: (_) => _submit(),
-                      decoration: _fieldDecoration(
-                        brand,
-                        hint: 'Contraseña',
-                        icon: Icons.lock_outline,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: brand.textSecondary,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                        ),
-                      ),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 14),
-                      Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: brand.occupancyHigh,
-                          fontSize: 13,
+                    if (!kIsWeb && Platform.isIOS) ...[
+                      const SizedBox(height: 12),
+                      _SocialButton(
+                        label: 'Continuar con Apple',
+                        icon: Icons.apple_rounded,
+                        onTap: () => _socialSignIn(
+                          () => ref
+                              .read(authControllerProvider)
+                              .signInWithApple(),
+                          'Apple',
                         ),
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: brand.accent,
-                        foregroundColor: brand.background,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: TextButton(
+                        onPressed: () =>
+                            setState(() => _showEmailForm = !_showEmailForm),
+                        child: Text(
+                          _showEmailForm
+                              ? 'Ocultar correo'
+                              : 'Entrar con correo',
+                          style: TextStyle(
+                            color: brand.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Entrar',
-                              style: TextStyle(fontWeight: FontWeight.w700),
-                            ),
                     ),
+                    if (!_showEmailForm) ...[
+                      if (_error != null) ...[
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: brand.occupancyHigh,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ] else ...[
+                      TextField(
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        autocorrect: false,
+                        style: TextStyle(color: brand.textPrimary),
+                        decoration: _fieldDecoration(
+                          brand,
+                          hint: 'Correo electrónico',
+                          icon: Icons.mail_outline,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _password,
+                        obscureText: _obscure,
+                        style: TextStyle(color: brand.textPrimary),
+                        onSubmitted: (_) => _submit(),
+                        decoration: _fieldDecoration(
+                          brand,
+                          hint: 'Contraseña',
+                          icon: Icons.lock_outline,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: brand.textSecondary,
+                              size: 20,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 14),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: brand.occupancyHigh,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _loading ? null : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: brand.accent,
+                          foregroundColor: brand.background,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Entrar',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -208,6 +298,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: brand.accent),
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 22, color: brand.textPrimary),
+      label: Text(
+        label,
+        style: TextStyle(color: brand.textPrimary, fontWeight: FontWeight.w700),
+      ),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        side: BorderSide(color: brand.cardBorder),
+        backgroundColor: brand.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }

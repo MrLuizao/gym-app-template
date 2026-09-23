@@ -129,6 +129,19 @@ final todayForecastProvider = StreamProvider.family<List<double>?, String>((
   return ref.watch(forecastRepositoryProvider).watchTodayForecast(branchId);
 });
 
+/// ¿Existe ya /users/{uid}? Con registro social el primer login llega
+/// sin doc — el gate usa esto para mandar a completar perfil.
+final memberDocExistsProvider = StreamProvider<bool>((ref) {
+  if (!AppConfig.firebaseActive) return Stream.value(true);
+  final uid = ref.watch(authUidProvider);
+  if (uid == null) return Stream.value(false);
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((doc) => doc.exists);
+});
+
 /// El socio logueado — su uid de Firebase Auth es el doc /users/{uid}.
 final memberProvider = StreamProvider<Member>((ref) {
   final uid = AppConfig.firebaseActive
