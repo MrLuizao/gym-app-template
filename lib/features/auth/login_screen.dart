@@ -5,8 +5,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../app.dart';
 import '../../core/branding/brand.dart';
 import '../../core/firebase/auth_provider.dart';
 
@@ -40,6 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     try {
       await signIn();
+      await _afterSignIn();
     } on GoogleSignInException catch (e) {
       /// El usuario cerró el sheet — no es error.
       if (e.code != GoogleSignInExceptionCode.canceled) {
@@ -68,6 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authControllerProvider)
           .signIn(_email.text, _password.text);
+      await _afterSignIn();
     } on FirebaseAuthException catch (e) {
       setState(() {
         _error = switch (e.code) {
@@ -85,6 +89,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  /// Cuando esta pantalla se abrió empujada desde el onboarding hay
+  /// que reemplazar la ruta por el gate — si viene del propio gate
+  /// (canPop == false) el stream de auth navega solo.
+  Future<void> _afterSignIn() async {
+    if (!mounted || !Navigator.of(context).canPop()) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_done', true);
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const AuthGate()),
+      (_) => false,
+    );
   }
 
   @override

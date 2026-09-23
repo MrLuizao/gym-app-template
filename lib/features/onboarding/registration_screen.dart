@@ -1,15 +1,32 @@
+import 'dart:io' show Platform;
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../app.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
+import '../../core/firebase/auth_provider.dart';
+import '../auth/login_screen.dart';
 import '../shell/main_shell.dart';
 
-class RegistrationScreen extends StatelessWidget {
+class RegistrationScreen extends ConsumerStatefulWidget {
   const RegistrationScreen({super.key});
 
-  Future<void> _continue(BuildContext context) async {
+  @override
+  ConsumerState<RegistrationScreen> createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _finish(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_done', true);
     if (!context.mounted) return;
@@ -21,9 +38,38 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
+  /// Sign-in social real — al éxito el AuthGate decide entre
+  /// completar perfil (sin /users/{uid}) o entrar al shell.
+  Future<void> _social(Future<void> Function() signIn, String provider) async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await signIn();
+      if (mounted) await _finish(context);
+    } on GoogleSignInException catch (e) {
+      if (e.code != GoogleSignInExceptionCode.canceled) {
+        setState(() => _error = 'No se pudo continuar con $provider');
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code != AuthorizationErrorCode.canceled) {
+        setState(() => _error = 'No se pudo continuar con $provider');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = 'No se pudo continuar (${e.code})');
+    } catch (_) {
+      setState(() => _error = 'No se pudo continuar con $provider');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
+    final firebase = AppConfig.firebaseActive;
     return Scaffold(
       backgroundColor: brand.background,
       body: Stack(
@@ -105,22 +151,80 @@ class RegistrationScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 44),
-                  _SocialButton(
-                    label: 'Continuar con Google',
-                    icon: Icons.g_mobiledata_rounded,
-                    iconColor: const Color(0xFF4285F4),
-                    filled: true,
-                    onTap: () => _continue(context),
-                  ),
-                  const SizedBox(height: 14),
-                  _SocialButton(
-                    label: 'Continuar con Apple',
-                    icon: Icons.apple_rounded,
-                    iconColor: brand.textPrimary,
-                    filled: false,
-                    onTap: () => _continue(context),
-                  ),
-                  const SizedBox(height: 28),
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  else ...[
+                    _SocialButton(
+                      label: 'Continuar con Google',
+                      icon: Icons.g_mobiledata_rounded,
+                      iconColor: const Color(0xFF4285F4),
+                      filled: true,
+                      onTap: () => _social(
+                        () =>
+                            ref.read(authControllerProvider).signInWithGoogle(),
+                        'Google',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    if (!kIsWeb && Platform.isIOS)
+                      _SocialButton(
+                        label: 'Continuar con Apple',
+                        icon: Icons.apple_rounded,
+                        iconColor: brand.textPrimary,
+                        filled: false,
+                        onTap: () => _social(
+                          () => ref
+                              .read(authControllerProvider)
+                              .signInWithApple(),
+                          'Apple',
+                        ),
+                      ),
+                  ],
+                  if (_error != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: brand.occupancyHigh,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  if (firebase)
+                    TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const LoginScreen(),
+                        ),
+                      ),
+                      child: Text(
+                        'Entrar con correo',
+                        style: TextStyle(
+                          color: brand.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () => _finish(context),
+                      child: Text(
+                        'Continuar sin cuenta (demo)',
+                        style: TextStyle(
+                          color: brand.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
                   Text(
                     'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de Capital Fitness.',
                     textAlign: TextAlign.center,

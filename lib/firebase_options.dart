@@ -42,8 +42,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1081337347174',
     projectId: 'rir-hub',
     storageBucket: 'rir-hub.firebasestorage.app',
-    androidClientId: '1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com',
-    iosClientId: '1081337347174-o1vrrd76n6m60233mk607ojejreesgdj.apps.googleusercontent.com',
+    androidClientId:
+        '1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com',
+    iosClientId:
+        '1081337347174-o1vrrd76n6m60233mk607ojejreesgdj.apps.googleusercontent.com',
     iosBundleId: 'com.luis.prototipoGym',
   );
 }
