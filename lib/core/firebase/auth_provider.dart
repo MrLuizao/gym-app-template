@@ -73,8 +73,14 @@ class AuthController {
     );
   }
 
+  /// Cierra la sesión de Firebase — la que manda en el gate. El
+  /// signOut de Google puede fallar si el plugin nunca se inicializó
+  /// (login por correo) o en plataformas sin soporte: no debe
+  /// bloquear el cierre de sesión.
   Future<void> signOut() async {
-    await GoogleSignIn.instance.signOut();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {}
     await _auth.signOut();
   }
 }
