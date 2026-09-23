@@ -25,16 +25,25 @@ class MainShell extends ConsumerWidget {
       });
     }
     final index = ref.watch(bottomNavIndexProvider);
+    /// extendBody remueve el MediaQuery padding del body (notch incluido);
+    /// restauramos el inset superior para que el contenido no se meta
+    /// detrás del status bar. El inferior queda en 0: la barra lo cubre.
+    final padding = MediaQuery.of(context).padding;
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(
-        index: index,
-        children: const [
-          HomeScreen(),
-          ExploreScreen(),
-          PromotionsScreen(),
-          ProfileScreen(),
-        ],
+      body: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          padding: padding.copyWith(bottom: 0),
+        ),
+        child: IndexedStack(
+          index: index,
+          children: const [
+            HomeScreen(),
+            ExploreScreen(),
+            PromotionsScreen(),
+            ProfileScreen(),
+          ],
+        ),
       ),
       bottomNavigationBar: MainBottomBar(
         index: index,
@@ -57,26 +66,28 @@ class MainBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.only(top: 6, bottom: 6),
-        decoration: BoxDecoration(
-          color: brand.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(
-            top: BorderSide(color: brand.cardBorder),
-            left: BorderSide(color: brand.cardBorder),
-            right: BorderSide(color: brand.cardBorder),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.55),
-              blurRadius: 28,
-              offset: const Offset(0, -8),
-            ),
-          ],
+    /// SafeArea va DENTRO del Container: el color de fondo llega hasta
+    /// el borde inferior de la pantalla (cubre el home indicator).
+    return Container(
+      padding: const EdgeInsets.only(top: 6, bottom: 6),
+      decoration: BoxDecoration(
+        color: brand.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(color: brand.cardBorder),
+          left: BorderSide(color: brand.cardBorder),
+          right: BorderSide(color: brand.cardBorder),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 28,
+            offset: const Offset(0, -8),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
         child: SizedBox(
           height: 64,
           child: Row(
