@@ -18,6 +18,11 @@ class AppConfig {
   /// con Payment Sheet; vacío = checkout deshabilitado.
   static const String stripePublishableKey = '';
 
+  /// OAuth web client (auto-creado por Firebase) — el flujo Google en
+  /// web va por FedCM y necesita el clientId explícito.
+  static const String googleWebClientId =
+      '1081337347174-pcgs538lrc9121pln4tki132iius1ur6.apps.googleusercontent.com';
+
   static const String demoUserId = 'demo-user-001';
   static const String qrSigningKey = 'prototipo-gym-dev-key';
   static const Duration qrTokenTtl = Duration(seconds: 45);

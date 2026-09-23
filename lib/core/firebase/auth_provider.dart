@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../config/app_config.dart';
+
 /// Sesión del socio — Firebase Auth es la fuente de verdad.
 final authStateProvider = StreamProvider<User?>(
   (ref) => FirebaseAuth.instance.authStateChanges(),
@@ -26,13 +28,20 @@ class AuthController {
   /// `instance` + `authenticate()`; el idToken se cambia por
   /// credencial de Firebase.
   Future<UserCredential?> signInWithGoogle() async {
-    /// En web el plugin google_sign_in va por FedCM y exige clientId —
-    /// y el popup lo bloquea Chrome por COOP (window.close del handler).
-    /// Redirect: la página navega a Google y getRedirectResult() en el
-    /// bootstrap completa la sesión al regresar.
+    /// En web: FedCM (Google Identity Services) — ni popup (Chrome lo
+    /// rompe por COOP) ni redirect (el iframe de auth pierde el storage
+    /// particionado). El idToken sale del prompt nativo del navegador
+    /// y se cambia por credencial Firebase via REST — persistencia
+    /// first-party, inmune al bloqueo de storage de terceros.
     if (kIsWeb) {
-      await _auth.signInWithRedirect(GoogleAuthProvider());
-      return null;
+      await GoogleSignIn.instance.initialize(
+        clientId: AppConfig.googleWebClientId,
+      );
+      final account = await GoogleSignIn.instance.authenticate();
+      final credential = GoogleAuthProvider.credential(
+        idToken: account.authentication.idToken,
+      );
+      return _auth.signInWithCredential(credential);
     }
     await GoogleSignIn.instance.initialize();
     final account = await GoogleSignIn.instance.authenticate();
