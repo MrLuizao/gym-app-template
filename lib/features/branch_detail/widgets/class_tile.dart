@@ -8,13 +8,18 @@ class ClassTile extends StatelessWidget {
     super.key,
     required this.gymClass,
     required this.reserved,
-    this.onToggle,
+    required this.date,
     this.onTap,
   });
 
   final GymClass gymClass;
   final bool reserved;
-  final VoidCallback? onToggle;
+
+  /// Fecha `YYYY-MM-DD` de la ocurrencia mostrada (selector de día).
+  final String date;
+
+  /// Abre el sheet de detalle — reservar/cancelar vive ahí, el botón
+  /// del tile es solo indicador.
   final VoidCallback? onTap;
 
   IconData _iconFor(String category) => switch (category) {
@@ -32,7 +37,8 @@ class ClassTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    final full = gymClass.isFull;
+    final full = gymClass.isFullFor(date);
+    final ended = gymClass.endedFor(date);
     final active = reserved && !full;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -114,11 +120,15 @@ class ClassTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        full ? 'Cupo lleno' : '${gymClass.spotsLeft} lugares',
+                        ended
+                            ? 'Terminada'
+                            : full
+                            ? 'Cupo lleno'
+                            : '${gymClass.spotsLeftFor(date)} lugares',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
-                          color: full
+                          color: ended || full
                               ? brand.occupancyHigh
                               : brand.occupancyLow,
                         ),
@@ -130,7 +140,7 @@ class ClassTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             GestureDetector(
-              onTap: full ? null : onToggle,
+              onTap: onTap,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(
@@ -143,20 +153,24 @@ class ClassTile extends StatelessWidget {
                   border: Border.all(
                     color: active
                         ? brand.accent
-                        : full
+                        : full || ended
                         ? brand.cardBorder
                         : brand.accent.withValues(alpha: 0.6),
                   ),
                 ),
                 child: Text(
-                  active ? 'RESERVADO' : (full ? 'LLENO' : 'RESERVAR'),
+                  active
+                      ? 'RESERVADO'
+                      : (ended
+                            ? 'TERMINADA'
+                            : (full ? 'LLENO' : 'RESERVAR')),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.4,
                     color: active
                         ? brand.background
-                        : full
+                        : full || ended
                         ? brand.textSecondary
                         : brand.accent,
                   ),

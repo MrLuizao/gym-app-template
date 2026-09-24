@@ -2,22 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/firebase/api_client.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/capacity_bar.dart';
 import '../../../data/models/gym_class.dart';
 import '../providers/reservation_provider.dart';
 
 class ClassDetailSheet extends ConsumerWidget {
-  const ClassDetailSheet({super.key, required this.gymClass});
+  const ClassDetailSheet({
+    super.key,
+    required this.gymClass,
+    required this.date,
+  });
 
   final GymClass gymClass;
 
-  static Future<void> show(BuildContext context, GymClass gymClass) {
+  /// Fecha `YYYY-MM-DD` de la ocurrencia (selector de día en la lista).
+  final String date;
+
+  static Future<void> show(
+    BuildContext context,
+    GymClass gymClass, {
+    required String date,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => ClassDetailSheet(gymClass: gymClass),
+      builder: (_) => ClassDetailSheet(gymClass: gymClass, date: date),
     );
   }
 
@@ -66,8 +78,17 @@ class ClassDetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
-    final reserved = ref.watch(reservedClassesProvider).contains(gymClass.id);
-    final full = gymClass.isFull;
+    final reserved = ref
+        .watch(reservedClassesProvider)
+        .contains(
+          ReservedClassesNotifier.keyOf(
+            gymClass.id,
+            gymClass.branchId,
+            date,
+          ),
+        );
+    final full = gymClass.isFullFor(date);
+    final booked = gymClass.bookedFor(date);
 
     return Container(
       decoration: BoxDecoration(
@@ -203,7 +224,7 @@ class ClassDetailSheet extends ConsumerWidget {
                     BadgeChip(
                       label: full
                           ? 'CUPO LLENO'
-                          : '${gymClass.spotsLeft} LUGARES',
+                          : '${gymClass.spotsLeftFor(date)} LUGARES',
                       color: full ? brand.occupancyHigh : brand.occupancyLow,
                     ),
                   ],
@@ -211,7 +232,7 @@ class ClassDetailSheet extends ConsumerWidget {
                 const SizedBox(height: 10),
                 CapacityBar(
                   value: gymClass.capacity > 0
-                      ? gymClass.booked / gymClass.capacity
+                      ? booked / gymClass.capacity
                       : 0,
                   height: 6,
                 ),
@@ -219,7 +240,7 @@ class ClassDetailSheet extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${gymClass.booked}/${gymClass.capacity} inscritos',
+                    '$booked/${gymClass.capacity} inscritos',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -231,7 +252,12 @@ class ClassDetailSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 18),
-          _ReserveButton(gymClass: gymClass, reserved: reserved, full: full),
+          _ReserveButton(
+            gymClass: gymClass,
+            date: date,
+            reserved: reserved,
+            full: full,
+          ),
         ],
       ),
     );
@@ -287,11 +313,13 @@ class _InfoCell extends StatelessWidget {
 class _ReserveButton extends ConsumerStatefulWidget {
   const _ReserveButton({
     required this.gymClass,
+    required this.date,
     required this.reserved,
     required this.full,
   });
 
   final GymClass gymClass;
+  final String date;
   final bool reserved;
   final bool full;
 
@@ -301,18 +329,33 @@ class _ReserveButton extends ConsumerStatefulWidget {
 
 class _ReserveButtonState extends ConsumerState<_ReserveButton> {
   bool _busy = false;
+  String? _error;
+
+  static String _ddmm(String date) =>
+      '${date.substring(8, 10)}/${date.substring(5, 7)}';
 
   Future<void> _toggle() async {
     if (_busy) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       await ref
           .read(reservedClassesProvider.notifier)
-          .toggle(widget.gymClass.id);
-    } catch (_) {
+          .toggle(
+            widget.gymClass.id,
+            branchId: widget.gymClass.branchId,
+            date: widget.date,
+          );
+    } catch (e) {
+      /// El error vive dentro del sheet — un SnackBar del Scaffold quedaría
+      /// tapado por el propio bottom sheet.
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo completar la reserva')),
+        setState(
+          () => _error = e is ApiException
+              ? (e.serverMessage ?? 'No se pudo completar la reserva')
+              : 'No se pudo completar la reserva',
         );
       }
     } finally {
@@ -325,8 +368,61 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
     final brand = context.brand;
     final reserved = widget.reserved;
     final full = widget.full;
-    if (full && !reserved) {
-      return Container(
+    final ended = widget.gymClass.endedFor(widget.date);
+    final isToday = widget.date == GymClass.dateKey(DateTime.now());
+
+    /// Banner de error inline — el SnackBar del Scaffold queda tapado por
+    /// el bottom sheet, así que el mensaje vive aquí con el mismo lenguaje
+    /// visual del resto del modal.
+    final errorBanner = _error == null
+        ? null
+        : Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: brand.occupancyHigh.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: brand.occupancyHigh.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 15,
+                  color: brand.occupancyHigh,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                      color: brand.occupancyHigh,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _error = null),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 15,
+                    color: brand.occupancyHigh.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+    if ((full || ended) && !reserved) {
+      final button = Container(
         height: 54,
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -334,7 +430,7 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
           borderRadius: BorderRadius.circular(99),
         ),
         child: Text(
-          'CUPO LLENO',
+          ended ? 'CLASE TERMINADA' : 'CUPO LLENO',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w900,
@@ -343,8 +439,12 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
           ),
         ),
       );
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [?errorBanner, button],
+      );
     }
-    return GestureDetector(
+    final action = GestureDetector(
       onTap: _toggle,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -385,7 +485,9 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
             Text(
               reserved
                   ? 'RESERVA ACTIVA · TOCAR PARA CANCELAR'
-                  : 'RESERVAR LUGAR',
+                  : isToday
+                  ? 'RESERVAR LUGAR'
+                  : 'RESERVAR PARA EL ${_ddmm(widget.date)}',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
@@ -396,6 +498,10 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
           ],
         ),
       ),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [?errorBanner, action],
     );
   }
 }

@@ -54,6 +54,17 @@ class ApiException implements Exception {
   final int statusCode;
   final String body;
 
+  /// `statusMessage` del backend si el body es JSON de error de Nuxt.
+  String? get serverMessage {
+    try {
+      final decoded = jsonDecode(body);
+      final msg = decoded is Map ? decoded['statusMessage'] : null;
+      return msg is String && msg.isNotEmpty ? msg : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   String toString() => 'ApiException($statusCode): $body';
 }

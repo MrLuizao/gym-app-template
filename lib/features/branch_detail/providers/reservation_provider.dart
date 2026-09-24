@@ -4,9 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/firebase/api_client.dart';
 import '../../../core/firebase/auth_provider.dart';
+import '../../../data/models/gym_class.dart';
 import 'catalog_providers.dart';
 
 class ReservedClassesNotifier extends Notifier<Set<String>> {
+  /// El estado se clavea `'$classId|$branchId|$classDate'` — una reserva
+  /// es por ocurrencia EN UNA SEDE: la misma clase multi-sede puede estar
+  /// reservada en Select y libre en Carranza.
+  static String keyOf(String classId, String branchId, String date) =>
+      '$classId|$branchId|$date';
+
   @override
   Set<String> build() {
     if (!AppConfig.firebaseActive) return const {};
@@ -16,6 +23,7 @@ class ReservedClassesNotifier extends Notifier<Set<String>> {
     /// Reservas reales del socio — las escribe POST /api/classes/:id/book
     /// (el cliente jamás toca la colección). El stream re-emite solo
     /// cuando el server confirma, así el estado sobrevive a reinicios.
+    /// Reservas viejas sin class_date cuentan en su fecha de created_at.
     final sub = FirebaseFirestore.instance
         .collection('bookings')
         .where('auth_uid', isEqualTo: uid)
@@ -23,26 +31,50 @@ class ReservedClassesNotifier extends Notifier<Set<String>> {
         .listen((snap) {
           state = snap.docs
               .where((d) => d.data()['status'] == 'confirmed')
-              .map((d) => d.data()['class_id'] as String)
+              .map((d) {
+                final data = d.data();
+                final created = data['created_at'];
+                final date =
+                    data['class_date'] as String? ??
+                    (created is Timestamp
+                        ? GymClass.dateKey(created.toDate())
+                        : GymClass.dateKey(DateTime.now()));
+                return keyOf(
+                  data['class_id'] as String,
+                  data['branch_id'] as String? ?? '',
+                  date,
+                );
+              })
               .toSet();
         });
     ref.onDispose(sub.cancel);
     return const {};
   }
 
-  /// Reserva o cancela vía el backend; el stream de bookings refleja el
-  /// resultado. En modo demo (sin Firebase) solo alterna en memoria.
-  Future<void> toggle(String classId) async {
+  /// Reserva o cancela la ocurrencia de [date] en [branchId] vía el
+  /// backend; el stream de bookings refleja el resultado. En modo demo
+  /// (sin Firebase) solo alterna en memoria.
+  Future<void> toggle(
+    String classId, {
+    required String branchId,
+    required String date,
+  }) async {
+    final key = keyOf(classId, branchId, date);
     if (!AppConfig.firebaseActive) {
-      state = state.contains(classId)
-          ? (<String>{...state}..remove(classId))
-          : <String>{...state, classId};
+      state = state.contains(key)
+          ? (<String>{...state}..remove(key))
+          : <String>{...state, key};
       return;
     }
-    if (state.contains(classId)) {
-      await ApiClient.del('/api/classes/$classId/book');
+    if (state.contains(key)) {
+      await ApiClient.del(
+        '/api/classes/$classId/book?date=$date&branchId=$branchId',
+      );
     } else {
-      await ApiClient.post('/api/classes/$classId/book', const {});
+      await ApiClient.post('/api/classes/$classId/book', {
+        'date': date,
+        'branchId': branchId,
+      });
     }
     ref.invalidate(branchClassesProvider);
   }

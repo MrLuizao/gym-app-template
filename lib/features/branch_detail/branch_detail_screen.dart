@@ -10,6 +10,7 @@ import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/hourly_forecast_chart.dart';
 import '../../core/widgets/skeleton_box.dart';
 import '../../data/models/branch.dart';
+import '../../data/models/gym_class.dart';
 import '../../data/repositories/gym_repositories.dart';
 import 'providers/catalog_providers.dart';
 import 'providers/reservation_provider.dart';
@@ -40,6 +41,11 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
     final date = DateTime.now().add(Duration(days: offset));
     return (_dayLabels[date.weekday - 1], date.day);
   }
+
+  /// Fecha `YYYY-MM-DD` del día seleccionado — la reserva es por
+  /// ocurrencia, no por clase en abstracto.
+  String get _selectedDate =>
+      GymClass.dateKey(DateTime.now().add(Duration(days: _selectedDay)));
 
   @override
   Widget build(BuildContext context) {
@@ -318,25 +324,19 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: ClassTile(
                     gymClass: classes[index],
-                    reserved: reserved.contains(classes[index].id),
-                    onToggle: () async {
-                      try {
-                        await ref
-                            .read(reservedClassesProvider.notifier)
-                            .toggle(classes[index].id);
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'No se pudo completar la reserva',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    onTap: () => ClassDetailSheet.show(context, classes[index]),
+                    date: _selectedDate,
+                    reserved: reserved.contains(
+                      ReservedClassesNotifier.keyOf(
+                        classes[index].id,
+                        branch.id,
+                        _selectedDate,
+                      ),
+                    ),
+                    onTap: () => ClassDetailSheet.show(
+                      context,
+                      classes[index],
+                      date: _selectedDate,
+                    ),
                   ),
                 ),
                 childCount: classes.length,
