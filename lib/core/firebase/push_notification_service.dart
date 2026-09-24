@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../data/models/member.dart';
 
@@ -24,6 +27,18 @@ class PushNotificationService {
     _initialTab = null;
     return tab;
   }
+
+  /// Android no muestra nada con la app en foreground — el banner lo
+  /// dibuja flutter_local_notifications en este canal de alta importancia.
+  static final FlutterLocalNotificationsPlugin _local =
+      FlutterLocalNotificationsPlugin();
+  static const AndroidNotificationChannel _channel =
+      AndroidNotificationChannel(
+    'push_channel',
+    'Notificaciones',
+    description: 'Avisos y promociones del gimnasio',
+    importance: Importance.high,
+  );
 
   /// Tab destino: el push puede traer `target` explícito; si no (o 'auto')
   /// cae al mapping por kind — SPONSOR → Aliados, BRAND → Descuentos.
@@ -50,13 +65,50 @@ class PushNotificationService {
       badge: true,
       sound: true,
     );
+    if (Platform.isAndroid) {
+      await _local
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(_channel);
+      await _local.initialize(
+        settings: const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        ),
+        /// Tap en el banner de foreground — misma navegación que el tap
+        /// del sistema (onMessageOpenedApp).
+        onDidReceiveNotificationResponse: (response) {
+          final payload = response.payload;
+          if (payload == null) return;
+          try {
+            _tabRequests.add(
+              _tabFor(jsonDecode(payload) as Map<String, dynamic>),
+            );
+          } on FormatException {
+            // Payload inválido — se ignora el tap.
+          }
+        },
+      );
+    }
     FirebaseMessaging.onMessage.listen((message) {
       final notification = message.notification;
-      if (notification != null) {
-        debugPrint(
-          'FCM foreground: ${notification.title} · ${notification.body}',
-        );
-      }
+      if (notification == null || !Platform.isAndroid) return;
+      _local.show(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channel.id,
+            _channel.name,
+            channelDescription: _channel.description,
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+        ),
+        payload: jsonEncode(message.data),
+      );
     });
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _tabRequests.add(_tabFor(message.data));
