@@ -169,13 +169,21 @@ class CouponCard extends StatelessWidget {
                                 color: brand.textSecondary,
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                _plansLabel,
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.6,
-                                  color: brand.textSecondary,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 88,
+                                ),
+                                child: Text(
+                                  _plansLabel,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.6,
+                                    color: brand.textSecondary,
+                                  ),
                                 ),
                               ),
                             ],

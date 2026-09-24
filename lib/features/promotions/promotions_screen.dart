@@ -17,6 +17,9 @@ class PromotionsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
+    /// Llena el cache de nombres de plan — `planNameFor` es síncrono y
+    /// sin este watch cae al fallback de 3 planes (ids crudos).
+    ref.watch(plansProvider);
     final member = ref.watch(memberProvider).value;
     final generated = ref.watch(generatedCouponsProvider).values.toList();
     final memberCoupons = ref.watch(availableCouponsProvider);

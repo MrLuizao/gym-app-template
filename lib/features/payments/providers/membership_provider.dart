@@ -35,6 +35,8 @@ const _fallbackPlans = <MembershipPlan>[
     price: 399,
     tag: 'TODO INCLUIDO',
   ),
+  MembershipPlan(id: 'select', name: 'Plan Select', price: 249),
+  MembershipPlan(id: 'xpress', name: 'Plan Xpress', price: 149),
 ];
 
 /// Cache module-level para que `planNameFor` (síncrono) resuelva sin
