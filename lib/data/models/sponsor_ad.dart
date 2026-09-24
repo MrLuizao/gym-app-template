@@ -57,6 +57,10 @@ class SponsorAd {
     this.phone = '',
     this.socials = const SponsorAdSocials(),
     this.photos = const [],
+    /// Espacio vendido: 'carousel' = carrusel del Home (premium),
+    /// 'list' = solo directorio de Aliados. Ads viejos sin el campo
+    /// cuentan como carrusel (comportamiento previo).
+    this.placement = 'carousel',
   });
 
   final String id;
@@ -75,6 +79,7 @@ class SponsorAd {
   final String phone;
   final SponsorAdSocials socials;
   final List<String> photos;
+  final String placement;
 
   bool get hasLocation => lat != null && lng != null;
 
@@ -97,6 +102,7 @@ class SponsorAd {
     photos: (map['photos'] as List<dynamic>? ?? const [])
         .whereType<String>()
         .toList(),
+    placement: map['placement'] as String? ?? 'carousel',
   );
 
   Map<String, dynamic> toMap() => {
@@ -115,5 +121,6 @@ class SponsorAd {
     'phone': phone,
     'socials': socials.toMap(),
     'photos': photos,
+    'placement': placement,
   };
 }

@@ -136,7 +136,10 @@ class _SponsorsSection extends ConsumerWidget {
     final adsAsync = ref.watch(sponsorAdsProvider);
     return adsAsync.maybeWhen(
       data: (ads) {
-        if (ads.isEmpty) return const SizedBox.shrink();
+        /// El carrusel es el espacio premium — los aliados del
+        /// directorio ('list') solo aparecen en la pestaña Aliados.
+        final carousel = ads.where((a) => a.placement == 'carousel').toList();
+        if (carousel.isEmpty) return const SizedBox.shrink();
         // TODO(Firebase): registrar impresión por anuncio visible
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +162,7 @@ class _SponsorsSection extends ConsumerWidget {
             //   ],
             // ),
             // const SizedBox(height: 12),
-            SponsorCarousel(ads: ads),
+            SponsorCarousel(ads: carousel),
           ],
         );
       },

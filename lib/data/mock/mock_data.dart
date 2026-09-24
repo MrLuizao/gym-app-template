@@ -292,6 +292,7 @@ final mockSponsorAds = <SponsorAd>[
       whatsapp: '+52 722 555 0303',
     ),
     photos: const ['https://picsum.photos/seed/ad-cafe-1/600/400'],
+    placement: 'list',
   ),
 ];
 

@@ -5,6 +5,7 @@ import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/push_notification_service.dart';
 import '../../data/repositories/gym_repositories.dart';
+import '../allies/allies_screen.dart';
 import '../explore/explore_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
@@ -43,6 +44,7 @@ class MainShell extends ConsumerWidget {
             children: const [
               HomeScreen(),
               ExploreScreen(),
+              AlliesScreen(),
               PromotionsScreen(),
               ProfileScreen(),
             ],
@@ -114,18 +116,26 @@ class MainBottomBar extends StatelessWidget {
               ),
               Expanded(
                 child: _BarItem(
-                  icon: Icons.local_activity_outlined,
-                  label: 'Descuentos',
+                  icon: Icons.handshake_outlined,
+                  label: 'Aliados',
                   selected: index == 2,
                   onTap: () => onChanged(2),
                 ),
               ),
               Expanded(
                 child: _BarItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Perfil',
+                  icon: Icons.local_activity_outlined,
+                  label: 'Descuentos',
                   selected: index == 3,
                   onTap: () => onChanged(3),
+                ),
+              ),
+              Expanded(
+                child: _BarItem(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Perfil',
+                  selected: index == 4,
+                  onTap: () => onChanged(4),
                 ),
               ),
             ],

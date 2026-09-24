@@ -21,7 +21,11 @@ class PromotionsScreen extends ConsumerWidget {
     final generated = ref.watch(generatedCouponsProvider).values.toList();
     final memberCoupons = ref.watch(availableCouponsProvider);
     final locked = ref.watch(lockedCouponsProvider);
-    final ads = ref.watch(sponsorAdsProvider).value ?? const [];
+    /// Solo los espacios 'carousel' — el directorio ('list') vive
+    /// en la pestaña Aliados.
+    final ads = (ref.watch(sponsorAdsProvider).value ?? const [])
+        .where((a) => a.placement == 'carousel')
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
