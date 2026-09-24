@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,12 +10,36 @@ import '../../data/models/member.dart';
 class PushNotificationService {
   PushNotificationService._();
 
+  /// Tab destino al tocar una notificación — MainShell lo consume.
+  /// kind: SPONSOR → Aliados, BRAND → Descuentos.
+  static final StreamController<int> _tabRequests =
+      StreamController<int>.broadcast();
+  static Stream<int> get tabRequests => _tabRequests.stream;
+
+  /// Notificación que abrió la app desde cold start — MainShell lo consume
+  /// una sola vez tras el primer frame.
+  static int? _initialTab;
+  static int? takeInitialTab() {
+    final tab = _initialTab;
+    _initialTab = null;
+    return tab;
+  }
+
+  static int _tabFor(Map<String, dynamic> data) =>
+      data['kind'] == 'SPONSOR' ? 2 : 3;
+
   static Future<void> initialize() async {
     /// Topics FCM no existen en web — el token va por VAPID y se
     /// suscribe desde un service worker, no desde el cliente.
     if (kIsWeb) return;
     final fcm = FirebaseMessaging.instance;
     await fcm.requestPermission(alert: true, badge: true, sound: true);
+    /// iOS no muestra banner con la app abierta salvo que se pida explícito.
+    await fcm.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     FirebaseMessaging.onMessage.listen((message) {
       final notification = message.notification;
       if (notification != null) {
@@ -22,6 +48,11 @@ class PushNotificationService {
         );
       }
     });
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _tabRequests.add(_tabFor(message.data));
+    });
+    final initial = await fcm.getInitialMessage();
+    if (initial != null) _initialTab = _tabFor(initial.data);
     await fcm.subscribeToTopic('all_members');
   }
 

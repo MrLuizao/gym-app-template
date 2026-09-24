@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,11 +14,43 @@ import '../profile/profile_screen.dart';
 import '../promotions/promotions_screen.dart';
 import 'bottom_nav_provider.dart';
 
-class MainShell extends ConsumerWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<MainShell> {
+  StreamSubscription<int>? _tabSub;
+
+  @override
+  void initState() {
+    super.initState();
+    if (AppConfig.firebaseActive) {
+      /// Tap en notificación → tab destino (SPONSOR → Aliados, BRAND →
+      /// Descuentos). El cold start llega antes del primer frame — se
+      /// consume una vez aquí.
+      _tabSub = PushNotificationService.tabRequests.listen(_goToTab);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final initial = PushNotificationService.takeInitialTab();
+        if (initial != null) _goToTab(initial);
+      });
+    }
+  }
+
+  void _goToTab(int index) {
+    ref.read(bottomNavIndexProvider.notifier).go(index);
+  }
+
+  @override
+  void dispose() {
+    _tabSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     /// Topics FCM por sede/estatus — se re-suscribe si el socio cambia.
     if (AppConfig.firebaseActive) {
       ref.listen(memberProvider, (prev, next) {
