@@ -25,8 +25,18 @@ class PushNotificationService {
     return tab;
   }
 
-  static int _tabFor(Map<String, dynamic> data) =>
-      data['kind'] == 'SPONSOR' ? 2 : 3;
+  /// Tab destino: el push puede traer `target` explícito; si no (o 'auto')
+  /// cae al mapping por kind — SPONSOR → Aliados, BRAND → Descuentos.
+  static int _tabFor(Map<String, dynamic> data) {
+    const targets = {
+      'home': 0,
+      'explore': 1,
+      'allies': 2,
+      'promos': 3,
+      'profile': 4,
+    };
+    return targets[data['target']] ?? (data['kind'] == 'SPONSOR' ? 2 : 3);
+  }
 
   static Future<void> initialize() async {
     /// Topics FCM no existen en web — el token va por VAPID y se
