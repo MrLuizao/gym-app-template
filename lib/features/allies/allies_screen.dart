@@ -85,47 +85,65 @@ class AlliesScreen extends ConsumerWidget {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 20),
-        Text(
-          'ESPACIOS PUBLICITARIOS',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            letterSpacing: 1.4,
-            color: brand.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        for (final space in _adSpaces) ...[
-          _AdSpaceCard(space: space),
-          const SizedBox(height: 10),
-        ],
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: brand.accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: brand.accent.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.campaign_outlined,
-                size: 18,
-                color: brand.accent,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '¿Quieres anunciar tu marca? Pregunta en recepción por '
-                  'la disponibilidad de espacios.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
+        GestureDetector(
+          onTap: () => _AdSpacesSheet.show(context),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: brand.accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: brand.accent.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: brand.accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: brand.accent.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.campaign_outlined,
+                    size: 20,
                     color: brand.accent,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Anuncia tu marca aquí',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: brand.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Espacios publicitarios desde \$490/mes',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: brand.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: brand.accent,
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -162,6 +180,106 @@ class AlliesScreen extends ConsumerWidget {
   }
 }
 
+/// Rate card de espacios publicitarios — modal bottom sheet.
+class _AdSpacesSheet extends StatelessWidget {
+  const _AdSpacesSheet();
+
+  static Future<void> show(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const _AdSpacesSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return Container(
+      decoration: BoxDecoration(
+        color: brand.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: brand.cardBorder),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: brand.cardBorder,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Espacios publicitarios',
+            style: TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w900,
+              color: brand.textPrimary,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'El precio varía por ubicación — el carrusel del Home es el '
+            'espacio premium.',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              height: 1.45,
+              color: brand.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          for (final space in _adSpaces) ...[
+            _AdSpaceCard(space: space),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: brand.accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: brand.accent.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.campaign_outlined,
+                  size: 18,
+                  color: brand.accent,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '¿Quieres anunciar tu marca? Pregunta en recepción por '
+                    'la disponibilidad de espacios.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                      color: brand.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AdSpaceCard extends StatelessWidget {
   const _AdSpaceCard({required this.space});
 
@@ -174,7 +292,7 @@ class _AdSpaceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: brand.surface,
+        color: brand.background,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: highlight ? brand.accent.withValues(alpha: 0.55) : brand.cardBorder,
