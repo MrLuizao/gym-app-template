@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -72,7 +73,9 @@ class _MembershipCheckoutScreenState
       if (!mounted) return;
       setState(() {
         _processing = false;
-        _error = 'No se pudo iniciar el pago: $e';
+        _error = e is ApiException
+            ? (e.serverMessage ?? 'No se pudo iniciar el pago')
+            : 'No se pudo iniciar el pago';
       });
     }
   }
@@ -81,7 +84,8 @@ class _MembershipCheckoutScreenState
   Widget build(BuildContext context) {
     final brand = context.brand;
     final plansAsync = ref.watch(plansProvider);
-    final plans = plansAsync.value ?? const <MembershipPlan>[];
+    final plans = plansAsync.value ??
+        (plansAsync.hasError ? fallbackPlans : const <MembershipPlan>[]);
     final plan = plans.isEmpty
         ? null
         : plans[_selectedPlan.clamp(0, plans.length - 1)];
@@ -143,8 +147,9 @@ class _MembershipCheckoutScreenState
 
     return Scaffold(
       backgroundColor: brand.background,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: [
           Row(
             children: [
@@ -184,11 +189,14 @@ class _MembershipCheckoutScreenState
                 ),
               ),
           const SizedBox(height: 8),
-          if (AppConfig.stripePublishableKey.isEmpty)
+          if (kIsWeb || AppConfig.stripePublishableKey.isEmpty)
             AppCard(
               child: Text(
-                'Pagos con tarjeta aún no configurados '
-                '(falta STRIPE_PUBLISHABLE_KEY).',
+                kIsWeb
+                    ? 'Los pagos con tarjeta solo están disponibles en la '
+                        'app móvil.'
+                    : 'Pagos con tarjeta aún no configurados '
+                        '(falta STRIPE_PUBLISHABLE_KEY).',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -279,6 +287,7 @@ class _MembershipCheckoutScreenState
             ),
           ],
         ],
+        ),
       ),
     );
   }

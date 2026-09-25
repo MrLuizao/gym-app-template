@@ -26,7 +26,7 @@ class MembershipPlan {
       );
 }
 
-const _fallbackPlans = <MembershipPlan>[
+const fallbackPlans = <MembershipPlan>[
   MembershipPlan(id: 'classic', name: 'Plan Classic', price: 199),
   MembershipPlan(id: 'plus', name: 'Plan Plus', price: 299, tag: 'MÁS POPULAR'),
   MembershipPlan(
@@ -41,22 +41,24 @@ const _fallbackPlans = <MembershipPlan>[
 
 /// Cache module-level para que `planNameFor` (síncrono) resuelva sin
 /// async — lo llena `plansProvider` al primer watch.
-List<MembershipPlan> _plansCache = _fallbackPlans;
+List<MembershipPlan> _plansCache = fallbackPlans;
 
-/// Catálogo real de planes desde /plans (Firestore).
+/// Catálogo real de planes desde /plans (Firestore). Se ordena por
+/// precio en cliente — un orderBy server-side pediría un índice
+/// compuesto (active + price) y el stream fallaría en silencio.
 final plansProvider = StreamProvider<List<MembershipPlan>>((ref) {
-  if (!AppConfig.firebaseActive) return Stream.value(_fallbackPlans);
+  if (!AppConfig.firebaseActive) return Stream.value(fallbackPlans);
   return FirebaseFirestore.instance
       .collection('plans')
       .where('active', isEqualTo: true)
-      .orderBy('price')
       .snapshots()
       .map((snap) {
         final plans = snap.docs
             .map((doc) => MembershipPlan.fromMap(doc.id, doc.data()))
-            .toList();
+            .toList()
+          ..sort((a, b) => a.price.compareTo(b.price));
         if (plans.isNotEmpty) _plansCache = plans;
-        return plans.isEmpty ? _fallbackPlans : plans;
+        return plans.isEmpty ? fallbackPlans : plans;
       });
 });
 

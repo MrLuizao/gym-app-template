@@ -14,7 +14,7 @@ class AppBootstrap {
 
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
-    if (AppConfig.stripePublishableKey.isNotEmpty) {
+    if (!kIsWeb && AppConfig.stripePublishableKey.isNotEmpty) {
       Stripe.publishableKey = AppConfig.stripePublishableKey;
       await Stripe.instance.applySettings();
     }
