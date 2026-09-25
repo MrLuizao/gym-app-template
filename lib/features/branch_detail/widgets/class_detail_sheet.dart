@@ -6,6 +6,8 @@ import '../../../core/firebase/api_client.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/capacity_bar.dart';
 import '../../../data/models/gym_class.dart';
+import '../../../data/repositories/gym_repositories.dart';
+import '../../payments/providers/membership_provider.dart';
 import '../providers/reservation_provider.dart';
 
 class ClassDetailSheet extends ConsumerWidget {
@@ -371,6 +373,15 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
     final ended = widget.gymClass.endedFor(widget.date);
     final isToday = widget.date == GymClass.dateKey(DateTime.now());
 
+    /// Planes mono-sede: la clase en otra sede no se puede reservar —
+    /// el server también lo rechaza (book.post), aquí se muestra antes.
+    final membership = ref.watch(membershipProvider);
+    final memberBranch = ref.watch(memberProvider).value?.branchId;
+    final outOfScope =
+        !membership.allBranches &&
+        memberBranch != null &&
+        widget.gymClass.branchId != memberBranch;
+
     /// Banner de error inline — el SnackBar del Scaffold queda tapado por
     /// el bottom sheet, así que el mensaje vive aquí con el mismo lenguaje
     /// visual del resto del modal.
@@ -421,7 +432,7 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
             ),
           );
 
-    if ((full || ended) && !reserved) {
+    if ((outOfScope || full || ended) && !reserved) {
       final button = Container(
         height: 54,
         alignment: Alignment.center,
@@ -430,7 +441,11 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
           borderRadius: BorderRadius.circular(99),
         ),
         child: Text(
-          ended ? 'CLASE TERMINADA' : 'CUPO LLENO',
+          outOfScope
+              ? 'TU PLAN NO CUBRE ESTA SEDE'
+              : ended
+              ? 'CLASE TERMINADA'
+              : 'CUPO LLENO',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w900,

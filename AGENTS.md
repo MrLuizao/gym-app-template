@@ -42,9 +42,11 @@ flutter run       # tras cambios de plugins/gradle: rebuild completo
 ### Alta de socio (claim)
 
 La app **no crea** el registro del socio — recepción lo crea en el B2B
-con número de miembro + teléfono. El usuario entra con Google/Apple y
-reclama su ficha en `claim_member_screen.dart` → `POST /api/members/claim`
-(número + teléfono). Sin vínculo no ve datos del gym.
+con número de miembro + correo de contacto; ahí le llega un `claim_pin`
+de 6 dígitos. El usuario entra con Google/Apple y reclama su ficha en
+`claim_member_screen.dart` → `POST /api/members/claim` (número + PIN,
+single-use). Si no le llega el código, recepción lo regenera desde el
+detalle del socio en el B2B. Sin vínculo no ve datos del gym.
 
 ### Reservas de clase — por ocurrencia
 
@@ -88,6 +90,16 @@ reclama su ficha en `claim_member_screen.dart` → `POST /api/members/claim`
   `FLUTTER_NOTIFICATION_CLICK` en `MainActivity` (ya agregado) para que
   `onMessageOpenedApp` dispare.
 
+### Avatares (sin fotos)
+
+- **Socio** — `MemberAvatar` (`core/widgets/member_avatar.dart`):
+  catálogo icono+gradiente, `users/{doc}.avatar` editable desde el
+  perfil (`AvatarPickerSheet`); sin avatar → iniciales.
+- **Coach** — `CoachAvatar` (`core/widgets/coach_avatar.dart`): SVG
+  locales `assets/avatars/coaches/{id}.svg` (flutter_svg), el id lo
+  asigna el B2B al crear/editar el coach (`trainers.avatar`).
+- `photo_url` de members/trainers ya no se renderiza.
+
 ### Métricas de aliados
 
 `POST /api/ads/track` registra impresiones/taps de anuncios de sponsors.
@@ -103,9 +115,24 @@ reclama su ficha en `claim_member_screen.dart` → `POST /api/members/claim`
 - Locale México (`es-MX`), fechas de ocurrencia en `YYYY-MM-DD` (la
   misma llave que el server calcula en `America/Mexico_City`).
 
+### Pagos (Stripe)
+
+- `features/payments/checkout_screen.dart`: elige plan →
+  `POST /api/payments/intent` → `Stripe.instance.initPaymentSheet` +
+  `presentPaymentSheet` → éxito muestra confirmación; el webhook del B2B
+  activa la membresía y el stream de `users/{uid}` la refleja en vivo.
+- `membershipProvider` deriva plan/status/expira de `users/{uid}`;
+  `plansProvider` lee `/plans` (Firestore, `active == true`).
+- Android: `MainActivity` extiende `FlutterFragmentActivity` y los temas
+  son `Theme.MaterialComponents.*` — **requisitos de flutter_stripe**,
+  no revertir.
+- `app_bootstrap` setea `Stripe.publishableKey` desde
+  `AppConfig.stripePublishableKey` — vacío = checkout muestra aviso de
+  "no configurado".
+
 ## Pendientes conocidos
 
-- **Stripe**: `POST /api/payments/intent` existe en el B2B; flujo de
-  cobro en app sin completar (`features/payments`).
+- **Stripe keys**: flujo completo; falta `stripePublishableKey`
+  (`app_config.dart`, `pk_test_...`) y las secret del B2B.
 - Ver "Deuda conocida" en el `AGENTS.md` del B2B para pendientes
   compartidos (cron close-day, bookings sin TTL, etc.).

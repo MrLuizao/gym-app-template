@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/badge_chip.dart';
-import '../../../core/widgets/cover_image.dart';
+import '../../../core/widgets/coach_avatar.dart';
 import '../../../data/models/trainer.dart';
 
 class TrainerCard extends StatelessWidget {
@@ -42,11 +42,10 @@ class TrainerCard extends StatelessWidget {
                   width: 1.6,
                 ),
               ),
-              child: ClipOval(
-                child: CoverImage(
-                  url: trainer.photoUrl,
-                  icon: Icons.person_rounded,
-                ),
+              child: CoachAvatar(
+                avatar: trainer.avatar,
+                initials: trainer.initials,
+                size: 56,
               ),
             ),
             const SizedBox(height: 10),

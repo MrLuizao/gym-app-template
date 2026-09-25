@@ -6,11 +6,13 @@ import '../../core/config/app_config.dart';
 import '../../core/firebase/auth_provider.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
+import '../../core/widgets/member_avatar.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../payments/checkout_screen.dart';
 import '../payments/providers/membership_provider.dart';
 import 'providers/notification_prefs_provider.dart';
+import 'widgets/avatar_picker_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -34,24 +36,61 @@ class ProfileScreen extends ConsumerWidget {
         Center(
           child: Column(
             children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: brand.accent, width: 2),
-                ),
-                child: ClipOval(
-                  child: member?.photoUrl != null
-                      ? Image.network(
-                          member!.photoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              _InitialsFallback(initials: member.initials),
-                        )
-                      : _InitialsFallback(initials: member?.initials ?? 'CF'),
+              GestureDetector(
+                onTap: member == null
+                    ? null
+                    : () => AvatarPickerSheet.show(context, member),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: brand.accent, width: 2),
+                      ),
+                    ),
+                    MemberAvatar(
+                      avatarId: member?.avatarId,
+                      initials: member?.initials ?? 'CF',
+                      size: 90,
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 2,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: brand.accent,
+                          border: Border.all(
+                            color: brand.background,
+                            width: 2.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.edit_rounded,
+                          size: 14,
+                          color: brand.background,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (member != null && member.avatarId == null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Toca para elegir tu avatar',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: brand.accent,
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               Text(
                 member?.name ?? 'Socio',
@@ -377,30 +416,6 @@ class _SwitchRow extends ConsumerWidget {
             onChanged: (value) => ref.read(provider.notifier).setEnabled(value),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _InitialsFallback extends StatelessWidget {
-  const _InitialsFallback({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    final brand = context.brand;
-    return ColoredBox(
-      color: brand.surface,
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: brand.accent,
-          ),
-        ),
       ),
     );
   }

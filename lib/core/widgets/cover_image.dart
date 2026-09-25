@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../branding/brand.dart';
@@ -27,6 +29,22 @@ class CoverImage extends StatelessWidget {
     );
     final url = this.url;
     if (url == null || url.isEmpty) return fallback;
+    /// Imágenes subidas desde el CMS se guardan embebidas como
+    /// data URI — Image.network no las soporta en nativo (en web sí,
+    /// porque va por <img>).
+    if (url.startsWith('data:')) {
+      try {
+        final bytes = base64Decode(url.substring(url.indexOf(',') + 1));
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          errorBuilder: (_, _, _) => fallback,
+        );
+      } catch (_) {
+        return fallback;
+      }
+    }
     return Image.network(
       url,
       fit: BoxFit.cover,

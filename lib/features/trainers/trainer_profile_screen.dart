@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
-import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/glass_icon_button.dart';
 import '../../data/models/trainer.dart';
 import 'providers/following_trainers_provider.dart';
@@ -47,41 +47,41 @@ class TrainerProfileScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: SizedBox(
-                    height: 170,
-                    width: double.infinity,
-                    child: CoverImage(
-                      url:
-                          'https://picsum.photos/seed/cf-trainer-${trainer.id}/800/500',
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  bottom: -26,
-                  child: Container(
-                    width: 84,
-                    height: 84,
+            /// Hero sin portada — el avatar ilustrado es el protagonista.
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 26),
+              decoration: BoxDecoration(
+                color: brand.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: brand.cardBorder),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 116,
+                    height: 116,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
+                      border: Border.all(color: brand.accent, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: brand.accent.withValues(alpha: 0.25),
+                          blurRadius: 28,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                    child: ClipOval(
-                      child: CoverImage(
-                        url: trainer.photoUrl,
-                        icon: Icons.person_rounded,
-                      ),
+                    child: CoachAvatar(
+                      avatar: trainer.avatar,
+                      initials: trainer.initials,
+                      size: 116,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 34),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/badge_chip.dart';
+import '../../../core/widgets/member_avatar.dart';
 import '../../../data/models/member.dart';
 import '../../payments/providers/membership_provider.dart';
 
@@ -40,14 +41,13 @@ class VipMemberCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(17),
-                  child: member?.photoUrl != null
-                      ? Image.network(
-                          member!.photoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              _PhotoFallback(initials: member!.initials),
-                        )
-                      : _PhotoFallback(initials: member?.initials ?? 'CF'),
+                  child: MemberAvatar(
+                    avatarId: member?.avatarId,
+                    initials: member?.initials ?? 'CF',
+                    size: 84,
+                    height: 108,
+                    borderRadius: BorderRadius.circular(17),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -103,30 +103,6 @@ class VipMemberCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PhotoFallback extends StatelessWidget {
-  const _PhotoFallback({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    final brand = context.brand;
-    return ColoredBox(
-      color: brand.background,
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            color: brand.accent,
-          ),
-        ),
       ),
     );
   }

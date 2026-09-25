@@ -10,8 +10,9 @@ import '../../core/firebase/auth_provider.dart';
 import '../../core/widgets/primary_button.dart';
 
 /// Primer login social: el socio ya fue dado de alta en recepción y
-/// tiene su número CF-#####. Aquí lo reclama junto con el teléfono
-/// registrado → POST /api/members/claim vincula el doc con auth_uid.
+/// tiene su número CF-##### + un PIN de 6 dígitos que le llegó por
+/// correo (contact_email). Aquí lo reclama → POST /api/members/claim
+/// vincula el doc con auth_uid y consume el PIN (single-use).
 class ClaimMemberScreen extends ConsumerStatefulWidget {
   const ClaimMemberScreen({super.key});
 
@@ -21,21 +22,23 @@ class ClaimMemberScreen extends ConsumerStatefulWidget {
 
 class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
   final _number = TextEditingController();
-  final _phone = TextEditingController();
+  final _pin = TextEditingController();
   bool _saving = false;
   String? _error;
 
   @override
   void dispose() {
     _number.dispose();
-    _phone.dispose();
+    _pin.dispose();
     super.dispose();
   }
 
   Future<void> _claim() async {
     if (_saving) return;
-    if (_number.text.trim().isEmpty || _phone.text.trim().length < 7) {
-      setState(() => _error = 'Ingresa tu número de socio y tu teléfono');
+    if (_number.text.trim().isEmpty || _pin.text.trim().length != 6) {
+      setState(
+        () => _error = 'Ingresa tu número de socio y el código de 6 dígitos',
+      );
       return;
     }
     setState(() {
@@ -45,7 +48,7 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
     try {
       await ApiClient.post('/api/members/claim', {
         'memberNumber': _number.text,
-        'phone': _phone.text,
+        'pin': _pin.text,
       });
 
       /// Al escribirse auth_uid, memberDocExistsProvider emite true
@@ -88,8 +91,8 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Recepción te lo entregó al registrarte. '
-              'Si aún no eres socio, acude a tu sucursal.',
+              'Recepción te envió un código de 6 dígitos a tu correo al '
+              'registrarte. Si aún no eres socio, acude a tu sucursal.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -117,14 +120,32 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
             ),
             const SizedBox(height: 14),
             TextField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
+              controller: _pin,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: TextStyle(color: brand.textPrimary),
+              style: TextStyle(
+                color: brand.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 8,
+                fontFamily: 'monospace',
+              ),
+              textAlign: TextAlign.center,
               decoration: _decoration(
                 brand,
-                hint: 'Teléfono registrado en recepción',
-                icon: Icons.phone_iphone_rounded,
+                hint: 'Código de 6 dígitos',
+                icon: Icons.pin_rounded,
+              ).copyWith(
+                counterText: '',
+                /// El letterSpacing del estilo de entrada se propaga al
+                /// hint (merge del decorator) — se resetea aquí.
+                hintStyle: TextStyle(
+                  color: brand.textSecondary,
+                  fontFamily: 'monospace',
+                  fontSize: 14,
+                  letterSpacing: 0,
+                ),
               ),
             ),
             if (_error != null) ...[

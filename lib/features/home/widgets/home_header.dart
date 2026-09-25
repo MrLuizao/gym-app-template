@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/widgets/member_avatar.dart';
 import '../../../data/repositories/gym_repositories.dart';
 
 class HomeHeader extends ConsumerWidget {
@@ -21,14 +22,11 @@ class HomeHeader extends ConsumerWidget {
             border: Border.all(color: Colors.white, width: 2),
           ),
           child: ClipOval(
-            child: member?.photoUrl != null
-                ? Image.network(
-                    member!.photoUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) =>
-                        _InitialsBox(initials: member.initials),
-                  )
-                : _InitialsBox(initials: member?.initials ?? 'CF'),
+            child: MemberAvatar(
+              avatarId: member?.avatarId,
+              initials: member?.initials ?? 'CF',
+              size: 48,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -62,30 +60,6 @@ class HomeHeader extends ConsumerWidget {
         const SizedBox(width: 12),
         _BellButton(),
       ],
-    );
-  }
-}
-
-class _InitialsBox extends StatelessWidget {
-  const _InitialsBox({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    final brand = context.brand;
-    return ColoredBox(
-      color: brand.surface,
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            color: brand.accent,
-          ),
-        ),
-      ),
     );
   }
 }

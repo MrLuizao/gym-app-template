@@ -9,6 +9,7 @@ class Member {
     required this.id,
     required this.name,
     this.photoUrl,
+    this.avatarId,
     required this.membershipStatus,
     this.qrCode = '',
     this.memberNumber = '',
@@ -20,6 +21,10 @@ class Member {
   final String id;
   final String name;
   final String? photoUrl;
+
+  /// Avatar prediseñado (`memberAvatarCatalog` ids) — reemplaza a la
+  /// foto de perfil: el socio elige uno, sin imágenes subidas.
+  final String? avatarId;
   final String membershipStatus;
   final String qrCode;
   final String memberNumber;
@@ -42,6 +47,7 @@ class Member {
       id: id,
       name: map['name'] as String? ?? 'Socio',
       photoUrl: map['photo_url'] as String?,
+      avatarId: map['avatar'] as String?,
       membershipStatus: map['membership_status'] as String? ?? 'EXPIRED',
       qrCode: map['qr_code'] as String? ?? '',
       memberNumber: map['member_number'] as String? ?? '',

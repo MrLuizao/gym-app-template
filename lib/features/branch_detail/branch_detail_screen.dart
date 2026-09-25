@@ -12,6 +12,7 @@ import '../../core/widgets/skeleton_box.dart';
 import '../../data/models/branch.dart';
 import '../../data/models/gym_class.dart';
 import '../../data/repositories/gym_repositories.dart';
+import '../payments/providers/membership_provider.dart';
 import 'providers/catalog_providers.dart';
 import 'providers/reservation_provider.dart';
 import '../checkin/widgets/checkin_sheet.dart';
@@ -57,6 +58,17 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
     final isFavorite = ref.watch(
       favoriteBranchesProvider.select((ids) => ids.contains(branch.id)),
     );
+
+    /// Planes mono-sede: esta sede no la cubre su plan — los tiles se
+    /// marcan y el botón de reserva queda bloqueado (server lo valida).
+    final memberBranch = ref.watch(
+      memberProvider.select((m) => m.value?.branchId),
+    );
+    final planAllBranches = ref.watch(
+      membershipProvider.select((m) => m.allBranches),
+    );
+    final outOfScope =
+        !planAllBranches && memberBranch != null && branch.id != memberBranch;
 
     return Scaffold(
       body: CustomScrollView(
@@ -225,7 +237,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _OccupancyCard(branch: branch),
+              child: _OccupancyCard(branch: branch, outOfScope: outOfScope),
             ),
           ),
           SliverToBoxAdapter(
@@ -325,6 +337,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                   child: ClassTile(
                     gymClass: classes[index],
                     date: _selectedDate,
+                    outOfScope: outOfScope,
                     reserved: reserved.contains(
                       ReservedClassesNotifier.keyOf(
                         classes[index].id,
@@ -464,14 +477,21 @@ class _TrainerSkeleton extends StatelessWidget {
 }
 
 class _OccupancyCard extends ConsumerWidget {
-  const _OccupancyCard({required this.branch});
+  const _OccupancyCard({required this.branch, required this.outOfScope});
 
   final Branch branch;
+
+  /// La sede no la cubre el plan del socio — el check-in aquí siempre
+  /// se rechaza en el server (PLAN_BRANCH_RESTRICTED).
+  final bool outOfScope;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final ratio = branch.occupancy;
+    /// El check-in solo tiene sentido si la sede está abierta Y el plan
+    /// del socio la cubre.
+    final canCheckIn = branch.isOpen && !outOfScope;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -525,17 +545,17 @@ class _OccupancyCard extends ConsumerWidget {
           const SizedBox(height: 14),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: branch.isOpen ? () => CheckInSheet.show(context) : null,
+            onTap: canCheckIn ? () => CheckInSheet.show(context) : null,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: branch.isOpen
+                color: canCheckIn
                     ? brand.accent.withValues(alpha: 0.12)
                     : brand.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: branch.isOpen
+                  color: canCheckIn
                       ? brand.accent.withValues(alpha: 0.35)
                       : brand.cardBorder,
                 ),
@@ -544,20 +564,24 @@ class _OccupancyCard extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    branch.isOpen
+                    canCheckIn
                         ? Icons.qr_code_scanner_rounded
                         : Icons.lock_outline_rounded,
                     size: 16,
-                    color: branch.isOpen ? brand.accent : brand.textSecondary,
+                    color: canCheckIn ? brand.accent : brand.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    branch.isOpen ? 'CHECK-IN AQUÍ' : 'SEDE CERRADA',
+                    outOfScope
+                        ? 'TU PLAN NO CUBRE ESTA SEDE'
+                        : branch.isOpen
+                        ? 'CHECK-IN AQUÍ'
+                        : 'SEDE CERRADA',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.8,
-                      color: branch.isOpen ? brand.accent : brand.textSecondary,
+                      color: canCheckIn ? brand.accent : brand.textSecondary,
                     ),
                   ),
                 ],

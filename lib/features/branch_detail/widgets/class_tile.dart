@@ -9,11 +9,16 @@ class ClassTile extends StatelessWidget {
     required this.gymClass,
     required this.reserved,
     required this.date,
+    this.outOfScope = false,
     this.onTap,
   });
 
   final GymClass gymClass;
   final bool reserved;
+
+  /// La sede del tile no la cubre el plan del socio (mono-sede) —
+  /// reservar aquí siempre falla en el server.
+  final bool outOfScope;
 
   /// Fecha `YYYY-MM-DD` de la ocurrencia mostrada (selector de día).
   final String date;
@@ -153,7 +158,7 @@ class ClassTile extends StatelessWidget {
                   border: Border.all(
                     color: active
                         ? brand.accent
-                        : full || ended
+                        : outOfScope || full || ended
                         ? brand.cardBorder
                         : brand.accent.withValues(alpha: 0.6),
                   ),
@@ -161,16 +166,18 @@ class ClassTile extends StatelessWidget {
                 child: Text(
                   active
                       ? 'RESERVADO'
-                      : (ended
-                            ? 'TERMINADA'
-                            : (full ? 'LLENO' : 'RESERVAR')),
+                      : (outOfScope
+                            ? 'SOLO TU SEDE'
+                            : (ended
+                                  ? 'TERMINADA'
+                                  : (full ? 'LLENO' : 'RESERVAR'))),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.4,
                     color: active
                         ? brand.background
-                        : full || ended
+                        : outOfScope || full || ended
                         ? brand.textSecondary
                         : brand.accent,
                   ),

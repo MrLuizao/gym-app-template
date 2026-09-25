@@ -159,7 +159,7 @@ final mockTrainers = <Trainer>[
     name: 'Marcos Villalba',
     specialty: 'Fuerza · Hipertrofia',
     shift: 'MAÑANA',
-    photoUrl: 'https://picsum.photos/seed/cf-t1/300/300',
+    avatar: 'bronce',
   ),
   Trainer(
     id: 't2',
@@ -167,7 +167,7 @@ final mockTrainers = <Trainer>[
     name: 'Lucía Ortega',
     specialty: 'Movilidad · Yoga',
     shift: 'MAÑANA',
-    photoUrl: 'https://picsum.photos/seed/cf-t2/300/300',
+    avatar: 'rosa',
   ),
   Trainer(
     id: 't3',
@@ -175,7 +175,7 @@ final mockTrainers = <Trainer>[
     name: 'Diego Salas',
     specialty: 'Cross Training',
     shift: 'TARDE',
-    photoUrl: 'https://picsum.photos/seed/cf-t3/300/300',
+    avatar: 'ember',
   ),
   Trainer(
     id: 't4',
@@ -183,7 +183,7 @@ final mockTrainers = <Trainer>[
     name: 'Carla Mendoza',
     specialty: 'Pérdida de grasa',
     shift: 'TARDE',
-    photoUrl: 'https://picsum.photos/seed/cf-t4/300/300',
+    avatar: 'terra',
   ),
   Trainer(
     id: 't5',
@@ -191,7 +191,7 @@ final mockTrainers = <Trainer>[
     name: 'Iván Paredes',
     specialty: 'Boxeo · Acondicionamiento',
     shift: 'NOCHE',
-    photoUrl: 'https://picsum.photos/seed/cf-t5/300/300',
+    avatar: 'vine',
   ),
 ];
 

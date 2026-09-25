@@ -10,6 +10,7 @@ class MembershipPlan {
     required this.name,
     required this.price,
     this.tag,
+    this.allBranches = false,
   });
 
   final String id;
@@ -17,12 +18,17 @@ class MembershipPlan {
   final double price;
   final String? tag;
 
+  /// `all_branches` del plan — sin él el socio solo entra/reserva en su
+  /// sede de registro (el backend lo valida igual en checkin y book).
+  final bool allBranches;
+
   factory MembershipPlan.fromMap(String id, Map<String, dynamic> map) =>
       MembershipPlan(
         id: id,
         name: map['name'] as String? ?? '',
         price: (map['price'] as num?)?.toDouble() ?? 0,
         tag: map['highlight'] == true ? 'DESTACADO' : null,
+        allBranches: map['all_branches'] == true,
       );
 }
 
@@ -75,23 +81,38 @@ class MembershipState {
     required this.planId,
     required this.status,
     this.expiresAt,
+    this.allBranches = false,
   });
 
   final String planId;
   final String status;
   final DateTime? expiresAt;
 
+  /// El plan cubre cualquier sede — sin él solo la de registro.
+  final bool allBranches;
+
   bool get isActive => status == 'ACTIVE';
 }
 
-/// Membresía del socio — derivada en vivo de /users/{uid}.
-/// La webhook de Stripe la actualiza al confirmarse el cobro.
+/// Membresía del socio — derivada en vivo de /users/{uid} + el catálogo
+/// de planes (all_branches). La webhook de Stripe la actualiza al
+/// confirmarse el cobro.
 final membershipProvider = Provider<MembershipState>((ref) {
   final member = ref.watch(memberProvider).value;
+  final planId = member?.planId ?? '';
+  final plans = ref.watch(plansProvider).value ?? _plansCache;
+  MembershipPlan? myPlan;
+  for (final p in plans) {
+    if (p.id == planId) {
+      myPlan = p;
+      break;
+    }
+  }
   return MembershipState(
-    planId: member?.planId ?? '',
+    planId: planId,
     status: member?.membershipStatus ?? 'EXPIRED',
     expiresAt: member?.membershipUntil,
+    allBranches: myPlan?.allBranches ?? false,
   );
 });
 

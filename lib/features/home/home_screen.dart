@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/branding/brand.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
-import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/skeleton_box.dart';
 import '../checkin/widgets/checkin_sheet.dart';
 import '../trainers/providers/following_trainers_provider.dart';
@@ -280,11 +280,10 @@ class _MyTrainersSection extends ConsumerWidget {
                               width: 1.6,
                             ),
                           ),
-                          child: ClipOval(
-                            child: CoverImage(
-                              url: trainer.photoUrl,
-                              icon: Icons.person_rounded,
-                            ),
+                          child: CoachAvatar(
+                            avatar: trainer.avatar,
+                            initials: trainer.initials,
+                            size: 54,
                           ),
                         ),
                         const SizedBox(height: 8),
