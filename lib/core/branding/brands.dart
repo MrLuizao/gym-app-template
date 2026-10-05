@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'brand.dart';
 
-const capitalFitness = BrandConfig(
-  id: 'capital_fitness',
-  appName: 'CAPITAL FITNESS',
+const rirHub = BrandConfig(
+  id: 'rir_hub',
+  appName: 'RIR-HUB',
   tagline: 'Entrena sin límites',
   background: Color(0xFF050505),
   surface: Color(0xFF111411),
@@ -28,4 +28,4 @@ const novaFit = BrandConfig(
   textSecondary: Color(0xFF8CA3B5),
 );
 
-const availableBrands = <BrandConfig>[capitalFitness, novaFit];
+const availableBrands = <BrandConfig>[rirHub, novaFit];

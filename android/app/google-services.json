@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1081337347174:android:55f347ac0ae7e4209d01a7",
+        "mobilesdk_app_id": "1:1081337347174:android:ce047705326905239d01a7",
         "android_client_info": {
-          "package_name": "com.luis.prototipo_gym"
+          "package_name": "com.rirhub.app"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.luis.prototipo_gym",
-            "certificate_hash": "fbc72aec99c5481f8bcbabd77b7f5cecf2339a3e"
-          }
-        },
         {
           "client_id": "1081337347174-pcgs538lrc9121pln4tki132iius1ur6.apps.googleusercontent.com",
           "client_type": 3

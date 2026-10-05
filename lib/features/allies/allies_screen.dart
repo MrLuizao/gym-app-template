@@ -8,7 +8,7 @@ import '../../data/models/sponsor_ad.dart';
 import '../home/providers/sponsor_ads_provider.dart';
 import '../metrics/ad_metrics_provider.dart';
 
-/// Espacio publicitario vendible — rate card estático del prototipo.
+/// Espacio publicitario vendible — rate card estático.
 /// Los precios varían por ubicación: el carrusel del Home es el
 /// premium, el directorio de esta sección es la entrada básica.
 class _AdSpace {

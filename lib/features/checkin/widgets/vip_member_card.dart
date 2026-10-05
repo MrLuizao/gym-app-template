@@ -64,7 +64,7 @@ class VipMemberCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      member?.name ?? 'Socio Capital',
+                      member?.name ?? 'Socio RIR-HUB',
                       style: Theme.of(context).textTheme.titleLarge,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

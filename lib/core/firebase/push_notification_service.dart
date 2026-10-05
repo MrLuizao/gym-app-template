@@ -9,7 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../data/models/member.dart';
 
 /// Topics FCM — el backend envía a topics, no a tokens:
-/// `all_members`, `branch_{id}`, `expired_members`.
+/// `all_members`, `branch_{id}`, `expired_members`, `member_{id}`.
 class PushNotificationService {
   PushNotificationService._();
 
@@ -19,6 +19,12 @@ class PushNotificationService {
       StreamController<int>.broadcast();
   static Stream<int> get tabRequests => _tabRequests.stream;
 
+  /// Tap en push de soporte (`data.type == 'support'`) — MainShell lo
+  /// consume y abre el chat.
+  static final StreamController<void> _supportRequests =
+      StreamController<void>.broadcast();
+  static Stream<void> get supportRequests => _supportRequests.stream;
+
   /// Notificación que abrió la app desde cold start — MainShell lo consume
   /// una sola vez tras el primer frame.
   static int? _initialTab;
@@ -26,6 +32,23 @@ class PushNotificationService {
     final tab = _initialTab;
     _initialTab = null;
     return tab;
+  }
+
+  static bool _initialSupport = false;
+  static bool takeInitialSupport() {
+    final flag = _initialSupport;
+    _initialSupport = false;
+    return flag;
+  }
+
+  /// Enruta el tap: push de soporte abre el chat; el resto cae al
+  /// mapping por target/kind.
+  static void _route(Map<String, dynamic> data) {
+    if (data['type'] == 'support') {
+      _supportRequests.add(null);
+      return;
+    }
+    _tabRequests.add(_tabFor(data));
   }
 
   /// Android no muestra nada con la app en foreground — el banner lo
@@ -81,9 +104,7 @@ class PushNotificationService {
           final payload = response.payload;
           if (payload == null) return;
           try {
-            _tabRequests.add(
-              _tabFor(jsonDecode(payload) as Map<String, dynamic>),
-            );
+            _route(jsonDecode(payload) as Map<String, dynamic>);
           } on FormatException {
             // Payload inválido — se ignora el tap.
           }
@@ -111,10 +132,16 @@ class PushNotificationService {
       );
     });
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      _tabRequests.add(_tabFor(message.data));
+      _route(message.data);
     });
     final initial = await fcm.getInitialMessage();
-    if (initial != null) _initialTab = _tabFor(initial.data);
+    if (initial != null) {
+      if (initial.data['type'] == 'support') {
+        _initialSupport = true;
+      } else {
+        _initialTab = _tabFor(initial.data);
+      }
+    }
     await fcm.subscribeToTopic('all_members');
   }
 
@@ -126,10 +153,13 @@ class PushNotificationService {
     final next = <String>{
       if (member?.branchId != null) 'branch_${member!.branchId}',
       if (member != null && !member.isActive) 'expired_members',
+      /// Topic personal — respuestas de soporte llegan solo a este socio.
+      if (member != null) 'member_${member.id}',
     };
     final prev = <String>{
       if (previous?.branchId != null) 'branch_${previous!.branchId}',
       if (previous != null && !previous.isActive) 'expired_members',
+      if (previous != null) 'member_${previous.id}',
     };
     for (final topic in prev.difference(next)) {
       await fcm.unsubscribeFromTopic(topic);

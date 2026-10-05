@@ -390,7 +390,7 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                                     TileLayer(
                                       urlTemplate:
                                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                      userAgentPackageName: 'com.prototipo.gym',
+                                      userAgentPackageName: 'com.rirhub.app',
                                     ),
                                     MarkerLayer(
                                       markers: [

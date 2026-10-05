@@ -1,6 +1,6 @@
 {
-    "name": "prototipo_gym",
-    "short_name": "prototipo_gym",
+    "name": "RIR-HUB",
+    "short_name": "RIR-HUB",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

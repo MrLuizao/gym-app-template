@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/badge_chip.dart';
+import '../../../data/repositories/gym_repositories.dart';
+import '../../rewards/providers/loyalty_providers.dart';
+import '../../rewards/rewards_screen.dart';
 
-class WeeklySummarySection extends StatelessWidget {
+/// Racha semanal real — `users/{id}/visits` (la escribe el backend al
+/// conceder check-in) + `weekly_goal` del socio. Tap → pantalla de
+/// objetivos y recompensas.
+class WeeklySummarySection extends ConsumerWidget {
   const WeeklySummarySection({super.key});
 
   static const _dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  static const _weeklyGoal = 4;
-
-  /// Mock: índices de días de la semana (0=lun) con check-in.
-  /// TODO(Firebase): reemplazar con el historial real de check-ins del socio.
-  static const _visitedWeekdays = {0, 1, 3};
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
+    final member = ref.watch(memberProvider).value;
+    final goal = AppConfig.firebaseActive
+        ? (member?.weeklyGoal ?? 4)
+        : ref.watch(demoWeeklyGoalProvider);
+    final visited = ref.watch(weekVisitedDaysProvider);
+
     final now = DateTime.now();
     final todayIndex = now.weekday - 1;
     final monday = now.subtract(Duration(days: todayIndex));
-    final visits = _visitedWeekdays.where((d) => d <= todayIndex).length;
-    final remaining = (_weeklyGoal - visits).clamp(0, _weeklyGoal);
+    final visits = visited.where((d) => d <= todayIndex).length;
+    final remaining = (goal - visits).clamp(0, goal);
 
     return AppCard(
       padding: const EdgeInsets.all(16),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const RewardsScreen())),
       child: Column(
         children: [
           Row(
@@ -38,9 +50,12 @@ class WeeklySummarySection extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              BadgeChip(
-                label: '$visits/$_weeklyGoal VISITAS',
-                color: brand.accent,
+              BadgeChip(label: '$visits/$goal VISITAS', color: brand.accent),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: brand.textSecondary,
               ),
             ],
           ),
@@ -48,7 +63,7 @@ class WeeklySummarySection extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: visits / _weeklyGoal,
+              value: (visits / goal).clamp(0.0, 1.0),
               minHeight: 6,
               backgroundColor: brand.background,
               valueColor: AlwaysStoppedAnimation(brand.accent),
@@ -68,7 +83,7 @@ class WeeklySummarySection extends StatelessWidget {
                   remaining == 0
                       ? 'Meta semanal cumplida — buen trabajo'
                       : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} '
-                            'para tu meta de $_weeklyGoal por semana',
+                            'para tu meta de $goal por semana',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -83,7 +98,7 @@ class WeeklySummarySection extends StatelessWidget {
                   child: _DayPill(
                     label: _dayLabels[i],
                     number: monday.add(Duration(days: i)).day,
-                    visited: _visitedWeekdays.contains(i),
+                    visited: visited.contains(i),
                     isToday: i == todayIndex,
                     isFuture: i > todayIndex,
                   ),

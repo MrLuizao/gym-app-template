@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>1081337347174-o1vrrd76n6m60233mk607ojejreesgdj.apps.googleusercontent.com</string>
+	<string>1081337347174-ruaeevqh2vdm7m1hn149a4pcfcoipq4n.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.1081337347174-o1vrrd76n6m60233mk607ojejreesgdj</string>
+	<string>com.googleusercontent.apps.1081337347174-ruaeevqh2vdm7m1hn149a4pcfcoipq4n</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.luis.prototipoGym</string>
+	<string>com.rirhub.app</string>
 	<key>PROJECT_ID</key>
 	<string>rir-hub</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1081337347174:ios:74c0853adc874d0a9d01a7</string>
+	<string>1:1081337347174:ios:6b4e298e8b3374349d01a7</string>
 </dict>
 </plist>

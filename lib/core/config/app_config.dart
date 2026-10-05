@@ -30,6 +30,6 @@ class AppConfig {
       '1081337347174-pcgs538lrc9121pln4tki132iius1ur6.apps.googleusercontent.com';
 
   static const String demoUserId = 'demo-user-001';
-  static const String qrSigningKey = 'prototipo-gym-dev-key';
+  static const String qrSigningKey = 'rirhub-dev-key';
   static const Duration qrTokenTtl = Duration(seconds: 45);
 }

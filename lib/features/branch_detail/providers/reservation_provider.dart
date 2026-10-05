@@ -10,7 +10,7 @@ import 'catalog_providers.dart';
 class ReservedClassesNotifier extends Notifier<Set<String>> {
   /// El estado se clavea `'$classId|$branchId|$classDate'` — una reserva
   /// es por ocurrencia EN UNA SEDE: la misma clase multi-sede puede estar
-  /// reservada en Select y libre en Carranza.
+  /// reservada en VIP y libre en Norte.
   static String keyOf(String classId, String branchId, String date) =>
       '$classId|$branchId|$date';
 
@@ -23,10 +23,16 @@ class ReservedClassesNotifier extends Notifier<Set<String>> {
     /// Reservas reales del socio — las escribe POST /api/classes/:id/book
     /// (el cliente jamás toca la colección). El stream re-emite solo
     /// cuando el server confirma, así el estado sobrevive a reinicios.
-    /// Reservas viejas sin class_date cuentan en su fecha de created_at.
+    /// Acotado a `class_date >= hoy` — las reservas pasadas ya no
+    /// afectan la UI y así no se releen en cada sesión. Requiere el
+    /// índice compuesto (auth_uid + class_date) en firestore.indexes.
     final sub = FirebaseFirestore.instance
         .collection('bookings')
         .where('auth_uid', isEqualTo: uid)
+        .where(
+          'class_date',
+          isGreaterThanOrEqualTo: GymClass.dateKey(DateTime.now()),
+        )
         .snapshots()
         .listen((snap) {
           state = snap.docs

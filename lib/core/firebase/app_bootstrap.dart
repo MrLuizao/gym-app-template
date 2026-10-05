@@ -1,6 +1,7 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -23,6 +24,21 @@ class AppBootstrap {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      if (!kIsWeb) {
+        /// App Check: Play Integrity (Android) / DeviceCheck (iOS).
+        /// En debug se usa el provider de depuración (registrar el token
+        /// impreso en consola en Firebase Console → App Check). Web no
+        /// se activa — requeriría reCAPTCHA. La enforcement se prende en
+        /// la consola de Firebase por producto (Firestore, Auth, etc.).
+        await FirebaseAppCheck.instance.activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleDeviceCheckProvider(),
+        );
+      }
       if (kIsWeb) {
         /// En web el sign-in de Google va por el botón oficial GIS
         /// (FedCM): popup/redirect pierden la sesión por las políticas

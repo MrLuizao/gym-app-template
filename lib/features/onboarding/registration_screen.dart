@@ -154,7 +154,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Únete a Capital Fitness y entrena sin límites',
+                    'Únete a RIR-HUB y entrena sin límites',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -243,7 +243,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     ),
                   const SizedBox(height: 8),
                   Text(
-                    'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de Capital Fitness.',
+                    'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de RIR-HUB.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10,

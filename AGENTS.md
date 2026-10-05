@@ -1,4 +1,4 @@
-# Prototipo Gym — App del socio (Flutter)
+# RIR-HUB — App del socio (Flutter)
 
 Flutter + Riverpod + Firebase (Auth, Firestore, FCM) + Stripe planeado.
 Es la app del socio del gym — **nunca escribe colecciones críticas**
@@ -6,7 +6,7 @@ Es la app del socio del gym — **nunca escribe colecciones críticas**
 cambio pasa por el API del B2B vía `ApiClient` (Bearer ID token).
 
 Repo hermano — consola de administración + backend API (Nuxt 3):
-`/Users/luis/Develop/Personal/prototipo-gym-b2b` — **ver su `AGENTS.md` y
+`/Users/luis/Develop/Personal/rirhub-b2b` — **ver su `AGENTS.md` y
 `FIRESTORE.md` para modelo de datos, endpoints y matriz de roles.**
 
 ## Comandos
@@ -100,9 +100,40 @@ detalle del socio en el B2B. Sin vínculo no ve datos del gym.
   asigna el B2B al crear/editar el coach (`trainers.avatar`).
 - `photo_url` de members/trainers ya no se renderiza.
 
+### Lealtad — objetivos y recompensas
+
+- `features/rewards/rewards_screen.dart` — pantalla propia accesible
+  desde la card "Racha semanal" del home y desde Perfil
+  ("Objetivos y recompensas"). Muestra puntos, meta semanal editable
+  (2–6 visitas), progreso por día, catálogo `/rewards` y canjes.
+- Datos reales: `users/{id}/visits/{yyyy-mm-dd}` (lo escribe el
+  backend en check-in concedido — la app solo lee) +
+  `users.{weekly_goal|points|goal_awarded_week}`.
+- `weekly_goal` sí es escribible por el socio (whitelist en rules);
+  `points` solo se mueven en el backend (`+50` al cumplir la meta).
+- Canje → `POST /api/rewards/redeem` `{rewardId}` → código `RWR-XXXXXX`
+  que el socio muestra en recepción (vigente 30 días).
+- Sin Firebase: modo demo con meta local (`demoWeeklyGoalProvider`),
+  `mockVisitDates()` y `mockRewards`.
+
 ### Métricas de aliados
 
 `POST /api/ads/track` registra impresiones/taps de anuncios de sponsors.
+
+### Soporte (chat con recepción)
+
+- `features/support/support_chat_screen.dart` — "Ayuda y soporte" del
+  perfil. La conversación (`conversations/{id}` + `messages`) se crea
+  **perezosa** en el primer envío (`POST /api/support/conversations`), no
+  al abrir la pantalla. Mensajes via `ApiClient`; lectura por stream
+  Firestore (rules restringen al `member_id` propio).
+- Staff resuelve → el doc se borra; un 404 al enviar reinicia el id y
+  recrea en el siguiente mensaje.
+- Notificaciones: el socio se suscribe al topic `member_{memberId}`
+  (`syncTopics`); respuesta de staff → push con `data.type='support'`
+  → `supportRequests` del `PushNotificationService` → MainShell abre el
+  chat (también en cold start). Campanita del HomeHeader =
+  `supportStateProvider` (unread de `unread_member`), tap abre el chat.
 
 ## Convenciones
 
@@ -131,6 +162,27 @@ detalle del socio en el B2B. Sin vínculo no ve datos del gym.
   "no configurado".
 
 ## Pendientes conocidos
+
+- **IDs de plataforma**: `com.rirhub.app` (Android applicationId +
+  iOS bundle ID — renombrados desde `com.luis.prototipo_gym`/
+  `com.luis.prototipoGym`). Los registros Firebase nuevos son
+  `android:ce047705326905239d01a7` / `ios:6b4e298e8b3374349d01a7`;
+  los viejos (`prototipo_gym`) quedaron en el proyecto y se pueden
+  borrar en Console cuando se confirme que todo corre.
+- **App Check**: el cliente activa Play Integrity (Android) / DeviceCheck
+  (iOS — registrado en Console con `AuthKey_848YS4NF3K.p8` + team
+  `FWU6W4844Y`) en `app_bootstrap.dart` — debug usa los providers de
+  depuración (registrar el token que imprime la consola en Firebase
+  Console → App Check → Apps). **Web no activado** (requeriría reCAPTCHA
+  — decisión tomada). Para que muerda de verdad falta en Firebase
+  Console: registrar la app Android con Play Integrity + la SHA-256 de
+  firma, y prender **enforcement** por producto (Firestore, Auth).
+- **SHA de firma (Android)**: el SHA-1 del debug keystore ya está
+  registrado en la app nueva (Google Sign-In). Al firmar release, agregar
+  el SHA-1/256 del keystore de producción en la app `rirhub` de Console.
+- **bookings stream**: acotado a `class_date >= hoy` — usa el índice
+  compuesto `(auth_uid, class_date)` ya deployado; reservas pasadas no se
+  releen.
 
 - **Stripe keys**: flujo completo; falta `stripePublishableKey`
   (`app_config.dart`, `pk_test_...`) y las secret del B2B.

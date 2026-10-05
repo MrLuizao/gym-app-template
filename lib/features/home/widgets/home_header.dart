@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/member_avatar.dart';
 import '../../../data/repositories/gym_repositories.dart';
+import '../../support/providers/support_provider.dart';
+import '../../support/support_chat_screen.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -64,14 +66,18 @@ class HomeHeader extends ConsumerWidget {
   }
 }
 
-class _BellButton extends StatelessWidget {
+class _BellButton extends ConsumerWidget {
   const _BellButton();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
+    final support = ref.watch(supportStateProvider).value;
+    final unread = support?.unread ?? 0;
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+      ),
       child: Container(
         width: 44,
         height: 44,
@@ -84,24 +90,38 @@ class _BellButton extends StatelessWidget {
           children: [
             Center(
               child: Icon(
-                Icons.notifications_rounded,
+                Icons.chat_bubble_outline_rounded,
                 size: 20,
                 color: brand.textPrimary,
               ),
             ),
-            Positioned(
-              right: 9,
-              top: 9,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: brand.accent,
-                  border: Border.all(color: brand.surface, width: 1.5),
+            if (unread > 0)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 16),
+                  height: 16,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(8),
+                    color: brand.occupancyHigh,
+                    border: Border.all(color: brand.surface, width: 1.5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      unread > 9 ? '9+' : '$unread',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-package com.luis.prototipo_gym
+package com.rirhub.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

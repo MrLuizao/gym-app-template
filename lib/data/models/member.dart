@@ -16,6 +16,9 @@ class Member {
     this.planId = '',
     this.branchId,
     this.membershipUntil,
+    this.weeklyGoal = 4,
+    this.points = 0,
+    this.goalAwardedWeek,
   });
 
   final String id;
@@ -31,6 +34,14 @@ class Member {
   final String planId;
   final String? branchId;
   final DateTime? membershipUntil;
+
+  /// Lealtad — `weekly_goal` lo edita el socio; `points` solo lo
+  /// escribe el backend al cumplir la meta semanal.
+  final int weeklyGoal;
+  final int points;
+
+  /// Semana (lunes `yyyy-MM-dd` CDMX) ya premiada — evita doble premio.
+  final String? goalAwardedWeek;
 
   bool get isActive => membershipStatus == 'ACTIVE';
 
@@ -58,6 +69,9 @@ class Member {
           : until is num
           ? DateTime.fromMillisecondsSinceEpoch(until.toInt())
           : null,
+      weeklyGoal: (map['weekly_goal'] as num?)?.toInt() ?? 4,
+      points: (map['points'] as num?)?.toInt() ?? 0,
+      goalAwardedWeek: map['goal_awarded_week'] as String?,
     );
   }
 

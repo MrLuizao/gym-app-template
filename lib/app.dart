@@ -28,7 +28,7 @@ class MembersApp extends StatelessWidget {
     return MaterialApp(
       title: 'Gym Members',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.fromBrand(capitalFitness),
+      theme: AppTheme.fromBrand(rirHub),
       home: const RootGate(),
       onGenerateRoute: (settings) {
         final routeBuilder = _routes[settings.name];

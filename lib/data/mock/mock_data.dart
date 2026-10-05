@@ -5,6 +5,7 @@ import '../models/coupon.dart';
 import '../models/gym_class.dart';
 import '../models/member.dart';
 import '../models/promo.dart';
+import '../models/reward.dart';
 import '../models/sponsor_ad.dart';
 import '../models/store_product.dart';
 import '../models/trainer.dart';
@@ -12,52 +13,52 @@ import '../models/trainer.dart';
 const mockBranches = <Branch>[
   Branch(
     id: 'select',
-    brandId: 'capital_fitness',
-    name: 'Select',
+    brandId: 'rir_hub',
+    name: 'VIP',
     maxCapacity: 180,
     currentCapacity: 96,
-    address: 'Av. Hidalgo · Centro',
+    address: 'Av. Principal #500',
     schedule: 'Lun–Vie 5:30–23:00 · Sáb 7:00–20:00',
     lat: 19.2926,
     lng: -99.6572,
-    imageUrl: 'https://picsum.photos/seed/cf-select/800/500',
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=500&fit=crop&auto=format',
   ),
   Branch(
     id: 'xpress',
-    brandId: 'capital_fitness',
-    name: 'Xpress Metepec',
+    brandId: 'rir_hub',
+    name: 'Fast',
     maxCapacity: 90,
     currentCapacity: 31,
-    address: 'Av. Paseo Tollocan #412',
+    address: 'Blvd. Express #412',
     schedule: 'Lun–Vie 6:00–22:00 · Sáb 8:00–14:00',
     lat: 19.2548,
     lng: -99.6057,
-    imageUrl: 'https://picsum.photos/seed/cf-xpress/800/500',
+    imageUrl: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&h=500&fit=crop&auto=format',
   ),
   Branch(
     id: 'centro',
-    brandId: 'capital_fitness',
+    brandId: 'rir_hub',
     name: 'Centro',
     maxCapacity: 140,
     currentCapacity: 122,
-    address: 'Av. Juárez Sur · Centro',
+    address: 'Av. Central #129',
     schedule: 'Lun–Vie 6:00–22:30 · Sáb 8:00–18:00',
     lat: 19.2855,
     lng: -99.6549,
-    imageUrl: 'https://picsum.photos/seed/cf-centro/800/500',
+    imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&h=500&fit=crop&auto=format',
   ),
   Branch(
     id: 'carranza',
-    brandId: 'capital_fitness',
-    name: 'Carranza',
+    brandId: 'rir_hub',
+    name: 'Norte',
     maxCapacity: 120,
     currentCapacity: 41,
     status: 'CLOSED',
-    address: 'C. Carranza #1235',
+    address: 'Av. Norte #1235',
     schedule: 'Lun–Vie 6:00–21:00',
     lat: 19.2810,
     lng: -99.6603,
-    imageUrl: 'https://picsum.photos/seed/cf-carranza/800/500',
+    imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=500&fit=crop&auto=format',
   ),
 ];
 
@@ -69,6 +70,8 @@ const mockMember = Member(
   memberNumber: 'CF-00421',
   planId: 'black',
   membershipUntil: null,
+  weeklyGoal: 4,
+  points: 60,
 );
 
 final mockClasses = <GymClass>[
@@ -380,7 +383,7 @@ final mockProducts = <StoreProduct>[
 final mockCoupons = <Coupon>[
   Coupon(
     id: 'c1',
-    brandId: 'capital_fitness',
+    brandId: 'rir_hub',
     title: 'Proteína X-Treme -25%',
     description: 'En suplementos de recepción · 2kg',
     badge: '-25%',
@@ -390,7 +393,7 @@ final mockCoupons = <Coupon>[
   ),
   Coupon(
     id: 'c2',
-    brandId: 'capital_fitness',
+    brandId: 'rir_hub',
     title: 'Invita a un amigo',
     description: 'Clase grupal gratis para un acompañante',
     badge: '1 FREE',
@@ -400,7 +403,7 @@ final mockCoupons = <Coupon>[
   ),
   Coupon(
     id: 'c3',
-    brandId: 'capital_fitness',
+    brandId: 'rir_hub',
     title: 'Bebidas 2x1',
     description: 'Bebidas de recepción después de las 18:00',
     badge: '2x1',
@@ -410,8 +413,8 @@ final mockCoupons = <Coupon>[
   ),
   Coupon(
     id: 'c4',
-    brandId: 'capital_fitness',
-    title: 'Merch Capital -15%',
+    brandId: 'rir_hub',
+    title: 'Merch RIR-HUB -15%',
     description: 'Camisetas, guantes y accesorios',
     badge: '-15%',
     code: 'CF-MERCH15',
@@ -419,6 +422,56 @@ final mockCoupons = <Coupon>[
     expiresAt: DateTime.now().add(const Duration(days: 21)),
   ),
 ];
+
+final mockRewards = <Reward>[
+  const Reward(
+    id: 'smoothie',
+    name: 'Smoothie gratis',
+    description: 'Un smoothie del bar al terminar tu entrenamiento',
+    pointsCost: 50,
+    icon: 'cup',
+    active: true,
+  ),
+  const Reward(
+    id: 'guest-pass',
+    name: 'Pase de invitado',
+    description: 'Un día gratis para un acompañante',
+    pointsCost: 100,
+    icon: 'users',
+    active: true,
+  ),
+  const Reward(
+    id: 'pt-session',
+    name: 'Sesión con entrenador',
+    description: '30 minutos de sesión personalizada',
+    pointsCost: 200,
+    icon: 'dumbbell',
+    active: true,
+  ),
+  const Reward(
+    id: 'week-free',
+    name: 'Semana gratis',
+    description: '7 días de extensión en tu membresía',
+    pointsCost: 350,
+    icon: 'calendar',
+    active: true,
+  ),
+];
+
+/// Visitas demo — esta semana lun/mié + la semana pasada completa.
+Set<String> mockVisitDates() {
+  final now = DateTime.now();
+  final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+  String key(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  return {
+    key(monday),
+    key(monday.add(const Duration(days: 2))),
+    key(monday.subtract(const Duration(days: 1))),
+    key(monday.subtract(const Duration(days: 3))),
+    key(monday.subtract(const Duration(days: 5))),
+  };
+}
 
 final mockNotices = <(IconData, String, String, String)>[
   (
@@ -429,7 +482,7 @@ final mockNotices = <(IconData, String, String, String)>[
   ),
   (
     Icons.local_fire_department_rounded,
-    'Reto Capital 30 días',
+    'Reto RIR-HUB 30 días',
     'Suma 12 entrenamientos y gana merchandising exclusivo.',
     'Ayer',
   ),

@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:prototipo_gym/app.dart';
-import 'package:prototipo_gym/data/mock/mock_data.dart';
-import 'package:prototipo_gym/data/models/branch.dart';
-import 'package:prototipo_gym/data/repositories/gym_repositories.dart';
+import 'package:rirhub_app/app.dart';
+import 'package:rirhub_app/data/mock/mock_data.dart';
+import 'package:rirhub_app/data/models/branch.dart';
+import 'package:rirhub_app/data/repositories/gym_repositories.dart';
 
 class _StaticBranchRepository implements BranchRepository {
   @override

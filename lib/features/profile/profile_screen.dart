@@ -11,6 +11,8 @@ import '../../core/widgets/primary_button.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../payments/checkout_screen.dart';
 import '../payments/providers/membership_provider.dart';
+import '../rewards/rewards_screen.dart';
+import '../support/support_chat_screen.dart';
 import 'providers/notification_prefs_provider.dart';
 import 'widgets/avatar_picker_sheet.dart';
 
@@ -185,9 +187,11 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             children: [
               _ActionRow(
-                icon: Icons.receipt_long_rounded,
-                label: 'Historial de visitas',
-                onTap: () => _soon(context),
+                icon: Icons.emoji_events_rounded,
+                label: 'Objetivos y recompensas',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RewardsScreen()),
+                ),
               ),
               Divider(height: 1, indent: 56, color: brand.cardBorder),
               _ActionRow(
@@ -197,15 +201,13 @@ class ProfileScreen extends ConsumerWidget {
               ),
               Divider(height: 1, indent: 56, color: brand.cardBorder),
               _ActionRow(
-                icon: Icons.notifications_rounded,
-                label: 'Notificaciones',
-                onTap: () => _soon(context),
-              ),
-              Divider(height: 1, indent: 56, color: brand.cardBorder),
-              _ActionRow(
-                icon: Icons.help_outline_rounded,
+                icon: Icons.chat_bubble_outline_rounded,
                 label: 'Ayuda y soporte',
-                onTap: () => _soon(context),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const SupportChatScreen(),
+                  ),
+                ),
               ),
               if (AppConfig.firebaseActive) ...[
                 Divider(height: 1, indent: 56, color: brand.cardBorder),

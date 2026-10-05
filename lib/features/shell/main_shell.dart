@@ -12,6 +12,7 @@ import '../explore/explore_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../promotions/promotions_screen.dart';
+import '../support/support_chat_screen.dart';
 import 'bottom_nav_provider.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -23,6 +24,7 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   StreamSubscription<int>? _tabSub;
+  StreamSubscription<void>? _supportSub;
 
   @override
   void initState() {
@@ -32,9 +34,12 @@ class _MainShellState extends ConsumerState<MainShell> {
       /// Descuentos). El cold start llega antes del primer frame — se
       /// consume una vez aquí.
       _tabSub = PushNotificationService.tabRequests.listen(_goToTab);
+      _supportSub =
+          PushNotificationService.supportRequests.listen((_) => _openSupport());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final initial = PushNotificationService.takeInitialTab();
         if (initial != null) _goToTab(initial);
+        if (PushNotificationService.takeInitialSupport()) _openSupport();
       });
     }
   }
@@ -43,9 +48,17 @@ class _MainShellState extends ConsumerState<MainShell> {
     ref.read(bottomNavIndexProvider.notifier).go(index);
   }
 
+  /// Push/tap de soporte → abre el chat encima del shell actual.
+  void _openSupport() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+    );
+  }
+
   @override
   void dispose() {
     _tabSub?.cancel();
+    _supportSub?.cancel();
     super.dispose();
   }
 

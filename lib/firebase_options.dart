@@ -31,21 +31,21 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDnJ4nfUvkkqQwhKAA7KMOPgqCjAGBdAoU',
-    appId: '1:1081337347174:android:55f347ac0ae7e4209d01a7',
+    appId: '1:1081337347174:android:ce047705326905239d01a7',
     messagingSenderId: '1081337347174',
     projectId: 'rir-hub',
     storageBucket: 'rir-hub.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyChA9pVf1ppamA7pqV_e86QDKNCmSESZ2o',
-    appId: '1:1081337347174:ios:74c0853adc874d0a9d01a7',
+    appId: '1:1081337347174:ios:6b4e298e8b3374349d01a7',
     messagingSenderId: '1081337347174',
     projectId: 'rir-hub',
     storageBucket: 'rir-hub.firebasestorage.app',
     androidClientId:
         '1081337347174-amukb7jv0ti7nmhpajgm5f0f91h8f49b.apps.googleusercontent.com',
     iosClientId:
-        '1081337347174-o1vrrd76n6m60233mk607ojejreesgdj.apps.googleusercontent.com',
-    iosBundleId: 'com.luis.prototipoGym',
+        '1081337347174-ruaeevqh2vdm7m1hn149a4pcfcoipq4n.apps.googleusercontent.com',
+    iosBundleId: 'com.rirhub.app',
   );
 }
