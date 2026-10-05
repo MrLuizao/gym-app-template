@@ -184,6 +184,12 @@ detalle del socio en el B2B. Sin vínculo no ve datos del gym.
   compuesto `(auth_uid, class_date)` ya deployado; reservas pasadas no se
   releen.
 
+- **QR firmado rotativo = código muerto**: `QrPassCard` +
+  `qrTokenProvider` (+ `verifyQrToken`/`QR_SIGNING_KEY` en el B2B)
+  están implementados pero **nadie los usa** — el check-in real es el
+  `CheckInSheet` con el número de socio en QR plano. Si se reactiva:
+  firmar server-side (la key compilada en el binario no es secreta y
+  debe igualar la env de Vercel) y validar frescura de `issuedAt`.
 - **Stripe keys**: flujo completo; falta `stripePublishableKey`
   (`app_config.dart`, `pk_test_...`) y las secret del B2B.
 - Ver "Deuda conocida" en el `AGENTS.md` del B2B para pendientes

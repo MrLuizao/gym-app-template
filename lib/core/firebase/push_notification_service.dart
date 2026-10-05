@@ -25,6 +25,12 @@ class PushNotificationService {
       StreamController<void>.broadcast();
   static Stream<void> get supportRequests => _supportRequests.stream;
 
+  /// Tap en push de lealtad (`data.type == 'loyalty'`, p.ej. meta
+  /// semanal cumplida) — MainShell abre la pantalla de Recompensas.
+  static final StreamController<void> _rewardsRequests =
+      StreamController<void>.broadcast();
+  static Stream<void> get rewardsRequests => _rewardsRequests.stream;
+
   /// Notificación que abrió la app desde cold start — MainShell lo consume
   /// una sola vez tras el primer frame.
   static int? _initialTab;
@@ -41,11 +47,22 @@ class PushNotificationService {
     return flag;
   }
 
-  /// Enruta el tap: push de soporte abre el chat; el resto cae al
-  /// mapping por target/kind.
+  static bool _initialRewards = false;
+  static bool takeInitialRewards() {
+    final flag = _initialRewards;
+    _initialRewards = false;
+    return flag;
+  }
+
+  /// Enruta el tap: soporte abre el chat, lealtad abre Recompensas; el
+  /// resto cae al mapping por target/kind.
   static void _route(Map<String, dynamic> data) {
     if (data['type'] == 'support') {
       _supportRequests.add(null);
+      return;
+    }
+    if (data['type'] == 'loyalty') {
+      _rewardsRequests.add(null);
       return;
     }
     _tabRequests.add(_tabFor(data));
@@ -138,6 +155,8 @@ class PushNotificationService {
     if (initial != null) {
       if (initial.data['type'] == 'support') {
         _initialSupport = true;
+      } else if (initial.data['type'] == 'loyalty') {
+        _initialRewards = true;
       } else {
         _initialTab = _tabFor(initial.data);
       }

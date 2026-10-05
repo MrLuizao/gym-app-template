@@ -12,6 +12,7 @@ import '../explore/explore_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../promotions/promotions_screen.dart';
+import '../rewards/rewards_screen.dart';
 import '../support/support_chat_screen.dart';
 import 'bottom_nav_provider.dart';
 
@@ -25,6 +26,7 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   StreamSubscription<int>? _tabSub;
   StreamSubscription<void>? _supportSub;
+  StreamSubscription<void>? _rewardsSub;
 
   @override
   void initState() {
@@ -36,10 +38,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       _tabSub = PushNotificationService.tabRequests.listen(_goToTab);
       _supportSub =
           PushNotificationService.supportRequests.listen((_) => _openSupport());
+      _rewardsSub =
+          PushNotificationService.rewardsRequests.listen((_) => _openRewards());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final initial = PushNotificationService.takeInitialTab();
         if (initial != null) _goToTab(initial);
         if (PushNotificationService.takeInitialSupport()) _openSupport();
+        if (PushNotificationService.takeInitialRewards()) _openRewards();
       });
     }
   }
@@ -55,10 +60,18 @@ class _MainShellState extends ConsumerState<MainShell> {
     );
   }
 
+  /// Push de lealtad (meta cumplida) → abre Recompensas.
+  void _openRewards() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RewardsScreen()),
+    );
+  }
+
   @override
   void dispose() {
     _tabSub?.cancel();
     _supportSub?.cancel();
+    _rewardsSub?.cancel();
     super.dispose();
   }
 
