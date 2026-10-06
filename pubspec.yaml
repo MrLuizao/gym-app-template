@@ -81,6 +81,7 @@ flutter:
   # scripts/generate-coach-avatars.mjs en el repo B2B).
   assets:
     - assets/avatars/coaches/
+    - assets/legal/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

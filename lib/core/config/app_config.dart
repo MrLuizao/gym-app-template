@@ -12,8 +12,8 @@ class AppConfig {
   /// Backend Nuxt (B2B) — endpoints con lógica de negocio:
   /// /api/ads/track, /api/payments/intent, etc.
   /// En dev con emulador Android usar http://10.0.2.2:3000
-  // static const String apiBaseUrl = 'https://gym-b2b-template.vercel.app';
-  static const String apiBaseUrl = 'http://localhost:3000'; 
+  static const String apiBaseUrl = 'https://gym-b2b-template.vercel.app';
+  // static const String apiBaseUrl = 'http://localhost:3000'; 
 
   // 'http://10.0.2.2:3000' (Android emu). En dispositivo físico el
   // localhost es el propio teléfono — usar la IP LAN de la Mac y

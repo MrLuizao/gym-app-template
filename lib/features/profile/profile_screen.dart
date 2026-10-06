@@ -9,6 +9,7 @@ import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/member_avatar.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/repositories/gym_repositories.dart';
+import '../legal/legal_screen.dart';
 import '../payments/checkout_screen.dart';
 import '../payments/providers/membership_provider.dart';
 import '../rewards/rewards_screen.dart';
@@ -207,6 +208,14 @@ class ProfileScreen extends ConsumerWidget {
                   MaterialPageRoute(
                     builder: (_) => const SupportChatScreen(),
                   ),
+                ),
+              ),
+              Divider(height: 1, indent: 56, color: brand.cardBorder),
+              _ActionRow(
+                icon: Icons.gavel_rounded,
+                label: 'Legal',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LegalScreen()),
                 ),
               ),
               if (AppConfig.firebaseActive) ...[
