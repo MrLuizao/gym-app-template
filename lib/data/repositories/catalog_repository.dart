@@ -14,7 +14,9 @@ abstract class CatalogRepository {
   Future<List<Trainer>> fetchTrainers(String branchId);
   Stream<List<Promo>> watchPromotions(String? branchId);
   Stream<List<Coupon>> watchCoupons(String? branchId);
-  Stream<List<SponsorAd>> watchSponsorAds(String? branchId);
+  /// Los anuncios ya no se segmentan por sede — cualquier ad activo lo
+  /// ven TODOS los socios, sin importar su sucursal.
+  Stream<List<SponsorAd>> watchSponsorAds();
 }
 
 bool _isFutureOrNull(dynamic ts) {
@@ -98,18 +100,14 @@ class FirestoreCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Stream<List<SponsorAd>> watchSponsorAds(String? branchId) {
+  Stream<List<SponsorAd>> watchSponsorAds() {
     return _db
         .collection('sponsorAds')
         .where('status', isEqualTo: 'ACTIVE')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .where(
-                (doc) =>
-                    _isFutureOrNull(doc.data()['ends_at']) &&
-                    _targetsBranch(doc.data(), branchId),
-              )
+              .where((doc) => _isFutureOrNull(doc.data()['ends_at']))
               .map((doc) => SponsorAd.fromMap(doc.id, doc.data()))
               .toList(),
         );
@@ -140,7 +138,7 @@ class MockCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Stream<List<SponsorAd>> watchSponsorAds(String? branchId) async* {
+  Stream<List<SponsorAd>> watchSponsorAds() async* {
     yield mockSponsorAds;
   }
 }

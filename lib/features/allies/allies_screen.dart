@@ -67,13 +67,10 @@ class AlliesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
-    final ads = ref.watch(sponsorAdsProvider).value ?? const [];
-    /// Los aliados con espacio premium van primero en el directorio.
-    final sorted = [...ads]..sort(
-        (a, b) => (a.placement == 'carousel' ? 0 : 1).compareTo(
-          b.placement == 'carousel' ? 0 : 1,
-        ),
-      );
+    /// El directorio muestra TODOS los anuncios activos: primero los
+    /// del carrusel (fijados — es lo que pagaron) y el resto en orden
+    /// aleatorio para que no haya favoritismo.
+    final sorted = ref.watch(alliesAdsProvider);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
@@ -422,7 +419,7 @@ class _AllyCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (ad.placement == 'carousel') ...[
+                      if (ad.placement != 'list') ...[
                         const SizedBox(width: 6),
                         Icon(
                           Icons.star_rounded,

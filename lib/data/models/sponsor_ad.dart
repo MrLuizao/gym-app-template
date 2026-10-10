@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Firestore: `/sponsorAds/{adId}`
 class SponsorAdSocials {
   const SponsorAdSocials({
@@ -6,6 +8,8 @@ class SponsorAdSocials {
     this.tiktok = '',
     this.website = '',
     this.whatsapp = '',
+    this.otherLabel = '',
+    this.otherUrl = '',
   });
 
   final String instagram;
@@ -14,12 +18,18 @@ class SponsorAdSocials {
   final String website;
   final String whatsapp;
 
+  /// Link libre — el anunciante elige la plataforma y escribe su
+  /// propia etiqueta (ej. "YouTube", "X", "Catálogo").
+  final String otherLabel;
+  final String otherUrl;
+
   bool get isEmpty =>
       instagram.isEmpty &&
       facebook.isEmpty &&
       tiktok.isEmpty &&
       website.isEmpty &&
-      whatsapp.isEmpty;
+      whatsapp.isEmpty &&
+      otherUrl.isEmpty;
 
   factory SponsorAdSocials.fromMap(Map<String, dynamic>? map) =>
       SponsorAdSocials(
@@ -28,6 +38,8 @@ class SponsorAdSocials {
         tiktok: map?['tiktok'] as String? ?? '',
         website: map?['website'] as String? ?? '',
         whatsapp: map?['whatsapp'] as String? ?? '',
+        otherLabel: map?['other_label'] as String? ?? '',
+        otherUrl: map?['other_url'] as String? ?? '',
       );
 
   Map<String, dynamic> toMap() => {
@@ -36,6 +48,8 @@ class SponsorAdSocials {
     'tiktok': tiktok,
     'website': website,
     'whatsapp': whatsapp,
+    'other_label': otherLabel,
+    'other_url': otherUrl,
   };
 }
 
@@ -57,10 +71,12 @@ class SponsorAd {
     this.phone = '',
     this.socials = const SponsorAdSocials(),
     this.photos = const [],
-    /// Espacio vendido: 'carousel' = carrusel del Home (premium),
-    /// 'list' = solo directorio de Aliados. Ads viejos sin el campo
-    /// cuentan como carrusel (comportamiento previo).
+    /// Espacio vendido: 'carousel' = premium (carrusel del Home +
+    /// Promociones + tope del directorio Aliados, cupo de 5), 'list' =
+    /// solo directorio en orden aleatorio. Docs con 'both' o sin el
+    /// campo cuentan como carrusel (normalizado en fromMap).
     this.placement = 'carousel',
+    this.createdAt,
   });
 
   final String id;
@@ -80,6 +96,10 @@ class SponsorAd {
   final SponsorAdSocials socials;
   final List<String> photos;
   final String placement;
+  /// Fecha de creación/compra — define el orden FIFO del carrusel:
+  /// los 5 más antiguos ocupan los espacios, el resto espera en la
+  /// lista hasta que venza alguno.
+  final DateTime? createdAt;
 
   bool get hasLocation => lat != null && lng != null;
 
@@ -102,7 +122,11 @@ class SponsorAd {
     photos: (map['photos'] as List<dynamic>? ?? const [])
         .whereType<String>()
         .toList(),
-    placement: map['placement'] as String? ?? 'carousel',
+    /// 'both' (legacy) y ads sin campo → 'carousel'.
+    placement: map['placement'] == 'list' ? 'list' : 'carousel',
+    createdAt: map['created_at'] is Timestamp
+        ? (map['created_at'] as Timestamp).toDate()
+        : null,
   );
 
   Map<String, dynamic> toMap() => {

@@ -135,10 +135,10 @@ class _SponsorsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final adsAsync = ref.watch(sponsorAdsProvider);
     return adsAsync.maybeWhen(
-      data: (ads) {
-        /// El carrusel es el espacio premium — los aliados del
-        /// directorio ('list') solo aparecen en la pestaña Aliados.
-        final carousel = ads.where((a) => a.placement == 'carousel').toList();
+      data: (_) {
+        /// El carrusel es el espacio premium — máx. 5 lugares ocupados
+        /// por antigüedad de compra; el excedente espera en Aliados.
+        final carousel = ref.watch(carouselAdsProvider);
         if (carousel.isEmpty) return const SizedBox.shrink();
         // TODO(Firebase): registrar impresión por anuncio visible
         return Column(

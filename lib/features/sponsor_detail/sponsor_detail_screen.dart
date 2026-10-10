@@ -354,6 +354,15 @@ class _SponsorDetailScreenState extends State<SponsorDetailScreen> {
                             onTap: () => _openUrl(ad.socials.website),
                             accent: ally,
                           ),
+                        if (ad.socials.otherUrl.isNotEmpty)
+                          _SocialChip(
+                            icon: Icons.link_rounded,
+                            label: ad.socials.otherLabel.isNotEmpty
+                                ? ad.socials.otherLabel
+                                : 'Enlace',
+                            onTap: () => _openUrl(ad.socials.otherUrl),
+                            accent: ally,
+                          ),
                       ],
                     ),
                   ],
