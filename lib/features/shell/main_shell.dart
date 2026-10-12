@@ -10,7 +10,6 @@ import '../../data/repositories/gym_repositories.dart';
 import '../allies/allies_screen.dart';
 import '../explore/explore_screen.dart';
 import '../home/home_screen.dart';
-import '../profile/profile_screen.dart';
 import '../promotions/promotions_screen.dart';
 import '../rewards/rewards_screen.dart';
 import '../support/support_chat_screen.dart';
@@ -106,7 +105,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ExploreScreen(),
               AlliesScreen(),
               PromotionsScreen(),
-              ProfileScreen(),
+              RewardsScreen(),
             ],
           ),
         ),
@@ -185,15 +184,15 @@ class MainBottomBar extends StatelessWidget {
               Expanded(
                 child: _BarItem(
                   icon: Icons.local_activity_outlined,
-                  label: 'Descuentos',
+                  label: 'Promos',
                   selected: index == 3,
                   onTap: () => onChanged(3),
                 ),
               ),
               Expanded(
                 child: _BarItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Perfil',
+                  icon: Icons.emoji_events_outlined,
+                  label: 'Premios',
                   selected: index == 4,
                   onTap: () => onChanged(4),
                 ),

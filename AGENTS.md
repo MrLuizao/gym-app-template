@@ -31,11 +31,13 @@ flutter run       # tras cambios de plugins/gradle: rebuild completo
   `app_bootstrap`), theme, widgets compartidos
 - `lib/data/` — models (Firestore snake_case ↔ Dart), repositories
   (queries de solo lectura a Firestore), mock (fallback demo)
-- `lib/features/` — por pantalla: `home`, `explore`, `allies`, `promos`
-  (Descuentos), `profile`, `branch_detail`, `checkin`, `trainers`,
+- `lib/features/` — por pantalla: `home`, `explore`, `allies`, `promos`,
+  `rewards`, `profile`, `branch_detail`, `checkin`, `trainers`,
   `auth`, `onboarding`, `payments`, `metrics`, `sponsor_detail`, `shell`
 - Bottom nav (`shell/main_shell.dart`): 0 Inicio · 1 Explorar · 2 Aliados
-  · 3 Descuentos · 4 Perfil — el `target` de los push mapea a estos índices
+  · 3 Promos · 4 Premios — el Perfil NO es tab; se abre tocando el avatar
+  del header del Home (push → `profile_screen` como modal). El `target`
+  de los push mapea a los índices de tab.
 
 ## Flujos clave
 
@@ -100,21 +102,40 @@ detalle del socio en el B2B. Sin vínculo no ve datos del gym.
   asigna el B2B al crear/editar el coach (`trainers.avatar`).
 - `photo_url` de members/trainers ya no se renderiza.
 
+### Perfil y ajustes
+
+- `profile_screen.dart` — se abre al tocar el avatar del HomeHeader
+  (no es tab del bottom nav). Muestra membresía, renovación y menú
+  Cuenta (pagos, soporte, legal, logout).
+- **Notificaciones**: los toggles viven en
+  `features/profile/settings_screen.dart` ("Ajustes") — accesible desde
+  Perfil → Cuenta → "Notificaciones". Mantenerlos fuera de la vista
+  principal es intencional: evita que el socio los desactive sin querer
+  (son canal comercial del gym).
+
 ### Lealtad — objetivos y recompensas
 
-- `features/rewards/rewards_screen.dart` — pantalla propia accesible
-  desde la card "Racha semanal" del home y desde Perfil
-  ("Objetivos y recompensas"). Muestra puntos, meta semanal editable
-  (2–6 visitas), progreso por día, catálogo `/rewards` y canjes.
+- `features/rewards/rewards_screen.dart` — tab propio del bottom nav
+  ("Premios"). Muestra puntos, meta semanal editable
+  (2–6 visitas), progreso por día, catálogo `/rewards`, canjes e
+  historial de puntos.
 - Datos reales: `users/{id}/visits/{yyyy-mm-dd}` (lo escribe el
   backend en check-in concedido — la app solo lee) +
   `users.{weekly_goal|points|goal_awarded_week}`.
 - `weekly_goal` sí es escribible por el socio (whitelist en rules);
   `points` solo se mueven en el backend (`+50` al cumplir la meta).
 - Canje → `POST /api/rewards/redeem` `{rewardId}` → código `RWR-XXXXXX`
-  que el socio muestra en recepción (vigente 30 días).
+  que el socio muestra en recepción (vigente 30 días). Al canjear llega
+  push de confirmación; 3 días antes de expirar llega recordatorio.
+- **Historial de puntos**: `pointsHistoryProvider` →
+  `GET /api/rewards/history` — últimos 50 movimientos. Modelo
+  `PointsHistoryEntry` en `data/models/reward.dart`. La pantalla muestra
+  cada movimiento con ícono por tipo, delta (+/-) y fecha relativa.
+- **Racha extendida**: el backend otorga puntos extra por semanas
+  consecutivas cumpliendo la meta (2 sem +25, 4 sem +50, 8 sem +100,
+  12 sem +150) — el historial lo refleja como entrada `streak_bonus`.
 - Sin Firebase: modo demo con meta local (`demoWeeklyGoalProvider`),
-  `mockVisitDates()` y `mockRewards`.
+  `mockVisitDates()` y `mockRewards`; historial con datos ficticios.
 
 ### Métricas de aliados
 

@@ -129,3 +129,41 @@ Future<String> redeemReward(String rewardId) async {
   });
   return res['code'] as String? ?? '';
 }
+
+/// Historial de movimientos de puntos — últimos 50, más recientes primero.
+final pointsHistoryProvider = FutureProvider<List<PointsHistoryEntry>>((ref) async {
+  if (!AppConfig.firebaseActive) {
+    // Demo: historial ficticio
+    return [
+      PointsHistoryEntry(
+        id: '1',
+        type: 'weekly_goal',
+        delta: 50,
+        balance: 110,
+        description: 'Meta semanal cumplida (4 visitas)',
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      PointsHistoryEntry(
+        id: '2',
+        type: 'redeem',
+        delta: -50,
+        balance: 60,
+        description: 'Canje: Smoothie gratis',
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      ),
+      PointsHistoryEntry(
+        id: '3',
+        type: 'weekly_goal',
+        delta: 50,
+        balance: 110,
+        description: 'Meta semanal cumplida (4 visitas)',
+        createdAt: DateTime.now().subtract(const Duration(days: 9)),
+      ),
+    ];
+  }
+  final res = await ApiClient.get('/api/rewards/history');
+  final list = res as List<dynamic>? ?? [];
+  return list
+      .map((e) => PointsHistoryEntry.fromJson(e as Map<String, dynamic>))
+      .toList();
+});

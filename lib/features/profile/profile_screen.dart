@@ -12,9 +12,8 @@ import '../../data/repositories/gym_repositories.dart';
 import '../legal/legal_screen.dart';
 import '../payments/checkout_screen.dart';
 import '../payments/providers/membership_provider.dart';
-import '../rewards/rewards_screen.dart';
 import '../support/support_chat_screen.dart';
-import 'providers/notification_prefs_provider.dart';
+import 'settings_screen.dart';
 import 'widgets/avatar_picker_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -33,9 +32,17 @@ class ProfileScreen extends ConsumerWidget {
     final member = ref.watch(memberProvider).value;
     final membership = ref.watch(membershipProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
-      children: [
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mi perfil'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        children: [
         Center(
           child: Column(
             children: [
@@ -158,29 +165,6 @@ class ProfileScreen extends ConsumerWidget {
           ).pushNamed(MembershipCheckoutScreen.routeName),
         ),
         const SizedBox(height: 24),
-        Text('Notificaciones', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 12),
-        AppCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _SwitchRow(
-                icon: Icons.notifications_active_rounded,
-                label: 'Avisos del gimnasio',
-                subtitle: 'Clases, aforo y tu membresía',
-                provider: gymNotifsEnabledProvider,
-              ),
-              Divider(height: 1, indent: 56, color: brand.cardBorder),
-              _SwitchRow(
-                icon: Icons.campaign_rounded,
-                label: 'Promos de aliados',
-                subtitle: 'Ofertas de marcas aliadas del gym',
-                provider: sponsorPromosOptInProvider,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
         Text('Cuenta', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         AppCard(
@@ -188,25 +172,21 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             children: [
               _ActionRow(
-                icon: Icons.emoji_events_rounded,
-                label: 'Objetivos y recompensas',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RewardsScreen()),
-                ),
-              ),
-              Divider(height: 1, indent: 56, color: brand.cardBorder),
-              _ActionRow(
-                icon: Icons.payments_rounded,
-                label: 'Métodos de pago',
-                onTap: () => _soon(context),
-              ),
-              Divider(height: 1, indent: 56, color: brand.cardBorder),
-              _ActionRow(
                 icon: Icons.chat_bubble_outline_rounded,
                 label: 'Ayuda y soporte',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const SupportChatScreen(),
+                  ),
+                ),
+              ),
+              Divider(height: 1, indent: 56, color: brand.cardBorder),
+              _ActionRow(
+                icon: Icons.notifications_active_rounded,
+                label: 'Notificaciones',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsScreen(),
                   ),
                 ),
               ),
@@ -230,27 +210,7 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  void _soon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        content: const Text(
-          'Disponible próximamente',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -361,72 +321,6 @@ class _ActionRow extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SwitchRow extends ConsumerWidget {
-  const _SwitchRow({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.provider,
-  });
-
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final NotifierProvider<PrefToggleNotifier, bool> provider;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final brand = context.brand;
-    final enabled = ref.watch(provider);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: brand.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: brand.cardBorder),
-            ),
-            child: Icon(icon, size: 16, color: brand.accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: brand.textPrimary,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: brand.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: enabled,
-            activeTrackColor: brand.accent,
-            onChanged: (value) => ref.read(provider.notifier).setEnabled(value),
-          ),
-        ],
       ),
     );
   }

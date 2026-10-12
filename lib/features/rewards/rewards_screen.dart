@@ -29,24 +29,40 @@ class RewardsScreen extends ConsumerWidget {
         ? member?.goalAwardedWeek == dateKey(weekMonday())
         : false;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Objetivos y recompensas')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-        children: [
-          _PointsCard(points: points),
-          const SizedBox(height: 16),
-          _GoalCard(goal: goal, visited: visited, awarded: awarded),
-          const SizedBox(height: 24),
-          Text('Recompensas', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          const _RewardsList(),
-          const SizedBox(height: 24),
-          Text('Mis códigos', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          const _RedemptionsList(),
-        ],
-      ),
+    final brand = context.brand;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+      children: [
+        Text('Premios', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Cumple tu meta semanal y canjea recompensas',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: brand.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 20),
+        _PointsCard(points: points),
+        const SizedBox(height: 16),
+        _GoalCard(goal: goal, visited: visited, awarded: awarded),
+        const SizedBox(height: 24),
+        Text('Recompensas', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        const _RewardsList(),
+        const SizedBox(height: 24),
+        Text('Mis códigos', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        const _RedemptionsList(),
+        const SizedBox(height: 24),
+        Text(
+          'Historial de puntos',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        const _PointsHistoryList(),
+      ],
     );
   }
 }
@@ -629,6 +645,137 @@ class _DayPill extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PointsHistoryList extends ConsumerWidget {
+  const _PointsHistoryList();
+
+  static const _typeIcons = <String, IconData>{
+    'weekly_goal': Icons.emoji_events_rounded,
+    'streak_bonus': Icons.local_fire_department_rounded,
+    'redeem': Icons.card_giftcard_rounded,
+    'manual_adjustment': Icons.edit_rounded,
+    'referral': Icons.people_rounded,
+  };
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(date).inDays;
+    if (diff == 0) return 'Hoy';
+    if (diff == 1) return 'Ayer';
+    if (diff < 7) return 'Hace $diff días';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brand = context.brand;
+    final historyAsync = ref.watch(pointsHistoryProvider);
+
+    return historyAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, _) => AppCard(
+        child: Text(
+          'No se pudo cargar el historial',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+      data: (history) {
+        if (history.isEmpty) {
+          return AppCard(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.history_rounded,
+                  size: 20,
+                  color: brand.textSecondary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Tu historial de puntos aparecerá aquí cuando '
+                    'cumplas tu meta semanal o canjees recompensas.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final entry in history)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AppCard(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: entry.delta > 0
+                              ? brand.occupancyLow.withValues(alpha: 0.15)
+                              : brand.occupancyHigh.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _typeIcons[entry.type] ?? Icons.stars_rounded,
+                          size: 18,
+                          color: entry.delta > 0
+                              ? brand.occupancyLow
+                              : brand.occupancyHigh,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.description,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: brand.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              _formatDate(entry.createdAt),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: brand.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        entry.delta > 0 ? '+${entry.delta}' : '${entry.delta}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: entry.delta > 0
+                              ? brand.occupancyLow
+                              : brand.occupancyHigh,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

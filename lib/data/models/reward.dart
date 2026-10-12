@@ -31,6 +31,55 @@ class Reward {
   }
 }
 
+/// Movimiento de puntos — `/users/{id}/pointsHistory/{docId}`.
+/// Lo escribe el backend en cada ganancia/gasto de puntos.
+class PointsHistoryEntry {
+  const PointsHistoryEntry({
+    required this.id,
+    required this.type,
+    required this.delta,
+    required this.balance,
+    required this.description,
+    this.refId,
+    this.createdAt,
+  });
+
+  final String id;
+
+  /// `weekly_goal` | `streak_bonus` | `redeem` | `manual_adjustment` | `referral`
+  final String type;
+
+  /// Cambio (+/-) en puntos.
+  final int delta;
+
+  /// Saldo resultante después del movimiento.
+  final int balance;
+
+  /// Texto legible del movimiento.
+  final String description;
+
+  /// Referencia opcional (redemptionId, etc.).
+  final String? refId;
+
+  final DateTime? createdAt;
+
+  factory PointsHistoryEntry.fromJson(Map<String, dynamic> json) {
+    return PointsHistoryEntry(
+      id: json['id'] as String? ?? '',
+      type: json['type'] as String? ?? 'manual_adjustment',
+      delta: (json['delta'] as num?)?.toInt() ?? 0,
+      balance: (json['balance'] as num?)?.toInt() ?? 0,
+      description: json['description'] as String? ?? '',
+      refId: json['refId'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (json['createdAt'] as num).toInt(),
+            )
+          : null,
+    );
+  }
+}
+
 /// Firestore: `/users/{userId}/redemptions/{id}` — escribe solo el
 /// backend (`POST /api/rewards/redeem`). `status`: 'active' | 'used'
 /// | 'expired'.

@@ -81,14 +81,14 @@ class PushNotificationService {
   );
 
   /// Tab destino: el push puede traer `target` explícito; si no (o 'auto')
-  /// cae al mapping por kind — SPONSOR → Aliados, BRAND → Descuentos.
+  /// cae al mapping por kind — SPONSOR → Aliados, BRAND → Promos.
   static int _tabFor(Map<String, dynamic> data) {
     const targets = {
       'home': 0,
       'explore': 1,
       'allies': 2,
       'promos': 3,
-      'profile': 4,
+      'rewards': 4,
     };
     return targets[data['target']] ?? (data['kind'] == 'SPONSOR' ? 2 : 3);
   }

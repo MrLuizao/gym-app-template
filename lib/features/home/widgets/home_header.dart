@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/member_avatar.dart';
 import '../../../data/repositories/gym_repositories.dart';
+import '../../profile/profile_screen.dart';
 import '../../support/providers/support_provider.dart';
 import '../../support/support_chat_screen.dart';
 
@@ -16,18 +17,23 @@ class HomeHeader extends ConsumerWidget {
     final member = ref.watch(memberProvider).value;
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
           ),
-          child: ClipOval(
-            child: MemberAvatar(
-              avatarId: member?.avatarId,
-              initials: member?.initials ?? 'CF',
-              size: 48,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: ClipOval(
+              child: MemberAvatar(
+                avatarId: member?.avatarId,
+                initials: member?.initials ?? 'CF',
+                size: 48,
+              ),
             ),
           ),
         ),
