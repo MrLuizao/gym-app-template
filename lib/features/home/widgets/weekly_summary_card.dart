@@ -7,7 +7,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../data/repositories/gym_repositories.dart';
 import '../../rewards/providers/loyalty_providers.dart';
-import '../../rewards/rewards_screen.dart';
+import '../../shell/bottom_nav_provider.dart';
 
 /// Racha semanal real — `users/{id}/visits` (la escribe el backend al
 /// conceder check-in) + `weekly_goal` del socio. Tap → pantalla de
@@ -34,9 +34,7 @@ class WeeklySummarySection extends ConsumerWidget {
 
     return AppCard(
       padding: const EdgeInsets.all(16),
-      onTap: () => Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const RewardsScreen())),
+      onTap: () => ref.read(bottomNavIndexProvider.notifier).go(4),
       child: Column(
         children: [
           Row(

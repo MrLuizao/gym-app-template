@@ -12,8 +12,14 @@ import 'providers/loyalty_providers.dart';
 /// Objetivos de asistencia + recompensas — el socio define su meta
 /// semanal, ve su progreso real (check-ins) y canjea los puntos que
 /// gana al cumplirla.
+///
+/// `embedded`: true cuando vive como tab del MainShell (header propio,
+/// padding para el bottom nav); false cuando se empuja como ruta
+/// (envuelta en Scaffold con AppBar + back).
 class RewardsScreen extends ConsumerWidget {
-  const RewardsScreen({super.key});
+  const RewardsScreen({super.key, this.embedded = true});
+
+  final bool embedded;
 
   static const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -30,20 +36,22 @@ class RewardsScreen extends ConsumerWidget {
         : false;
 
     final brand = context.brand;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+    final body = ListView(
+      padding: EdgeInsets.fromLTRB(20, embedded ? 16 : 8, 20, embedded ? 130 : 40),
       children: [
-        Text('Premios', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 4),
-        Text(
-          'Cumple tu meta semanal y canjea recompensas',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: brand.textSecondary,
+        if (embedded) ...[
+          Text('Premios', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Cumple tu meta semanal y canjea recompensas',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: brand.textSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
+        ],
         _PointsCard(points: points),
         const SizedBox(height: 16),
         _GoalCard(goal: goal, visited: visited, awarded: awarded),
@@ -63,6 +71,11 @@ class RewardsScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         const _PointsHistoryList(),
       ],
+    );
+    if (embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Objetivos y recompensas')),
+      body: body,
     );
   }
 }

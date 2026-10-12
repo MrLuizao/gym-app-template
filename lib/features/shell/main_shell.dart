@@ -62,7 +62,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Push de lealtad (meta cumplida) → abre Recompensas.
   void _openRewards() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RewardsScreen()),
+      MaterialPageRoute(
+        builder: (_) => const RewardsScreen(embedded: false),
+      ),
     );
   }
 
