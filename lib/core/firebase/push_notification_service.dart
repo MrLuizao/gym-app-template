@@ -72,8 +72,7 @@ class PushNotificationService {
   /// dibuja flutter_local_notifications en este canal de alta importancia.
   static final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
-  static const AndroidNotificationChannel _channel =
-      AndroidNotificationChannel(
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'push_channel',
     'Notificaciones',
     description: 'Avisos y promociones del gimnasio',
@@ -99,12 +98,37 @@ class PushNotificationService {
     if (kIsWeb) return;
     final fcm = FirebaseMessaging.instance;
     await fcm.requestPermission(alert: true, badge: true, sound: true);
+
     /// iOS no muestra banner con la app abierta salvo que se pida explícito.
     await fcm.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
+
+    /// En iOS el APNs token puede tardar ~1s tras el arranque; suscribir
+    /// antes de tenerlo lanza `apns-token-not-set` y el topic nunca se
+    /// registra — esperamos hasta ~10s antes de suscribir.
+    if (Platform.isIOS) {
+      var apnsToken = await fcm.getAPNSToken();
+      for (var i = 0; apnsToken == null && i < 20; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        apnsToken = await fcm.getAPNSToken();
+      }
+      if (apnsToken == null) {
+        debugPrint(
+          'Push: APNs token no disponible — se reintenta en syncTopics',
+        );
+      } else {
+        debugPrint('Push: APNs token OK (${apnsToken.substring(0, 8)}…)');
+      }
+    }
+    if (kDebugMode) {
+      fcm.getToken().then(
+        (t) => debugPrint('Push: FCM token = $t'),
+        onError: (Object e) => debugPrint('Push: getToken falló: $e'),
+      );
+    }
     if (Platform.isAndroid) {
       await _local
           .resolvePlatformSpecificImplementation<
@@ -115,6 +139,7 @@ class PushNotificationService {
         settings: const InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         ),
+
         /// Tap en el banner de foreground — misma navegación que el tap
         /// del sistema (onMessageOpenedApp).
         onDidReceiveNotificationResponse: (response) {
@@ -151,6 +176,14 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _route(message.data);
     });
+
+    /// Rotación del FCM token → re-suscribir el topic universal (las
+    /// suscripciones viven ligadas al token, no a la instalación).
+    FirebaseMessaging.instance.onTokenRefresh.listen((_) {
+      fcm.subscribeToTopic('all_members').catchError((Object e) {
+        debugPrint('Push: re-subscribe onTokenRefresh falló: $e');
+      });
+    });
     final initial = await fcm.getInitialMessage();
     if (initial != null) {
       if (initial.data['type'] == 'support') {
@@ -161,17 +194,25 @@ class PushNotificationService {
         _initialTab = _tabFor(initial.data);
       }
     }
-    await fcm.subscribeToTopic('all_members');
+    try {
+      await fcm.subscribeToTopic('all_members');
+    } catch (e) {
+      debugPrint('Push: subscribeToTopic(all_members) falló: $e');
+    }
   }
 
   /// Suscribe los topics del perfil del socio — llamar tras login y
-  /// cuando cambie su sede/estatus de membresía.
+  /// cuando cambie su sede/estatus de membresía. También re-asegura
+  /// `all_members` por si la suscripción del arranque falló (APNs
+  /// tardío) — FCM la hace idempotente.
   static Future<void> syncTopics(Member? member, {Member? previous}) async {
     if (kIsWeb) return;
     final fcm = FirebaseMessaging.instance;
     final next = <String>{
+      'all_members',
       if (member?.branchId != null) 'branch_${member!.branchId}',
       if (member != null && !member.isActive) 'expired_members',
+
       /// Topic personal — respuestas de soporte llegan solo a este socio.
       if (member != null) 'member_${member.id}',
     };
@@ -181,10 +222,26 @@ class PushNotificationService {
       if (previous != null) 'member_${previous.id}',
     };
     for (final topic in prev.difference(next)) {
-      await fcm.unsubscribeFromTopic(topic);
+      try {
+        await fcm.unsubscribeFromTopic(topic);
+        debugPrint('Push: unsubscribe($topic) OK');
+      } catch (e) {
+        debugPrint('Push: unsubscribe($topic) falló: $e');
+      }
     }
     for (final topic in next.difference(prev)) {
-      await fcm.subscribeToTopic(topic);
+      try {
+        await fcm.subscribeToTopic(topic);
+        debugPrint('Push: subscribe($topic) OK');
+      } catch (e) {
+        debugPrint('Push: subscribe($topic) falló: $e');
+      }
+    }
+    if (kDebugMode) {
+      fcm.getToken().then(
+        (t) => debugPrint('Push: FCM token = $t'),
+        onError: (Object e) => debugPrint('Push: getToken falló: $e'),
+      );
     }
   }
 }

@@ -3,20 +3,19 @@ import 'dart:io' show Platform;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import '../../app.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/auth_provider.dart';
 import '../../core/firebase/google_sign_in_button_stub.dart'
-    if (dart.library.js_interop)
-        '../../core/firebase/google_sign_in_button_web.dart';
+    if (dart.library.js_interop) '../../core/firebase/google_sign_in_button_web.dart';
+import '../../core/widgets/auth_success_screen.dart';
 import '../auth/login_screen.dart';
-import '../shell/main_shell.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {
   const RegistrationScreen({super.key});
@@ -26,27 +25,39 @@ class RegistrationScreen extends ConsumerStatefulWidget {
 }
 
 class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
-  bool _loading = false;
+  /// Proveedor en vuelo ('google' | 'apple' | null) — solo ese botón
+  /// morfa a loader; el otro se atenúa.
+  String? _loadingProvider;
   String? _error;
+
+  /// Navigator raíz — sobrevive aunque el gate desmonte esta pantalla.
+  late final NavigatorState _nav;
+
+  bool get _loading => _loadingProvider != null;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _nav = Navigator.of(context);
+  }
 
   Future<void> _finish(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_done', true);
-    if (!context.mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            AppConfig.firebaseActive ? const AuthGate() : const MainShell(),
-      ),
-    );
+    if (!_nav.mounted) return;
+    await AuthSuccessScreen.playOn(_nav);
   }
 
   /// Sign-in social real — al éxito el AuthGate decide entre
   /// completar perfil (sin /users/{uid}) o entrar al shell.
-  Future<void> _social(Future<void> Function() signIn, String provider) async {
+  Future<void> _social(
+    Future<void> Function() signIn,
+    String provider,
+    String providerKey,
+  ) async {
     if (_loading) return;
     setState(() {
-      _loading = true;
+      _loadingProvider = providerKey;
       _error = null;
     });
     try {
@@ -55,8 +66,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     } on GoogleSignInException catch (e) {
       if (e.code != GoogleSignInExceptionCode.canceled) {
         setState(
-          () => _error =
-              'No se pudo continuar con $provider (${e.code.name})',
+          () => _error = 'No se pudo continuar con $provider (${e.code.name})',
         );
       }
     } on SignInWithAppleAuthorizationException catch (e) {
@@ -68,7 +78,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     } catch (e) {
       setState(() => _error = 'No se pudo continuar con $provider ($e)');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loadingProvider = null);
     }
   }
 
@@ -76,6 +86,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   Widget build(BuildContext context) {
     final brand = context.brand;
     final firebase = AppConfig.firebaseActive;
+
     /// En web el botón GIS completa el sign-in sin callback — cuando
     /// llega la sesión por authState entramos directo al gate.
     ref.listen(authStateProvider, (_, next) {
@@ -126,32 +137,43 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 children: [
                   const Spacer(),
                   Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [brand.accent, brand.accentDark],
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.fitness_center_rounded,
-                      size: 38,
-                      color: brand.background,
-                    ),
-                  ),
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [brand.accent, brand.accentDark],
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.fitness_center_rounded,
+                          size: 38,
+                          color: brand.background,
+                        ),
+                      )
+                      .animate()
+                      .scale(
+                        begin: const Offset(0.6, 0.6),
+                        end: const Offset(1, 1),
+                        duration: 520.ms,
+                        curve: Curves.easeOutBack,
+                      )
+                      .fadeIn(duration: 300.ms),
                   const SizedBox(height: 22),
                   Text(
-                    'Crea tu cuenta',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                      color: brand.textPrimary,
-                    ),
-                  ),
+                        'Crea tu cuenta',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.8,
+                          color: brand.textPrimary,
+                        ),
+                      )
+                      .animate(delay: 130.ms)
+                      .fadeIn(duration: 360.ms)
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
                   const SizedBox(height: 8),
                   Text(
                     'Únete a RIR-HUB y entrena sin límites',
@@ -160,46 +182,60 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       fontWeight: FontWeight.w500,
                       color: brand.textSecondary,
                     ),
-                  ),
+                  ).animate(delay: 240.ms).fadeIn(duration: 340.ms),
                   const SizedBox(height: 44),
-                  if (_loading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    )
-                  else ...[
-                    /// En web Google exige su botón oficial (FedCM);
-                    /// el evento llega por authenticationEvents.
-                    if (kIsWeb)
-                      Center(child: googleSignInWebButton())
-                    else
-                      _SocialButton(
-                        label: 'Continuar con Google',
-                        icon: Icons.g_mobiledata_rounded,
-                        iconColor: const Color(0xFF4285F4),
-                        filled: true,
-                        onTap: () => _social(
-                          () => ref
-                              .read(authControllerProvider)
-                              .signInWithGoogle(),
-                          'Google',
+
+                  /// En web Google exige su botón oficial (FedCM);
+                  /// el evento llega por authenticationEvents.
+                  if (kIsWeb)
+                    Center(child: googleSignInWebButton())
+                  else
+                    _SocialButton(
+                          label: 'Continuar con Google',
+                          icon: Icons.g_mobiledata_rounded,
+                          iconColor: const Color(0xFF4285F4),
+                          filled: true,
+                          loading: _loadingProvider == 'google',
+                          dimmed: _loadingProvider == 'apple',
+                          onTap: () => _social(
+                            () => ref
+                                .read(authControllerProvider)
+                                .signInWithGoogle(),
+                            'Google',
+                            'google',
+                          ),
+                        )
+                        .animate(delay: 380.ms)
+                        .fadeIn(duration: 360.ms)
+                        .slideY(
+                          begin: 0.25,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
                         ),
-                      ),
-                    const SizedBox(height: 14),
-                    if (!kIsWeb && Platform.isIOS)
-                      _SocialButton(
-                        label: 'Continuar con Apple',
-                        icon: Icons.apple_rounded,
-                        iconColor: brand.textPrimary,
-                        filled: false,
-                        onTap: () => _social(
-                          () => ref
-                              .read(authControllerProvider)
-                              .signInWithApple(),
-                          'Apple',
+                  const SizedBox(height: 14),
+                  if (!kIsWeb && Platform.isIOS)
+                    _SocialButton(
+                          label: 'Continuar con Apple',
+                          icon: Icons.apple_rounded,
+                          iconColor: brand.textPrimary,
+                          filled: false,
+                          loading: _loadingProvider == 'apple',
+                          dimmed: _loadingProvider == 'google',
+                          onTap: () => _social(
+                            () => ref
+                                .read(authControllerProvider)
+                                .signInWithApple(),
+                            'Apple',
+                            'apple',
+                          ),
+                        )
+                        .animate(delay: 480.ms)
+                        .fadeIn(duration: 360.ms)
+                        .slideY(
+                          begin: 0.25,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
                         ),
-                      ),
-                  ],
                   if (_error != null) ...[
                     const SizedBox(height: 14),
                     Text(
@@ -228,7 +264,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    )
+                    ).animate(delay: 580.ms).fadeIn(duration: 320.ms)
                   else
                     TextButton(
                       onPressed: () => _finish(context),
@@ -240,7 +276,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
+                    ).animate(delay: 580.ms).fadeIn(duration: 320.ms),
                   const SizedBox(height: 8),
                   Text(
                     'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de RIR-HUB.',
@@ -251,7 +287,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       height: 1.5,
                       color: brand.textSecondary,
                     ),
-                  ),
+                  ).animate(delay: 660.ms).fadeIn(duration: 320.ms),
                   const Spacer(),
                 ],
               ),
@@ -270,6 +306,8 @@ class _SocialButton extends StatelessWidget {
     required this.iconColor,
     required this.filled,
     required this.onTap,
+    this.loading = false,
+    this.dimmed = false,
   });
 
   final String label;
@@ -277,35 +315,59 @@ class _SocialButton extends StatelessWidget {
   final Color iconColor;
   final bool filled;
   final VoidCallback onTap;
+  final bool loading;
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 54,
-        decoration: BoxDecoration(
-          color: filled ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(99),
-          border: filled
-              ? null
-              : Border.all(color: Colors.white.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: iconColor),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: filled ? Colors.black : brand.textPrimary,
-              ),
-            ),
-          ],
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 240),
+      opacity: dimmed ? 0.45 : 1,
+      child: GestureDetector(
+        onTap: (loading || dimmed) ? null : onTap,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: filled ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(99),
+            border: filled
+                ? null
+                : Border.all(color: Colors.white.withValues(alpha: 0.25)),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeIn,
+            child: loading
+                ? Center(
+                    key: const ValueKey('loading'),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: filled ? Colors.black : brand.accent,
+                      ),
+                    ),
+                  )
+                : Row(
+                    key: const ValueKey('label'),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 24, color: iconColor),
+                      const SizedBox(width: 10),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: filled ? Colors.black : brand.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
