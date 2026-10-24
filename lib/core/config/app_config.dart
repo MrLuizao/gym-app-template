@@ -32,4 +32,19 @@ class AppConfig {
   static const String demoUserId = 'demo-user-001';
   static const String qrSigningKey = 'rirhub-dev-key';
   static const Duration qrTokenTtl = Duration(seconds: 45);
+
+  /// =========================================================================
+  /// PARÁMETROS DE CARACTERÍSTICAS DE IA (CODE-LEVEL FEATURE FLAGS)
+  /// =========================================================================
+
+  /// Activa o desactiva el "Coach de Bolsillo" (chat interactivo con Gemini).
+  /// - `false`: Mantiene el código intacto pero oculta la interfaz y botones.
+  /// - `true`: Activa la experiencia del chat de asistencia personal.
+  static const bool enableAiCoachChat = false;
+
+  /// Activa o desactiva las recomendaciones de horario y aforo por IA en la
+  /// tarjeta de resumen semanal.
+  /// - `false`: Muestra únicamente la tarjeta de racha clásica y días Lun-Dom.
+  /// - `true`: Muestra el bloque inteligente con sugerencia de horario y aforo.
+  static const bool enableAiCoachInsights = true;
 }

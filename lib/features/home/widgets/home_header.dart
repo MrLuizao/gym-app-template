@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/widgets/member_avatar.dart';
 import '../../../data/repositories/gym_repositories.dart';
 import '../../profile/profile_screen.dart';
@@ -66,8 +67,10 @@ class HomeHeader extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        const _CoachAiButton(),
+        if (AppConfig.enableAiCoachChat) ...[
+          const SizedBox(width: 8),
+          const _CoachAiButton(),
+        ],
         const SizedBox(width: 8),
         _BellButton(),
       ],

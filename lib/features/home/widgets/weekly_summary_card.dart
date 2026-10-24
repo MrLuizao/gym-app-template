@@ -163,8 +163,9 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
               ],
             ],
           ),
-          coachAsync.maybeWhen(
-            data: (coach) {
+          if (AppConfig.enableAiCoachInsights)
+            coachAsync.maybeWhen(
+              data: (coach) {
               final crowdDiff =
                   coach.usualHourOccupancyPct - coach.bestHourOccupancyPct;
               final savesCrowd =
@@ -553,100 +554,103 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
                       ),
                     ],
 
-                    const SizedBox(height: 12),
+                    if (AppConfig.enableAiCoachChat) ...[
+                      const SizedBox(height: 12),
 
-                    // Botón interactivo: Platicar con Coach de Bolsillo
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            brand.accent.withValues(alpha: 0.18),
-                            brand.accent.withValues(alpha: 0.08),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: brand.accent.withValues(alpha: 0.45),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                      // Botón interactivo: Platicar con Coach de Bolsillo
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              brand.accent.withValues(alpha: 0.18),
+                              brand.accent.withValues(alpha: 0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(14),
-                          onTap: () => AiCoachChatSheet.show(context),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: brand.accent.withValues(alpha: 0.22),
-                                    borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: brand.accent.withValues(alpha: 0.45),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => AiCoachChatSheet.show(context),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          brand.accent.withValues(alpha: 0.22),
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: Icon(
+                                      Icons.auto_awesome_rounded,
+                                      size: 17,
+                                      color: brand.accent,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.auto_awesome_rounded,
-                                    size: 17,
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'Consultar al Coach de Bolsillo',
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w900,
+                                                color: brand.textPrimary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Icon(
+                                              Icons.fiber_manual_record,
+                                              size: 7,
+                                              color: brand.occupancyLow,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          'Pregunta sobre tu rutina, técnica o nutrición',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: brand.textSecondary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 20,
                                     color: brand.accent,
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Consultar al Coach de Bolsillo',
-                                            style: TextStyle(
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w900,
-                                              color: brand.textPrimary,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Icon(
-                                            Icons.fiber_manual_record,
-                                            size: 7,
-                                            color: brand.occupancyLow,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 1),
-                                      Text(
-                                        'Pregunta sobre tu rutina, técnica o nutrición',
-                                        style: TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: brand.textSecondary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 20,
-                                  color: brand.accent,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               );
