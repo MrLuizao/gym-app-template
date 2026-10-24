@@ -9,11 +9,17 @@ Repo hermano — consola de administración + backend API (Nuxt 3):
 `/Users/luis/Develop/Personal/rirhub-b2b` — **ver su `AGENTS.md` y
 `FIRESTORE.md` para modelo de datos, endpoints y matriz de roles.**
 
+## ⚡ Regla de Oro de Agilidad y Pruebas
+
+- **NO ejecutar pruebas unitarias (`flutter test`, etc.) de forma automática**: Las pruebas solo se realizan **cuando el usuario lo indique expresamente**. No correr suites de prueba ni comandos largos por iniciativa propia.
+- **Flujo de trabajo ágil y directo**: Resolver solicitudes con modificaciones concisas, precisas y directas al código. Evitar diagnósticos redundantes, pasos intermedios innecesarios o procesos largos.
+- **Validación ligera de sintaxis**: La única verificación tras cambios de código es confirmar que no existan errores de compilación (`flutter analyze`), manteniéndolo ágil y sin bloquear al usuario con esperas innecesarias.
+
 ## Comandos
 
 ```bash
-flutter analyze   # debe quedar en 0 issues
-flutter run       # tras cambios de plugins/gradle: rebuild completo
+flutter analyze   # verificación rápida de sintaxis (debe quedar en 0 issues)
+flutter run       # ejecutar la app en emulador o dispositivo
 ```
 
 ## Configuración
@@ -47,8 +53,25 @@ La app **no crea** el registro del socio — recepción lo crea en el B2B
 con número de miembro + correo de contacto; ahí le llega un `claim_pin`
 de 6 dígitos. El usuario entra con Google/Apple y reclama su ficha en
 `claim_member_screen.dart` → `POST /api/members/claim` (número + PIN,
-single-use). Si no le llega el código, recepción lo regenera desde el
-detalle del socio en el B2B. Sin vínculo no ve datos del gym.
+single-use).
+- El campo de número viene **precargado con `CF-`** mediante
+  `_MemberNumberFormatter`: el usuario no puede borrar el prefijo, se
+  abre directamente el teclado numérico (`TextInputType.number`) y se
+  normaliza automáticamente a 5 dígitos (`CF-00000`).
+- Si no le llega el código, recepción lo regenera desde el detalle del
+  socio en el B2B. Sin vínculo no ve datos del gym.
+
+### Home: Racha Semanal y Coach IA Unificado
+
+`WeeklySummarySection` (`features/home/widgets/weekly_summary_card.dart`)
+integra en una sola tarjeta compacta el progreso del socio y la IA:
+- **Progreso y racha**: Barra de avance semanal y pastillas de los 7 días (Lun–Dom)
+  para conseguir el bono de +50 pts de lealtad.
+- **Coach IA (`/api/members/ai-coach`)**: Identifica la hora habitual del socio y
+  muestra la **mejor ventana horaria hoy** con menor aforo estimado en su sede favorita.
+- **Ajuste inteligente de meta (1-tap)**: Si la IA detecta que le conviene ajustar
+  su meta para salvar la racha o escalar su objetivo, despliega la acción recomendada
+  sin repetir texto de visitas.
 
 ### Reservas de clase — por ocurrencia
 

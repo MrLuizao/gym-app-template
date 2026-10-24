@@ -7,6 +7,7 @@ import '../../../data/repositories/gym_repositories.dart';
 import '../../profile/profile_screen.dart';
 import '../../support/providers/support_provider.dart';
 import '../../support/support_chat_screen.dart';
+import 'ai_coach_chat_sheet.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -65,9 +66,48 @@ class HomeHeader extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
+        const _CoachAiButton(),
+        const SizedBox(width: 8),
         _BellButton(),
       ],
+    );
+  }
+}
+
+class _CoachAiButton extends StatelessWidget {
+  const _CoachAiButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return GestureDetector(
+      onTap: () => AiCoachChatSheet.show(context),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: brand.surface,
+          border: Border.all(
+            color: brand.accent.withValues(alpha: 0.4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: brand.accent.withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            Icons.auto_awesome_rounded,
+            size: 20,
+            color: brand.accent,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -21,10 +21,16 @@ class ClaimMemberScreen extends ConsumerStatefulWidget {
 }
 
 class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
-  final _number = TextEditingController();
+  final _number = TextEditingController(text: 'CF-');
   final _pin = TextEditingController();
   bool _saving = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _number.selection = TextSelection.collapsed(offset: _number.text.length);
+  }
 
   @override
   void dispose() {
@@ -33,9 +39,19 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
     super.dispose();
   }
 
+  void _ensureCursorAfterPrefix() {
+    if (_number.selection.baseOffset < 3) {
+      _number.selection = TextSelection.collapsed(offset: _number.text.length);
+    }
+  }
+
   Future<void> _claim() async {
     if (_saving) return;
-    if (_number.text.trim().isEmpty || _pin.text.trim().length != 6) {
+    final rawNumber = _number.text.trim().toUpperCase();
+    final digits = rawNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    final pin = _pin.text.trim();
+
+    if (digits.isEmpty || pin.length != 6) {
       setState(
         () => _error = 'Ingresa tu número de socio y el código de 6 dígitos',
       );
@@ -46,9 +62,12 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
       _error = null;
     });
     try {
+      final paddedDigits = digits.padLeft(5, '0');
+      final memberNumber = 'CF-$paddedDigits';
+
       await ApiClient.post('/api/members/claim', {
-        'memberNumber': _number.text,
-        'pin': _pin.text,
+        'memberNumber': memberNumber,
+        'pin': pin,
       });
 
       /// Al escribirse auth_uid, memberDocExistsProvider emite true
@@ -100,10 +119,10 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
             TextField(
               controller: _number,
               autocorrect: false,
-              textCapitalization: TextCapitalization.characters,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
-              ],
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
+              inputFormatters: [_MemberNumberFormatter()],
+              onTap: _ensureCursorAfterPrefix,
               style: TextStyle(
                 color: brand.accent,
                 fontSize: 20,
@@ -122,6 +141,8 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
             TextField(
               controller: _pin,
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _claim(),
               maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               style: TextStyle(
@@ -206,6 +227,45 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: brand.accent),
       ),
+    );
+  }
+}
+
+/// Formateador que asegura que el prefijo 'CF-' siempre esté presente
+/// y no pueda ser borrado, permitiendo al usuario ingresar únicamente los dígitos.
+class _MemberNumberFormatter extends TextInputFormatter {
+  static const prefix = 'CF-';
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (!newValue.text.startsWith(prefix)) {
+      final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final capped = digits.length > 5 ? digits.substring(0, 5) : digits;
+      final newText = '$prefix$capped';
+      return TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+
+    final afterPrefix = newValue.text.substring(prefix.length);
+    final digits = afterPrefix.replaceAll(RegExp(r'[^0-9]'), '');
+    final capped = digits.length > 5 ? digits.substring(0, 5) : digits;
+    final newText = '$prefix$capped';
+
+    var selectionIndex = newValue.selection.end;
+    if (selectionIndex < prefix.length) {
+      selectionIndex = prefix.length;
+    } else if (selectionIndex > newText.length) {
+      selectionIndex = newText.length;
+    }
+
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: selectionIndex),
     );
   }
 }

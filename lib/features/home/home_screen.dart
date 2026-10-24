@@ -113,7 +113,7 @@ class HomeScreen extends ConsumerWidget {
             ),
         const SizedBox(height: 24),
         const WeeklySummarySection()
-            .animate(delay: const Duration(milliseconds: 140))
+            .animate(delay: const Duration(milliseconds: 120))
             .fadeIn(duration: const Duration(milliseconds: 420))
             .slideY(
               begin: 0.06,
