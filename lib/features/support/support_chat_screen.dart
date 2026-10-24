@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -171,6 +172,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
+    final onAccent = brand.readableOn(brand.accent);
 
     return Scaffold(
       backgroundColor: brand.surface,
@@ -297,9 +299,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                       msg.text,
                                       style: TextStyle(
                                         color: isMe
-                                            ? Colors.white
+                                            ? onAccent
                                             : brand.textPrimary,
                                         fontSize: 15,
+                                        fontWeight:
+                                            isMe ? FontWeight.w500 : null,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -307,9 +311,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                       _formatTime(msg.createdAt),
                                       style: TextStyle(
                                         color: isMe
-                                            ? Colors.white70
+                                            ? onAccent.withValues(alpha: 0.7)
                                             : brand.textSecondary,
                                         fontSize: 10,
+                                        fontWeight:
+                                            isMe ? FontWeight.w500 : null,
                                       ),
                                     ),
                                   ],
@@ -373,12 +379,12 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                   padding: const EdgeInsets.all(12),
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: onAccent,
                                   ),
                                 )
-                              : const Icon(
+                              : Icon(
                                   Icons.send,
-                                  color: Colors.white,
+                                  color: onAccent,
                                   size: 20,
                                 ),
                         ),

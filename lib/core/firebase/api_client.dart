@@ -81,7 +81,7 @@ class ApiClient {
     return post('/api/support/chatbot-message', {
       'message': message,
       'member_id': memberId,
-      if (branchId != null) 'branch_id': branchId,
+      'branch_id': ?branchId,
     });
   }
 
