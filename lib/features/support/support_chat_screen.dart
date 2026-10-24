@@ -84,6 +84,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
             text: data['text'] as String? ?? '',
             createdAt: (data['created_at'] as Timestamp?)?.toDate() ??
                 DateTime.now(),
+            senderType: data['sender_type'] as String?,
           );
         }).toList();
       });
@@ -109,16 +110,44 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     _controller.clear();
 
     try {
-      // Primer mensaje → crea la conversación y conecta el listener.
+      // Primer mensaje → intenta chatbot primero
       if (_conversationId == null) {
-        final res = await ApiClient.post('/api/support/conversations', {});
-        _conversationId = res['id'] as String?;
-        if (_conversationId != null) _listenMessages(_conversationId!);
+        final memberId = FirebaseAuth.instance.currentUser?.uid;
+        if (memberId == null) return;
+
+        // Llamar al chatbot
+        final botResponse = await ApiClient.postChatbotMessage(text, memberId);
+
+        if (botResponse['escalate_to_staff'] == true) {
+          // Bot no pudo resolver → crear conversación normal
+          final res = await ApiClient.post('/api/support/conversations', {});
+          _conversationId = res['id'] as String?;
+          if (_conversationId != null) _listenMessages(_conversationId!);
+          // Re-enviar el mensaje a la conversación de staff
+          await ApiClient.post(
+            '/api/support/$_conversationId/messages',
+            {'text': text},
+          );
+        } else {
+          // Bot respondió → mostrar respuesta como mensaje del bot
+          setState(() {
+            _messages.add(_Message(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              sender: 'bot',
+              senderName: 'Asistente',
+              text: botResponse['response'] as String,
+              createdAt: DateTime.now(),
+              senderType: 'bot',
+            ));
+          });
+        }
+      } else {
+        // Conversación ya existe → enviar a staff directamente
+        await ApiClient.post(
+          '/api/support/$_conversationId/messages',
+          {'text': text},
+        );
       }
-      await ApiClient.post(
-        '/api/support/$_conversationId/messages',
-        {'text': text},
-      );
     } catch (e) {
       // Staff resolvió/borró la conversación — el próximo envío crea una.
       if (e is ApiException && e.statusCode == 404) {
@@ -211,6 +240,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                           itemBuilder: (context, index) {
                             final msg = _messages[index];
                             final isMe = msg.sender == 'member';
+                            final isBot = msg.senderType == 'bot';
 
                             return Align(
                               alignment: isMe
@@ -227,17 +257,42 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                   vertical: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: isMe
-                                      ? brand.accent
-                                      : brand.surface,
+                                  color: isBot
+                                      ? brand.surface.withValues(alpha: 0.5)
+                                      : isMe
+                                          ? brand.accent
+                                          : brand.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   border: isMe
                                       ? null
-                                      : Border.all(color: brand.cardBorder),
+                                      : Border.all(
+                                          color: isBot
+                                              ? brand.accent.withValues(alpha: 0.3)
+                                              : brand.cardBorder,
+                                        ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if (isBot)
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.smart_toy_outlined,
+                                            size: 12,
+                                            color: brand.accent,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Asistente',
+                                            style: TextStyle(
+                                              color: brand.accent,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     Text(
                                       msg.text,
                                       style: TextStyle(
@@ -343,6 +398,7 @@ class _Message {
   final String senderName;
   final String text;
   final DateTime createdAt;
+  final String? senderType; // 'bot' | 'staff' | 'member'
 
   _Message({
     required this.id,
@@ -350,5 +406,6 @@ class _Message {
     required this.senderName,
     required this.text,
     required this.createdAt,
+    this.senderType,
   });
 }

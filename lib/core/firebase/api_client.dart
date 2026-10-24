@@ -71,6 +71,30 @@ class ApiClient {
     final decoded = jsonDecode(response.body);
     return decoded is Map<String, dynamic> ? decoded : const {};
   }
+
+  /// Envia un mensaje al chatbot de soporte.
+  static Future<Map<String, dynamic>> postChatbotMessage(
+    String message,
+    String memberId, {
+    String? branchId,
+  }) async {
+    return post('/api/support/chatbot-message', {
+      'message': message,
+      'member_id': memberId,
+      if (branchId != null) 'branch_id': branchId,
+    });
+  }
+
+  /// Envia feedback sobre una respuesta del chatbot.
+  static Future<void> sendChatbotFeedback(
+    String interactionId,
+    bool helpful,
+  ) async {
+    await post('/api/support/chatbot-feedback', {
+      'interaction_id': interactionId,
+      'helpful': helpful,
+    });
+  }
 }
 
 class ApiException implements Exception {
