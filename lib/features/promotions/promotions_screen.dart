@@ -28,9 +28,31 @@ class PromotionsScreen extends ConsumerWidget {
     /// directorio completo vive en la pestaña Aliados.
     final ads = ref.watch(carouselAdsProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+    return Stack(
       children: [
+        Positioned(
+          top: -90,
+          left: -40,
+          right: -40,
+          height: 280,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.55),
+                  radius: 0.9,
+                  colors: [
+                    brand.accent.withValues(alpha: 0.14),
+                    brand.background.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+          children: [
         Text('Promociones', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
         Text(
@@ -156,6 +178,8 @@ class PromotionsScreen extends ConsumerWidget {
                   ),
             ),
         ],
+          ],
+        ),
       ],
     );
   }

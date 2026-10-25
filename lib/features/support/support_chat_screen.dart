@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -111,44 +110,16 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     _controller.clear();
 
     try {
-      // Primer mensaje → intenta chatbot primero
+      // Primer mensaje → crea la conversación y conecta el listener.
       if (_conversationId == null) {
-        final memberId = FirebaseAuth.instance.currentUser?.uid;
-        if (memberId == null) return;
-
-        // Llamar al chatbot
-        final botResponse = await ApiClient.postChatbotMessage(text, memberId);
-
-        if (botResponse['escalate_to_staff'] == true) {
-          // Bot no pudo resolver → crear conversación normal
-          final res = await ApiClient.post('/api/support/conversations', {});
-          _conversationId = res['id'] as String?;
-          if (_conversationId != null) _listenMessages(_conversationId!);
-          // Re-enviar el mensaje a la conversación de staff
-          await ApiClient.post(
-            '/api/support/$_conversationId/messages',
-            {'text': text},
-          );
-        } else {
-          // Bot respondió → mostrar respuesta como mensaje del bot
-          setState(() {
-            _messages.add(_Message(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              sender: 'bot',
-              senderName: 'Asistente',
-              text: botResponse['response'] as String,
-              createdAt: DateTime.now(),
-              senderType: 'bot',
-            ));
-          });
-        }
-      } else {
-        // Conversación ya existe → enviar a staff directamente
-        await ApiClient.post(
-          '/api/support/$_conversationId/messages',
-          {'text': text},
-        );
+        final res = await ApiClient.post('/api/support/conversations', {});
+        _conversationId = res['id'] as String?;
+        if (_conversationId != null) _listenMessages(_conversationId!);
       }
+      await ApiClient.post(
+        '/api/support/$_conversationId/messages',
+        {'text': text},
+      );
     } catch (e) {
       // Staff resolvió/borró la conversación — el próximo envío crea una.
       if (e is ApiException && e.statusCode == 404) {

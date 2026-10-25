@@ -1,12 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/branding/brand.dart';
 import 'core/branding/brands.dart';
 import 'core/config/app_config.dart';
 import 'core/firebase/auth_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/haptics.dart';
 import 'data/models/branch.dart';
 import 'data/models/sponsor_ad.dart';
 import 'data/models/trainer.dart';
@@ -35,8 +38,8 @@ class MembersApp extends StatelessWidget {
         if (routeBuilder == null) return null;
         return PageRouteBuilder<void>(
           settings: settings,
-          transitionDuration: const Duration(milliseconds: 340),
-          reverseTransitionDuration: const Duration(milliseconds: 260),
+          transitionDuration: const Duration(milliseconds: 360),
+          reverseTransitionDuration: const Duration(milliseconds: 280),
           pageBuilder: (_, animation, _) => routeBuilder(settings.arguments),
           transitionsBuilder: (_, animation, _, child) {
             final curved = CurvedAnimation(
@@ -80,11 +83,17 @@ class RootGate extends StatefulWidget {
 
 class _RootGateState extends State<RootGate> {
   bool? _onboardingDone;
+  bool _splashCompleted = false;
 
   @override
   void initState() {
     super.initState();
     _loadFlag();
+    Future<void>.delayed(const Duration(milliseconds: 720), () {
+      if (!mounted) return;
+      AppHaptics.light();
+      setState(() => _splashCompleted = true);
+    });
   }
 
   Future<void> _loadFlag() async {
@@ -97,15 +106,116 @@ class _RootGateState extends State<RootGate> {
   Widget build(BuildContext context) {
     final done = _onboardingDone;
     final size = MediaQuery.sizeOf(context);
-    if (done == null || size.width < 2 || size.height < 2) {
+    if (size.width < 2 || size.height < 2) {
       return const Scaffold(body: SizedBox.shrink());
     }
-    /// Sesión activa → AuthGate aunque onboarding_done no se haya
-    /// marcado (en web el sign-in por redirect recarga la página y
-    /// el flag nunca llega a escribirse).
+    final showSplash = done == null || !_splashCompleted;
     final signedIn =
         AppConfig.firebaseActive && FirebaseAuth.instance.currentUser != null;
-    return (done || signedIn) ? const AuthGate() : const OnboardingScreen();
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 460),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.985, end: 1.0).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: showSplash
+          ? const _LuxurySplashView(key: ValueKey('splash'))
+          : ((done || signedIn)
+                ? const AuthGate(key: ValueKey('auth_gate'))
+                : const OnboardingScreen(key: ValueKey('onboarding'))),
+    );
+  }
+}
+
+/// Splash reveal estilo Spotify: emblema que respira sobre halo radial.
+class _LuxurySplashView extends StatelessWidget {
+  const _LuxurySplashView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return Scaffold(
+      backgroundColor: brand.background,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  brand.accent.withValues(alpha: 0.24),
+                  brand.accent.withValues(alpha: 0),
+                ],
+              ),
+            ),
+          )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
+                begin: const Offset(0.85, 0.85),
+                end: const Offset(1.15, 1.15),
+                duration: 900.ms,
+                curve: Curves.easeInOut,
+              ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  color: brand.accent,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: brand.accent.withValues(alpha: 0.45),
+                      blurRadius: 36,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.fitness_center_rounded,
+                  color: brand.readableOn(brand.accent),
+                  size: 34,
+                ),
+              )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.65, 0.65),
+                    end: const Offset(1, 1),
+                    duration: 480.ms,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(duration: 280.ms),
+              const SizedBox(height: 20),
+              Text(
+                brand.appName,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4.2,
+                  color: brand.textPrimary,
+                ),
+              )
+                  .animate(delay: 140.ms)
+                  .fadeIn(duration: 320.ms)
+                  .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -142,8 +252,7 @@ class AuthGate extends ConsumerWidget {
     if (!AppConfig.firebaseActive) return const MainShell();
     final auth = ref.watch(authStateProvider);
     return auth.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const _LuxurySplashView(),
       error: (e, _) => _GateError(error: e),
       data: (user) {
         if (user == null) return const LoginScreen();
@@ -153,12 +262,15 @@ class AuthGate extends ConsumerWidget {
         return ref
             .watch(memberDocExistsProvider)
             .when(
-              loading: () => const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
+              loading: () => const _LuxurySplashView(),
               error: (e, _) => _GateError(error: e),
-              data: (exists) =>
-                  exists ? const MainShell() : const ClaimMemberScreen(),
+              data: (exists) => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 380),
+                switchInCurve: Curves.easeOutCubic,
+                child: exists
+                    ? const MainShell(key: ValueKey('main_shell'))
+                    : const ClaimMemberScreen(key: ValueKey('claim_member')),
+              ),
             );
       },
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../app.dart';
@@ -41,6 +42,10 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> {
   @override
   void initState() {
     super.initState();
+    HapticFeedback.mediumImpact();
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      if (mounted) HapticFeedback.heavyImpact();
+    });
     Future<void>.delayed(const Duration(milliseconds: 1700), _finish);
   }
 

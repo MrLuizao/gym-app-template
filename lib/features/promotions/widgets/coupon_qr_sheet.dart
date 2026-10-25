@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/utils/haptics.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/models/coupon.dart';
 
 class CouponQrSheet extends StatelessWidget {
@@ -10,6 +13,7 @@ class CouponQrSheet extends StatelessWidget {
   final Coupon coupon;
 
   static Future<void> show(BuildContext context, Coupon coupon) {
+    AppHaptics.medium();
     final brand = context.brand;
     return showModalBottomSheet<void>(
       context: context,
@@ -78,21 +82,44 @@ class CouponQrSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: brand.background,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: brand.cardBorder),
-              ),
-              child: Text(
-                coupon.code,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  fontFamily: 'monospace',
-                  letterSpacing: 1.4,
-                  color: brand.accent,
+            PressableScale(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: coupon.code));
+                AppHaptics.selection();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Código copiado al portapapeles'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: brand.background,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: brand.cardBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      coupon.code,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'monospace',
+                        letterSpacing: 1.4,
+                        color: brand.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(
+                      Icons.copy_rounded,
+                      size: 15,
+                      color: brand.textSecondary,
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../data/models/reward.dart';
 import '../../data/repositories/gym_repositories.dart';
 import 'providers/loyalty_providers.dart';
@@ -36,9 +39,41 @@ class RewardsScreen extends ConsumerWidget {
         : false;
 
     final brand = context.brand;
-    final body = ListView(
-      padding: EdgeInsets.fromLTRB(20, embedded ? 16 : 8, 20, embedded ? 130 : 40),
+    final body = Stack(
       children: [
+        Positioned(
+          top: -90,
+          left: -60,
+          right: -60,
+          height: 290,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.55),
+                  radius: 1.05,
+                  colors: [
+                    (awarded ? brand.occupancyLow : brand.accent).withValues(
+                      alpha: 0.2,
+                    ),
+                    (awarded ? brand.occupancyLow : brand.accent).withValues(
+                      alpha: 0.05,
+                    ),
+                    brand.background.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            embedded ? 16 : 8,
+            20,
+            embedded ? 130 : 40,
+          ),
+          children: [
         if (embedded) ...[
           Text('Premios', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 4),
@@ -70,6 +105,8 @@ class RewardsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         const _PointsHistoryList(),
+      ],
+    ),
       ],
     );
     if (embedded) return body;
@@ -114,12 +151,18 @@ class _PointsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$points',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: brand.textPrimary,
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: points.toDouble()),
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, val, _) => Text(
+                    '${val.round()}',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.6,
+                      color: brand.textPrimary,
+                    ),
                   ),
                 ),
                 Text(
@@ -182,14 +225,19 @@ class _GoalCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: (visits / goal).clamp(0.0, 1.0),
-              minHeight: 6,
-              backgroundColor: brand.background,
-              valueColor: AlwaysStoppedAnimation(
-                awarded ? brand.occupancyLow : brand.accent,
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: (visits / goal).clamp(0.0, 1.0)),
+            duration: const Duration(milliseconds: 850),
+            curve: Curves.easeOutCubic,
+            builder: (context, val, _) => ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: val,
+                minHeight: 7,
+                backgroundColor: brand.background,
+                valueColor: AlwaysStoppedAnimation(
+                  awarded ? brand.occupancyLow : brand.accent,
+                ),
               ),
             ),
           ),
@@ -250,10 +298,17 @@ class _GoalCard extends ConsumerWidget {
               for (var n = 2; n <= 6; n++) ...[
                 if (n > 2) const SizedBox(width: 8),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => setWeeklyGoal(ref, n),
+                  child: PressableScale(
+                    enableHaptic: false,
+                    onTap: () {
+                      if (n != goal) {
+                        AppHaptics.selection();
+                        setWeeklyGoal(ref, n);
+                      }
+                    },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: n == goal ? brand.accent : brand.background,
@@ -261,6 +316,15 @@ class _GoalCard extends ConsumerWidget {
                         border: Border.all(
                           color: n == goal ? brand.accent : brand.cardBorder,
                         ),
+                        boxShadow: n == goal
+                            ? [
+                                BoxShadow(
+                                  color: brand.accent.withValues(alpha: 0.28),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Center(
                         child: Text(
@@ -269,7 +333,7 @@ class _GoalCard extends ConsumerWidget {
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: n == goal
-                                ? brand.background
+                                ? brand.readableOn(brand.accent)
                                 : brand.textPrimary,
                           ),
                         ),
@@ -342,7 +406,9 @@ class _RewardsList extends ConsumerWidget {
     );
     if (confirm != true || !context.mounted) return;
     try {
+      AppHaptics.medium();
       final code = await redeemReward(reward.id);
+      AppHaptics.heavy();
       if (!context.mounted) return;
       await showDialog<void>(
         context: context,
@@ -546,31 +612,57 @@ class _RedemptionsList extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: r.isActive
-                              ? brand.accent.withValues(alpha: 0.14)
-                              : brand.background,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: r.isActive
-                                ? brand.accent.withValues(alpha: 0.4)
-                                : brand.cardBorder,
+                      PressableScale(
+                        onTap: r.isActive
+                            ? () {
+                                AppHaptics.selection();
+                                Clipboard.setData(ClipboardData(text: r.code));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Código ${r.code} copiado'),
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                        ),
-                        child: Text(
-                          r.code,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
+                          decoration: BoxDecoration(
                             color: r.isActive
-                                ? brand.accent
-                                : brand.textSecondary,
+                                ? brand.accent.withValues(alpha: 0.14)
+                                : brand.background,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: r.isActive
+                                  ? brand.accent.withValues(alpha: 0.4)
+                                  : brand.cardBorder,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                r.code,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.5,
+                                  color: r.isActive
+                                      ? brand.accent
+                                      : brand.textSecondary,
+                                ),
+                              ),
+                              if (r.isActive) ...[
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.copy_rounded,
+                                  size: 13,
+                                  color: brand.accent,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),

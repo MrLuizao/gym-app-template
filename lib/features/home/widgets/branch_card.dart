@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/utils/haptics.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/capacity_ring.dart';
 import '../../../core/widgets/cover_image.dart';
@@ -93,23 +95,33 @@ class BranchCard extends StatelessWidget {
                 right: 14,
                 top: 14,
                 child: GestureDetector(
-                  onTap: onToggleFavorite,
+                  onTap: () {
+                    AppHaptics.medium();
+                    onToggleFavorite!();
+                  },
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black.withValues(alpha: 0.45),
+                      color: Colors.black.withValues(alpha: 0.55),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.14),
+                        color: isFavorite
+                            ? brand.accent.withValues(alpha: 0.6)
+                            : Colors.white.withValues(alpha: 0.14),
                       ),
                     ),
-                    child: Icon(
-                      isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      size: 16,
-                      color: isFavorite ? brand.accent : Colors.white,
+                    child: AnimatedScale(
+                      scale: isFavorite ? 1.12 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutBack,
+                      child: Icon(
+                        isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        size: 16,
+                        color: isFavorite ? brand.accent : Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -123,17 +135,17 @@ class BranchCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.75),
+                  color: Colors.black.withValues(alpha: 0.78),
                   borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.6)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.65)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.circle, size: 7, color: statusColor),
-                    const SizedBox(width: 5),
+                    _LivePulseDot(color: statusColor, active: branch.isOpen),
+                    const SizedBox(width: 6),
                     Text(
-                      branch.isOpen ? 'ABIERTA' : 'CERRADA',
+                      branch.isOpen ? 'EN VIVO' : 'CERRADA',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
@@ -172,12 +184,19 @@ class BranchCard extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
-                        Text(
-                          '${branch.currentCapacity}/${branch.maxCapacity} cupos',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(
+                            end: branch.currentCapacity.toDouble(),
+                          ),
+                          duration: const Duration(milliseconds: 700),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, val, _) => Text(
+                            '${val.round()}/${branch.maxCapacity} cupos',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -207,6 +226,50 @@ class BranchCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LivePulseDot extends StatelessWidget {
+  const _LivePulseDot({required this.color, required this.active});
+
+  final Color color;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!active) {
+      return Icon(Icons.circle, size: 7, color: color);
+    }
+    return SizedBox(
+      width: 11,
+      height: 11,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 11,
+            height: 11,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.45),
+            ),
+          )
+              .animate(onPlay: (c) => c.repeat())
+              .scale(
+                begin: const Offset(0.5, 0.5),
+                end: const Offset(1.5, 1.5),
+                duration: 1400.ms,
+                curve: Curves.easeOut,
+              )
+              .fadeOut(duration: 1400.ms),
+          Container(
+            width: 6.5,
+            height: 6.5,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          ),
+        ],
       ),
     );
   }

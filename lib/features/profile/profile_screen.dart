@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/auth_provider.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/member_avatar.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../legal/legal_screen.dart';
@@ -40,56 +42,88 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      body: Stack(
         children: [
-        Center(
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: member == null
-                    ? null
-                    : () => AvatarPickerSheet.show(context, member),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: brand.accent, width: 2),
-                      ),
-                    ),
-                    MemberAvatar(
-                      avatarId: member?.avatarId,
-                      initials: member?.initials ?? 'CF',
-                      size: 90,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 2,
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: brand.accent,
-                          border: Border.all(
-                            color: brand.background,
-                            width: 2.5,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.edit_rounded,
-                          size: 14,
-                          color: brand.background,
-                        ),
-                      ),
-                    ),
-                  ],
+          Positioned(
+            top: -80,
+            left: -40,
+            right: -40,
+            height: 280,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.5),
+                    radius: 0.9,
+                    colors: [
+                      brand.accent.withValues(alpha: 0.16),
+                      brand.background.withValues(alpha: 0),
+                    ],
+                  ),
                 ),
               ),
+            ),
+          ),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    PressableScale(
+                      onTap: member == null
+                          ? null
+                          : () => AvatarPickerSheet.show(context, member),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: brand.accent,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: brand.accent.withValues(alpha: 0.24),
+                                  blurRadius: 24,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                          MemberAvatar(
+                            avatarId: member?.avatarId,
+                            initials: member?.initials ?? 'CF',
+                            size: 92,
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: 2,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: brand.accent,
+                                border: Border.all(
+                                  color: brand.background,
+                                  width: 2.5,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.edit_rounded,
+                                size: 14,
+                                color: brand.readableOn(brand.accent),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
               if (member != null && member.avatarId == null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -210,6 +244,8 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
+            ],
+          ),
         ],
       ),
     );
@@ -288,7 +324,12 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final brand = context.brand;
     return InkWell(
-      onTap: onTap,
+      onTap: onTap == null
+          ? null
+          : () {
+              AppHaptics.light();
+              onTap!();
+            },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(

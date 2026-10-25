@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../branding/brand.dart';
+import 'pressable_scale.dart';
 
 class AppCard extends StatelessWidget {
   const AppCard({
@@ -27,12 +28,17 @@ class AppCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       side: BorderSide(color: borderColor ?? brand.cardBorder),
     );
-    final content = Padding(padding: padding, child: child);
-    return Material(
+    final card = Material(
       color: color ?? brand.surface,
       clipBehavior: Clip.antiAlias,
       shape: shape,
-      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
+      child: Padding(padding: padding, child: child),
+    );
+    if (onTap == null) return card;
+    return PressableScale(
+      onTap: onTap,
+      pressedScale: 0.975,
+      child: card,
     );
   }
 }

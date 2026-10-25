@@ -179,6 +179,34 @@ integra en una sola tarjeta compacta el progreso del socio y la IA:
   chat (también en cold start). Campanita del HomeHeader =
   `supportStateProvider` (unread de `unread_member`), tap abre el chat.
 
+## Estética Luxury (estilo Spotify) y Micro-interacciones
+
+Toda nueva pantalla, modal o componente en la app **debe mantener el estándar visual y táctil de lujo (inspirado en Spotify)** implementado en el sistema de diseño:
+
+1. **Luz ambiental superior (Ambient Radial Glow)**:
+   - Las pantallas principales (`HomeScreen`, `ExploreScreen`, `AlliesScreen`, `PromotionsScreen`, `RewardsScreen`, `ProfileScreen`, `BranchDetailScreen`) envuelven su contenido en un `Stack` con un `RadialGradient` superior (`brand.accent` con `alpha: 0.14–0.22` hacia transparente).
+   - En `HomeScreen`, el halo cambia dinámicamente a verde esmeralda (`brand.occupancyLow`) cuando el socio cumple su meta semanal (`visits >= goal`).
+2. **Física táctil universal (`PressableScale` + `AppHaptics`)**:
+   - **Nunca usar `GestureDetector` plano sin feedback** en tarjetas, píldoras, botones o chips interactivos. Envolver siempre en `PressableScale` (`lib/core/widgets/pressable_scale.dart`), que aplica compresión elástica (`Curves.easeOutCubic` / `Curves.elasticOut`) y dispara `AppHaptics.light()` al presionar.
+   - `AppCard` con `onTap != null` y `PrimaryButton` ya integran compresión elástica y hápticos por defecto (`glow: true` en `PrimaryButton` proyecta sombra difusa del color de acento).
+3. **Jerarquía de respuestas hápticas (`lib/core/utils/haptics.dart`)**:
+   - `AppHaptics.light()`: Taps en tarjetas, filas de acción, abrir modales secundarios.
+   - `AppHaptics.selection()`: Cambios de pestaña en `MainBottomBar`, filtros de categoría, selector de días en calendario, ajuste de meta semanal (`+/-`), copiar códigos al portapapeles.
+   - `AppHaptics.medium()`: Acciones principales (`PrimaryButton`), abrir el pase QR (`CheckInSheet`, `CouponQrSheet`), reservar clase, confirmar canje de recompensa.
+   - `AppHaptics.heavy()`: Éxito de vinculación/check-in (`AuthSuccessScreen`), cumplimiento de meta semanal, o error con sacudida horizontal (shake en `ClaimMemberScreen`).
+4. **Bottom Navigation (`MainShell` + `MainBottomBar`)**:
+   - Barra fija de 5 tabs con cristal esmerilado (`ClipRect` + `BackdropFilter(ImageFilter.blur(sigmaX: 24, sigmaY: 24))` + superficie translúcida `alpha: 0.82`).
+   - Íconos `outlined` en reposo que transicionan a `filled` al activarse, con escala elástica y punto luminoso inferior (`BoxShadow` con `brand.accent`).
+   - Transición suave entre pestañas (`FadeTransition` + `SlideTransition` sutil de `180ms`).
+5. **Indicadores vivos y contadores animados**:
+   - **Pulso en vivo**: Las sedes abiertas (`BranchCard`) y el estado activo del QR (`CheckInSheet`) muestran un punto con halo respiratorio (`AnimationController` en repeat reverse).
+   - **Contadores numéricos (`TweenAnimationBuilder`)**: Los números de visitas semanales (`WeeklySummarySection`) y el saldo de puntos (`RewardsScreen`) animan su conteo progresivo y destellan cuando suben.
+   - **Cascada de racha**: Las 7 pastillas de días (`Lun–Dom`) entran en cascada escalonada y las completadas brillan con `BoxShadow` del color de acento.
+6. **Launch, Onboarding y Vinculación (`ClaimMemberScreen`)**:
+   - `GymApp` presenta un `_LuxurySplashView` (~720ms) con emblema respirando y pulso háptico antes de revelar `Home` u `Onboarding` con `AnimatedSwitcher`.
+   - `OnboardingScreen` usa `PageView` deslizable con barras de progreso superiores tipo *Story* y fondo con halo en paralaje.
+   - `ClaimMemberScreen` usa **6 casillas individuales táctiles** para el `claim_pin` con glow en foco, auto-avance, soporte de pegado de 6 dígitos, auto-submit al 6º dígito y sacudida horizontal (`shake`) + `AppHaptics.heavy()` si el código falla.
+
 ## Convenciones
 
 - Riverpod `Notifier`/`FutureProvider.family` para estado; streams de

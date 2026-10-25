@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/utils/haptics.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/badge_chip.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/repositories/gym_repositories.dart';
 import '../../rewards/providers/loyalty_providers.dart';
 import '../../shell/bottom_nav_provider.dart';
@@ -30,11 +33,13 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
 
   Future<void> _applySuggestedGoal(int suggestedGoal) async {
     if (_applyingGoal) return;
+    AppHaptics.medium();
     setState(() => _applyingGoal = true);
     try {
       await setWeeklyGoal(ref, suggestedGoal);
       ref.invalidate(aiCoachProvider);
       if (!mounted) return;
+      AppHaptics.heavy();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -99,16 +104,23 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
                   ),
                 ),
               ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => ref.read(bottomNavIndexProvider.notifier).go(4),
+              PressableScale(
+                onTap: () {
+                  AppHaptics.selection();
+                  ref.read(bottomNavIndexProvider.notifier).go(4);
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     BadgeChip(
                       label: '$visits/$goal VISITAS',
                       color: brand.accent,
-                    ),
+                    )
+                        .animate(target: remaining == 0 ? 1 : 0)
+                        .shimmer(
+                          duration: 1200.ms,
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
                     const SizedBox(width: 4),
                     Icon(
                       Icons.chevron_right_rounded,
@@ -121,13 +133,18 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
             ],
           ),
           const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: (visits / goal).clamp(0.0, 1.0),
-              minHeight: 6,
-              backgroundColor: brand.background,
-              valueColor: AlwaysStoppedAnimation(brand.accent),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: (visits / goal).clamp(0.0, 1.0)),
+            duration: const Duration(milliseconds: 850),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, _) => ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 7,
+                backgroundColor: brand.background,
+                valueColor: AlwaysStoppedAnimation(brand.accent),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -139,8 +156,12 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
                       ? 'Meta semanal cumplida — ¡Bono de +50 pts asegurado!'
                       : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} para tu meta de $goal por semana',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: brand.textSecondary,
-                        fontWeight: FontWeight.w600,
+                        color: remaining == 0
+                            ? brand.accent
+                            : brand.textSecondary,
+                        fontWeight: remaining == 0
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                       ),
                 ),
               ),
@@ -158,7 +179,15 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
                     visited: visited.contains(i),
                     isToday: i == todayIndex,
                     isFuture: i > todayIndex,
-                  ),
+                  )
+                      .animate(delay: Duration(milliseconds: 50 * i))
+                      .fadeIn(duration: 280.ms)
+                      .scale(
+                        begin: const Offset(0.88, 0.88),
+                        end: const Offset(1, 1),
+                        duration: 320.ms,
+                        curve: Curves.easeOutBack,
+                      ),
                 ),
               ],
             ],

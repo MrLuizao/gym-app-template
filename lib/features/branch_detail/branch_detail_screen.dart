@@ -5,9 +5,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/hourly_forecast_chart.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/skeleton_box.dart';
 import '../../data/models/branch.dart';
 import '../../data/models/gym_class.dart';
@@ -253,15 +255,33 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                   itemBuilder: (context, index) {
                     final day = _dayFor(index);
                     final selected = index == _selectedDay;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedDay = index),
+                    return PressableScale(
+                      enableHaptic: false,
+                      onTap: () {
+                        if (_selectedDay != index) {
+                          AppHaptics.selection();
+                          setState(() => _selectedDay = index);
+                        }
+                      },
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 13),
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
                           color: selected ? brand.accent : brand.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: brand.cardBorder),
+                          border: Border.all(
+                            color: selected ? brand.accent : brand.cardBorder,
+                          ),
+                          boxShadow: selected
+                              ? [
+                                  BoxShadow(
+                                    color: brand.accent.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -273,7 +293,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.8,
                                 color: selected
-                                    ? brand.background
+                                    ? brand.readableOn(brand.accent)
                                     : brand.textSecondary,
                               ),
                             ),
@@ -284,7 +304,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
                                 color: selected
-                                    ? brand.background
+                                    ? brand.readableOn(brand.accent)
                                     : brand.textPrimary,
                               ),
                             ),

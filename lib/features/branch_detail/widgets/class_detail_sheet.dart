@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/firebase/api_client.dart';
+import '../../../core/utils/haptics.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/capacity_bar.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/models/gym_class.dart';
 import '../../../data/repositories/gym_repositories.dart';
 import '../../payments/providers/membership_provider.dart';
@@ -27,6 +29,7 @@ class ClassDetailSheet extends ConsumerWidget {
     GymClass gymClass, {
     required String date,
   }) {
+    AppHaptics.light();
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -338,6 +341,7 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
 
   Future<void> _toggle() async {
     if (_busy) return;
+    AppHaptics.medium();
     setState(() {
       _busy = true;
       _error = null;
@@ -350,7 +354,9 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
             branchId: widget.gymClass.branchId,
             date: widget.date,
           );
+      AppHaptics.heavy();
     } catch (e) {
+      AppHaptics.heavy();
       /// El error vive dentro del sheet — un SnackBar del Scaffold quedaría
       /// tapado por el propio bottom sheet.
       if (mounted) {
@@ -459,14 +465,17 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
         children: [?errorBanner, button],
       );
     }
-    final action = GestureDetector(
+    final action = PressableScale(
       onTap: _toggle,
+      enableHaptic: false,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         height: 54,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(99),
+          color: reserved ? brand.accent.withValues(alpha: 0.12) : null,
           gradient: reserved
               ? null
               : LinearGradient(
@@ -475,6 +484,15 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
                   colors: [brand.accent, brand.accentDark],
                 ),
           border: reserved ? Border.all(color: brand.accent, width: 1.5) : null,
+          boxShadow: reserved
+              ? null
+              : [
+                  BoxShadow(
+                    color: brand.accent.withValues(alpha: 0.3),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -485,7 +503,9 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: reserved ? brand.accent : brand.background,
+                  color: reserved
+                      ? brand.accent
+                      : brand.readableOn(brand.accent),
                 ),
               )
             else
@@ -494,7 +514,9 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
                     ? Icons.check_circle_rounded
                     : Icons.event_seat_rounded,
                 size: 18,
-                color: reserved ? brand.accent : brand.background,
+                color: reserved
+                    ? brand.accent
+                    : brand.readableOn(brand.accent),
               ),
             const SizedBox(width: 8),
             Text(
@@ -507,7 +529,9 @@ class _ReserveButtonState extends ConsumerState<_ReserveButton> {
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.6,
-                color: reserved ? brand.accent : brand.background,
+                color: reserved
+                    ? brand.accent
+                    : brand.readableOn(brand.accent),
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/branding/brand.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/widgets/member_avatar.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/repositories/gym_repositories.dart';
 import '../../profile/profile_screen.dart';
 import '../../support/providers/support_provider.dart';
@@ -13,28 +14,51 @@ import 'ai_coach_chat_sheet.dart';
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'BUENOS DÍAS';
+    if (h < 19) return 'BUENAS TARDES';
+    return 'BUENAS NOCHES';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final member = ref.watch(memberProvider).value;
+    final streak = member?.goalStreak ?? 0;
+
     return Row(
       children: [
-        GestureDetector(
+        PressableScale(
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           ),
           child: Container(
-            width: 48,
-            height: 48,
+            width: 50,
+            height: 50,
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  brand.accent,
+                  brand.accentDark.withValues(alpha: 0.7),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: brand.accent.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                ),
+              ],
             ),
             child: ClipOval(
               child: MemberAvatar(
                 avatarId: member?.avatarId,
                 initials: member?.initials ?? 'CF',
-                size: 48,
+                size: 46,
               ),
             ),
           ),
@@ -44,21 +68,62 @@ class HomeHeader extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hola',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: brand.accent,
-                ),
+              Row(
+                children: [
+                  Text(
+                    _greeting(),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
+                      color: brand.accent,
+                    ),
+                  ),
+                  if (streak > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: brand.accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: brand.accent.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.local_fire_department_rounded,
+                            size: 11,
+                            color: brand.accent,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '$streak sem',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: brand.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 member?.name ?? 'Socio',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 21,
                   fontWeight: FontWeight.w900,
-                  height: 1.1,
+                  height: 1.08,
+                  letterSpacing: -0.4,
                   color: brand.textPrimary,
                 ),
                 maxLines: 1,
@@ -72,7 +137,7 @@ class HomeHeader extends ConsumerWidget {
           const _CoachAiButton(),
         ],
         const SizedBox(width: 8),
-        _BellButton(),
+        const _BellButton(),
       ],
     );
   }
@@ -84,7 +149,7 @@ class _CoachAiButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
+    return PressableScale(
       onTap: () => AiCoachChatSheet.show(context),
       child: Container(
         width: 44,
@@ -97,8 +162,8 @@ class _CoachAiButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: brand.accent.withValues(alpha: 0.12),
-              blurRadius: 8,
+              color: brand.accent.withValues(alpha: 0.14),
+              blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
@@ -123,7 +188,7 @@ class _BellButton extends ConsumerWidget {
     final brand = context.brand;
     final support = ref.watch(supportStateProvider).value;
     final unread = support?.unread ?? 0;
-    return GestureDetector(
+    return PressableScale(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const SupportChatScreen()),
       ),

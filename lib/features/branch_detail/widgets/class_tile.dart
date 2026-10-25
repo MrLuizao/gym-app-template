@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/branding/brand.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/models/gym_class.dart';
 
 class ClassTile extends StatelessWidget {
@@ -45,15 +46,37 @@ class ClassTile extends StatelessWidget {
     final full = gymClass.isFullFor(date);
     final ended = gymClass.endedFor(date);
     final active = reserved && !full;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+
+    return PressableScale(
       onTap: onTap,
-      child: Container(
+      pressedScale: 0.975,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: brand.surface,
+          color: active
+              ? Color.alphaBlend(
+                  brand.accent.withValues(alpha: 0.06),
+                  brand.surface,
+                )
+              : brand.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: brand.cardBorder),
+          border: Border.all(
+            color: active
+                ? brand.accent.withValues(alpha: 0.55)
+                : brand.cardBorder,
+            width: active ? 1.4 : 1.0,
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: brand.accent.withValues(alpha: 0.14),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
@@ -66,7 +89,7 @@ class ClassTile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
-                      color: brand.textPrimary,
+                      color: active ? brand.accent : brand.textPrimary,
                       height: 1,
                     ),
                   ),
@@ -88,7 +111,19 @@ class ClassTile extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 13),
               color: brand.cardBorder,
             ),
-            Icon(_iconFor(gymClass.category), size: 22, color: brand.accent),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: brand.accent.withValues(alpha: active ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _iconFor(gymClass.category),
+                size: 20,
+                color: brand.accent,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -144,44 +179,55 @@ class ClassTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: onTap,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 9,
+              ),
+              decoration: BoxDecoration(
+                color: active ? brand.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: active
+                      ? brand.accent
+                      : outOfScope || full || ended
+                      ? brand.cardBorder
+                      : brand.accent.withValues(alpha: 0.6),
                 ),
-                decoration: BoxDecoration(
-                  color: active ? brand.accent : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: active
-                        ? brand.accent
-                        : outOfScope || full || ended
-                        ? brand.cardBorder
-                        : brand.accent.withValues(alpha: 0.6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (active) ...[
+                    Icon(
+                      Icons.check_rounded,
+                      size: 12,
+                      color: brand.readableOn(brand.accent),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Text(
+                    active
+                        ? 'RESERVADO'
+                        : (outOfScope
+                              ? 'SOLO TU SEDE'
+                              : (ended
+                                    ? 'TERMINADA'
+                                    : (full ? 'LLENO' : 'RESERVAR'))),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                      color: active
+                          ? brand.readableOn(brand.accent)
+                          : outOfScope || full || ended
+                          ? brand.textSecondary
+                          : brand.accent,
+                    ),
                   ),
-                ),
-                child: Text(
-                  active
-                      ? 'RESERVADO'
-                      : (outOfScope
-                            ? 'SOLO TU SEDE'
-                            : (ended
-                                  ? 'TERMINADA'
-                                  : (full ? 'LLENO' : 'RESERVAR'))),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.4,
-                    color: active
-                        ? brand.background
-                        : outOfScope || full || ended
-                        ? brand.textSecondary
-                        : brand.accent,
-                  ),
-                ),
+                ],
               ),
             ),
           ],

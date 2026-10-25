@@ -18,6 +18,7 @@ class Member {
     this.membershipUntil,
     this.weeklyGoal = 4,
     this.points = 0,
+    this.goalStreak = 0,
     this.goalAwardedWeek,
   });
 
@@ -39,6 +40,7 @@ class Member {
   /// escribe el backend al cumplir la meta semanal.
   final int weeklyGoal;
   final int points;
+  final int goalStreak;
 
   /// Semana (lunes `yyyy-MM-dd` CDMX) ya premiada — evita doble premio.
   final String? goalAwardedWeek;
@@ -71,6 +73,7 @@ class Member {
           : null,
       weeklyGoal: (map['weekly_goal'] as num?)?.toInt() ?? 4,
       points: (map['points'] as num?)?.toInt() ?? 0,
+      goalStreak: (map['goal_streak'] as num?)?.toInt() ?? 0,
       goalAwardedWeek: map['goal_awarded_week'] as String?,
     );
   }

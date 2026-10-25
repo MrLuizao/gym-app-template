@@ -13,6 +13,7 @@ class CheckInSheet extends ConsumerWidget {
 
   static Future<void> show(BuildContext context) {
     final brand = context.brand;
+    HapticFeedback.mediumImpact();
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../data/models/sponsor_ad.dart';
 import '../home/providers/sponsor_ads_provider.dart';
 import '../metrics/ad_metrics_provider.dart';
@@ -72,19 +75,45 @@ class AlliesScreen extends ConsumerWidget {
     /// aleatorio para que no haya favoritismo.
     final sorted = ref.watch(alliesAdsProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+    return Stack(
       children: [
-        Text('Aliados', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 6),
-        Text(
-          'Las marcas que apoyan tu entrenamiento',
-          style: Theme.of(context).textTheme.bodyMedium,
+        Positioned(
+          top: -90,
+          left: -60,
+          right: -60,
+          height: 290,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.55),
+                  radius: 1.05,
+                  colors: [
+                    brand.accent.withValues(alpha: 0.18),
+                    brand.accent.withValues(alpha: 0.05),
+                    brand.background.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 20),
-        GestureDetector(
-          onTap: () => _AdSpacesSheet.show(context),
-          child: Container(
+        ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
+          children: [
+            Text('Aliados', style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 6),
+            Text(
+              'Las marcas que apoyan tu entrenamiento',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            PressableScale(
+              onTap: () {
+                AppHaptics.light();
+                _AdSpacesSheet.show(context);
+              },
+              child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: brand.accent.withValues(alpha: 0.08),
@@ -168,10 +197,20 @@ class AlliesScreen extends ConsumerWidget {
             ),
           )
         else
-          for (final ad in sorted) ...[
-            _AllyCard(ad: ad),
+          for (var i = 0; i < sorted.length; i++) ...[
+            _AllyCard(ad: sorted[i])
+                .animate(delay: Duration(milliseconds: 50 + i * 65))
+                .fadeIn(duration: const Duration(milliseconds: 340))
+                .slideY(
+                  begin: 0.05,
+                  end: 0,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                ),
             const SizedBox(height: 10),
           ],
+          ],
+        ),
       ],
     );
   }
@@ -374,17 +413,22 @@ class _AllyCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
-    return GestureDetector(
+    return PressableScale(
       onTap: () {
         ref.read(adMetricsProvider.notifier).track(ad.id, 'tap');
         Navigator.of(context).pushNamed('/sponsor', arguments: ad);
       },
+      pressedScale: 0.975,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: brand.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: brand.cardBorder),
+          border: Border.all(
+            color: ad.placement != 'list'
+                ? brand.accent.withValues(alpha: 0.38)
+                : brand.cardBorder,
+          ),
         ),
         child: Row(
           children: [
