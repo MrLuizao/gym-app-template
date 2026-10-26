@@ -179,6 +179,7 @@ class _SponsorsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final brand = context.brand;
     final adsAsync = ref.watch(sponsorAdsProvider);
     return adsAsync.maybeWhen(
       data: (_) {
@@ -186,28 +187,51 @@ class _SponsorsSection extends ConsumerWidget {
         /// por antigüedad de compra; el excedente espera en Aliados.
         final carousel = ref.watch(carouselAdsProvider);
         if (carousel.isEmpty) return const SizedBox.shrink();
-        // TODO(Firebase): registrar impresión por anuncio visible
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: Text(
-            //         'Nuestros aliados',
-            //         style: Theme.of(context).textTheme.titleLarge,
-            //       ),
-            //     ),
-            //     Text(
-            //       'PUBLICIDAD',
-            //       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            //             letterSpacing: 1.4,
-            //             color: Theme.of(context).dividerColor,
-            //           ),
-            //     ),
-            //   ],
-            // ),
-            // const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Club de beneficios',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                PressableScale(
+                  onTap: () {
+                    AppHaptics.selection();
+                    ref.read(bottomNavIndexProvider.notifier).go(2);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Ver aliados',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: brand.accent,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: brand.accent,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             SponsorCarousel(ads: carousel),
           ],
         );
@@ -301,7 +325,8 @@ class _MyTrainersSection extends ConsumerWidget {
               separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final trainer = followed[index];
-                return GestureDetector(
+                return PressableScale(
+                  pressedScale: 0.96,
                   onTap: () => Navigator.of(context).pushNamed(
                     TrainerProfileScreen.routeName,
                     arguments: trainer,

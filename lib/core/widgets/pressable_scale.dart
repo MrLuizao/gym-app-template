@@ -8,7 +8,7 @@ class PressableScale extends StatefulWidget {
     required this.child,
     this.onTap,
     this.pressedScale = 0.96,
-    this.enableHaptic = true,
+    this.enableHaptic = false,
   });
 
   final Widget child;

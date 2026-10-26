@@ -25,6 +25,10 @@ class RegistrationScreen extends ConsumerStatefulWidget {
 }
 
 class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
+  static const _indigo = Color(0xFF6D5DF1);
+  static const _violet = Color(0xFF8B5CF6);
+  static const _pink = Color(0xFFEC4899);
+
   /// Proveedor en vuelo ('google' | 'apple' | null) — solo ese botón
   /// morfa a loader; el otro se atenúa.
   String? _loadingProvider;
@@ -136,26 +140,69 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
               child: Column(
                 children: [
                   const Spacer(),
-                  Container(
-                        width: 76,
-                        height: 76,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [brand.accent, brand.accentDark],
+                  Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 180,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(99),
+                              gradient: RadialGradient(
+                                colors: [
+                                  _indigo.withValues(alpha: 0.28),
+                                  _pink.withValues(alpha: 0.10),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          Icons.fitness_center_rounded,
-                          size: 38,
-                          color: brand.background,
-                        ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'RIR',
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.2,
+                                  height: 1.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              ShaderMask(
+                                blendMode: BlendMode.srcIn,
+                                shaderCallback: (bounds) =>
+                                    const LinearGradient(
+                                      colors: [_indigo, _violet, _pink],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ).createShader(
+                                      Rect.fromLTWH(
+                                        0,
+                                        0,
+                                        bounds.width,
+                                        bounds.height,
+                                      ),
+                                    ),
+                                child: const Text(
+                                  'HUB',
+                                  style: TextStyle(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1.2,
+                                    height: 1.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       )
                       .animate()
                       .scale(
-                        begin: const Offset(0.6, 0.6),
+                        begin: const Offset(0.82, 0.82),
                         end: const Offset(1, 1),
                         duration: 520.ms,
                         curve: Curves.easeOutBack,
@@ -176,7 +223,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
                   const SizedBox(height: 8),
                   Text(
-                    'Únete a RIR-HUB y entrena sin límites',
+                    'Únete a RIRHUB y entrena sin límites',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -279,7 +326,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     ).animate(delay: 580.ms).fadeIn(duration: 320.ms),
                   const SizedBox(height: 8),
                   Text(
-                    'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de RIR-HUB.',
+                    'Al continuar aceptas los Términos y Condiciones\ny la Política de Privacidad de RIRHUB.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10,

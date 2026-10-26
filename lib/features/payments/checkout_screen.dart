@@ -6,8 +6,10 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/api_client.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/glass_icon_button.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/primary_button.dart';
 import 'providers/membership_provider.dart';
 
@@ -58,6 +60,7 @@ class _MembershipCheckoutScreenState
       setState(() => _processing = false);
       await Stripe.instance.presentPaymentSheet();
       if (!mounted) return;
+      AppHaptics.heavy();
       setState(() => _success = true);
     } on StripeException catch (e) {
       if (!mounted) return;
@@ -83,15 +86,47 @@ class _MembershipCheckoutScreenState
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
+    final membership = ref.watch(membershipProvider);
     final plansAsync = ref.watch(plansProvider);
     final plans = plansAsync.value ??
         (plansAsync.hasError ? fallbackPlans : const <MembershipPlan>[]);
-    final plan = plans.isEmpty
-        ? null
-        : plans[_selectedPlan.clamp(0, plans.length - 1)];
+
+    // Determinar si el socio tiene una membresía activa vigente y cuál es su nivel actual
+    final now = DateTime.now();
+    final isCurrentlyActive =
+        membership.isActive &&
+        (membership.expiresAt == null || membership.expiresAt!.isAfter(now));
+
+    MembershipPlan? currentPlan;
+    if (isCurrentlyActive && membership.planId.isNotEmpty) {
+      for (final p in plans) {
+        if (p.id == membership.planId) {
+          currentPlan = p;
+          break;
+        }
+      }
+    }
+
+    bool isPlanSelectable(MembershipPlan candidate) {
+      if (!isCurrentlyActive || currentPlan == null) return true;
+      return candidate.price > currentPlan.price;
+    }
+
+    // Asegurar que el índice seleccionado apunte a un plan permitido (upgrade)
+    int? effectiveIndex;
+    if (plans.isNotEmpty) {
+      final clamped = _selectedPlan.clamp(0, plans.length - 1);
+      if (isPlanSelectable(plans[clamped])) {
+        effectiveIndex = clamped;
+      } else {
+        final firstUpgrade = plans.indexWhere(isPlanSelectable);
+        effectiveIndex = firstUpgrade >= 0 ? firstUpgrade : null;
+      }
+    }
+
+    final plan = effectiveIndex != null ? plans[effectiveIndex] : null;
 
     if (_success) {
-      final membership = ref.watch(membershipProvider);
       return Scaffold(
         backgroundColor: brand.background,
         body: SafeArea(
@@ -147,47 +182,126 @@ class _MembershipCheckoutScreenState
 
     return Scaffold(
       backgroundColor: brand.background,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+      body: Stack(
         children: [
-          Row(
-            children: [
-              GlassIconButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              const Spacer(),
-              Text(
-                'Renovar membresía',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: brand.textPrimary,
+          Positioned(
+            top: -80,
+            left: -40,
+            right: -40,
+            height: 260,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.5),
+                    radius: 0.9,
+                    colors: [
+                      brand.accent.withValues(alpha: 0.14),
+                      brand.background.withValues(alpha: 0),
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
-              const SizedBox(width: 42),
-            ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Text('Elige tu plan', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          if (plans.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
-            )
-          else
-            for (var i = 0; i < plans.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _PlanCard(
-                  plan: plans[i],
-                  selected: i == _selectedPlan,
-                  onTap: () => setState(() => _selectedPlan = i),
+          SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+              children: [
+                Row(
+                  children: [
+                    GlassIconButton(
+                      icon: Icons.arrow_back_ios_new_rounded,
+                      onTap: () => Navigator.of(context).maybePop(),
+                    ),
+                    const Spacer(),
+                    Text(
+                      isCurrentlyActive ? 'Mejorar mi plan' : 'Renovar membresía',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: brand.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    const SizedBox(width: 42),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 20),
+                Text(
+                  isCurrentlyActive ? 'Sube de nivel' : 'Elige tu plan',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                if (isCurrentlyActive && currentPlan != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Tu membresía ${currentPlan.name} está activa. Mientras esté vigente solo puedes subir a un plan de mayor nivel.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      color: brand.textSecondary,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (plans.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                  )
+                else ...[
+                  for (var i = 0; i < plans.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _PlanCard(
+                        plan: plans[i],
+                        selected: effectiveIndex == i,
+                        isCurrentPlan:
+                            isCurrentlyActive &&
+                            currentPlan != null &&
+                            plans[i].id == currentPlan.id,
+                        isLowerTier:
+                            isCurrentlyActive &&
+                            currentPlan != null &&
+                            plans[i].price < currentPlan.price,
+                        onTap: isPlanSelectable(plans[i])
+                            ? () => setState(() => _selectedPlan = i)
+                            : null,
+                      ),
+                    ),
+                  if (isCurrentlyActive &&
+                      currentPlan != null &&
+                      effectiveIndex == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: AppCard(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.workspace_premium_rounded,
+                              color: brand.accent,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Ya cuentas con el nivel más alto (${currentPlan.name}). Podrás renovar cuando finalice tu periodo actual.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.35,
+                                  color: brand.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
           const SizedBox(height: 8),
           if (kIsWeb || AppConfig.stripePublishableKey.isEmpty)
             AppCard(
@@ -286,105 +400,160 @@ class _MembershipCheckoutScreenState
               ),
             ),
           ],
+          ],
+            ),
+          ),
         ],
-        ),
       ),
     );
   }
 }
 
 class _PlanCard extends StatelessWidget {
-  const _PlanCard({required this.plan, required this.selected, this.onTap});
+  const _PlanCard({
+    required this.plan,
+    required this.selected,
+    this.isCurrentPlan = false,
+    this.isLowerTier = false,
+    this.onTap,
+  });
 
   final MembershipPlan plan;
   final bool selected;
+  final bool isCurrentPlan;
+  final bool isLowerTier;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: selected
-              ? brand.accent.withValues(alpha: 0.08)
-              : brand.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? brand.accent : brand.cardBorder,
-            width: selected ? 1.6 : 1,
+    final locked = isCurrentPlan || isLowerTier;
+    final statusBadge = isCurrentPlan
+        ? 'TU PLAN ACTUAL'
+        : isLowerTier
+        ? 'NIVEL INFERIOR'
+        : plan.tag;
+
+    return Opacity(
+      opacity: isLowerTier ? 0.48 : (isCurrentPlan ? 0.72 : 1.0),
+      child: PressableScale(
+        pressedScale: 0.97,
+        onTap: locked ? null : onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? brand.accent.withValues(alpha: 0.10)
+                : brand.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected
+                  ? brand.accent
+                  : isCurrentPlan
+                  ? brand.accent.withValues(alpha: 0.35)
+                  : brand.cardBorder,
+              width: selected ? 1.6 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: brand.accent.withValues(alpha: 0.14),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selected ? brand.accent : Colors.transparent,
-                border: Border.all(
-                  color: selected ? brand.accent : brand.cardBorder,
-                  width: 1.6,
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? brand.accent
+                      : isCurrentPlan
+                      ? brand.accent.withValues(alpha: 0.18)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: selected || isCurrentPlan
+                        ? brand.accent
+                        : brand.cardBorder,
+                    width: 1.6,
+                  ),
+                ),
+                child: selected
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 15,
+                        color: brand.background,
+                      )
+                    : isCurrentPlan
+                    ? Icon(Icons.verified_rounded, size: 14, color: brand.accent)
+                    : isLowerTier
+                    ? Icon(
+                        Icons.lock_rounded,
+                        size: 13,
+                        color: brand.textSecondary,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      plan.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: brand.textPrimary,
+                      ),
+                    ),
+                    if (statusBadge != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        statusBadge,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: isLowerTier
+                              ? brand.textSecondary
+                              : brand.accent,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              child: selected
-                  ? Icon(Icons.check_rounded, size: 15, color: brand.background)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    plan.name,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: brand.textPrimary,
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '\$${plan.price.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: brand.textPrimary,
+                      ),
                     ),
-                  ),
-                  if (plan.tag != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      plan.tag!,
+                    TextSpan(
+                      text: ' /mes',
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: brand.accent,
+                        fontWeight: FontWeight.w700,
+                        color: brand.textSecondary,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '\$${plan.price.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      color: brand.textPrimary,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' /mes',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: brand.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

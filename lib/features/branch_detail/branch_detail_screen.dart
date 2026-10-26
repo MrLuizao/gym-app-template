@@ -81,7 +81,8 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
             backgroundColor: brand.background,
             leading: Padding(
               padding: const EdgeInsets.all(8),
-              child: GestureDetector(
+              child: PressableScale(
+                pressedScale: 0.88,
                 onTap: () => Navigator.of(context).maybePop(),
                 child: Container(
                   decoration: BoxDecoration(
@@ -102,10 +103,14 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
             actions: [
               Padding(
                 padding: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () => ref
-                      .read(favoriteBranchesProvider.notifier)
-                      .toggle(branch.id),
+                child: PressableScale(
+                  pressedScale: 0.86,
+                  onTap: () {
+                    AppHaptics.medium();
+                    ref
+                        .read(favoriteBranchesProvider.notifier)
+                        .toggle(branch.id);
+                  },
                   child: Container(
                     width: 36,
                     height: 36,
@@ -116,12 +121,18 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                         color: Colors.white.withValues(alpha: 0.14),
                       ),
                     ),
-                    child: Icon(
-                      isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      size: 17,
-                      color: isFavorite ? brand.accent : Colors.white,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: Icon(
+                        isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        key: ValueKey<bool>(isFavorite),
+                        size: 17,
+                        color: isFavorite ? brand.accent : Colors.white,
+                      ),
                     ),
                   ),
                 ),

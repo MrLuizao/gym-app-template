@@ -13,7 +13,9 @@ import '../../core/branding/brand.dart';
 import '../../core/firebase/auth_provider.dart';
 import '../../core/firebase/google_sign_in_button_stub.dart'
     if (dart.library.js_interop) '../../core/firebase/google_sign_in_button_web.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/auth_success_screen.dart';
+import '../../core/widgets/pressable_scale.dart';
 
 /// Login del socio — registro self-service con Google/Apple.
 /// El doc /users/{uid} en Firestore define membresía, sede y número;
@@ -26,6 +28,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  static const _indigo = Color(0xFF6D5DF1);
+  static const _violet = Color(0xFF8B5CF6);
+  static const _pink = Color(0xFFEC4899);
+
   bool _loading = false;
   String? _error;
 
@@ -106,8 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accent.withValues(alpha: 0.3),
-                    brand.accent.withValues(alpha: 0),
+                    _indigo.withValues(alpha: 0.26),
+                    _violet.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),
@@ -123,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accentDark.withValues(alpha: 0.4),
+                    brand.accentDark.withValues(alpha: 0.32),
                     brand.accentDark.withValues(alpha: 0),
                   ],
                 ),
@@ -139,53 +146,76 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Center(
-                      child:
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
                           Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: brand.accent,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: brand.accent.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      blurRadius: 32,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.fitness_center_rounded,
-                                  color: brand.background,
-                                  size: 32,
-                                ),
-                              )
-                              .animate()
-                              .scale(
-                                begin: const Offset(0.6, 0.6),
-                                end: const Offset(1, 1),
-                                duration: 520.ms,
-                                curve: Curves.easeOutBack,
-                              )
-                              .fadeIn(duration: 300.ms),
-                    ),
-                    const SizedBox(height: 28),
-                    Text(
-                          brand.appName,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 3.5,
-                            color: brand.accent,
+                            width: 180,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(99),
+                              gradient: RadialGradient(
+                                colors: [
+                                  _indigo.withValues(alpha: 0.28),
+                                  _pink.withValues(alpha: 0.10),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
                           ),
-                        )
-                        .animate(delay: 120.ms)
-                        .fadeIn(duration: 340.ms)
-                        .slideY(begin: 0.4, end: 0, curve: Curves.easeOutCubic),
-                    const SizedBox(height: 14),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'RIR',
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.2,
+                                  height: 1.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              ShaderMask(
+                                blendMode: BlendMode.srcIn,
+                                shaderCallback: (bounds) =>
+                                    const LinearGradient(
+                                      colors: [_indigo, _violet, _pink],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ).createShader(
+                                      Rect.fromLTWH(
+                                        0,
+                                        0,
+                                        bounds.width,
+                                        bounds.height,
+                                      ),
+                                    ),
+                                child: const Text(
+                                  'HUB',
+                                  style: TextStyle(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1.2,
+                                    height: 1.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                          .animate()
+                          .scale(
+                            begin: const Offset(0.82, 0.82),
+                            end: const Offset(1, 1),
+                            duration: 500.ms,
+                            curve: Curves.easeOutBack,
+                          )
+                          .fadeIn(duration: 320.ms),
+                    ),
+                    const SizedBox(height: 22),
                     Text(
                           'ENTRENA.\nRESERVA.\nREPITE.',
                           textAlign: TextAlign.center,
@@ -304,8 +334,14 @@ class _SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
-      onTap: loading ? null : onTap,
+    return PressableScale(
+      enableHaptic: false,
+      onTap: loading
+          ? null
+          : () {
+              AppHaptics.medium();
+              onTap();
+            },
       child: Container(
         height: 54,
         decoration: BoxDecoration(

@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
-import '../../core/utils/haptics.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/pressable_scale.dart';
@@ -109,10 +108,7 @@ class AlliesScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             PressableScale(
-              onTap: () {
-                AppHaptics.light();
-                _AdSpacesSheet.show(context);
-              },
+              onTap: () => _AdSpacesSheet.show(context),
               child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -414,6 +410,7 @@ class _AllyCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     return PressableScale(
+      enableHaptic: true,
       onTap: () {
         ref.read(adMetricsProvider.notifier).track(ad.id, 'tap');
         Navigator.of(context).pushNamed('/sponsor', arguments: ad);

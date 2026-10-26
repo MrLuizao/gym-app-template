@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/coach_avatar.dart';
+import '../../../core/widgets/pressable_scale.dart';
 import '../../../data/models/trainer.dart';
 
 class TrainerCard extends StatelessWidget {
@@ -20,7 +21,8 @@ class TrainerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
+    return PressableScale(
+      pressedScale: 0.96,
       onTap: onTap,
       child: Container(
         width: 138,

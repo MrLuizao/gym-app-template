@@ -4,7 +4,7 @@ import 'brand.dart';
 
 const rirHub = BrandConfig(
   id: 'rir_hub',
-  appName: 'RIR-HUB',
+  appName: 'RIRHUB',
   tagline: 'Entrena sin límites',
   background: Color(0xFF050505),
   surface: Color(0xFF111411),

@@ -71,7 +71,8 @@ class HomeHeader extends ConsumerWidget {
               Row(
                 children: [
                   Text(
-                    _greeting(),
+                    'Hola',
+                    // _greeting(),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w900,

@@ -239,6 +239,7 @@ class CouponCard extends StatelessWidget {
     }
 
     return PressableScale(
+      enableHaptic: true,
       onTap: onTap,
       pressedScale: 0.975,
       child: card,

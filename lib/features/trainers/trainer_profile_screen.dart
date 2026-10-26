@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/glass_icon_button.dart';
+import '../../core/widgets/pressable_scale.dart';
 import '../../data/models/trainer.dart';
 import 'providers/following_trainers_provider.dart';
 
@@ -109,10 +111,14 @@ class TrainerProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () => ref
-                      .read(followingTrainersProvider.notifier)
-                      .toggle(trainer.id),
+                PressableScale(
+                  pressedScale: 0.92,
+                  onTap: () {
+                    AppHaptics.medium();
+                    ref
+                        .read(followingTrainersProvider.notifier)
+                        .toggle(trainer.id);
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
@@ -133,7 +139,9 @@ class TrainerProfileScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
-                        color: following ? brand.accent : brand.background,
+                        color: following
+                            ? brand.accent
+                            : brand.readableOn(brand.accent),
                       ),
                     ),
                   ),

@@ -187,17 +187,17 @@ Toda nueva pantalla, modal o componente en la app **debe mantener el estándar v
    - Las pantallas principales (`HomeScreen`, `ExploreScreen`, `AlliesScreen`, `PromotionsScreen`, `RewardsScreen`, `ProfileScreen`, `BranchDetailScreen`) envuelven su contenido en un `Stack` con un `RadialGradient` superior (`brand.accent` con `alpha: 0.14–0.22` hacia transparente).
    - En `HomeScreen`, el halo cambia dinámicamente a verde esmeralda (`brand.occupancyLow`) cuando el socio cumple su meta semanal (`visits >= goal`).
 2. **Física táctil universal (`PressableScale` + `AppHaptics`)**:
-   - **Nunca usar `GestureDetector` plano sin feedback** en tarjetas, píldoras, botones o chips interactivos. Envolver siempre en `PressableScale` (`lib/core/widgets/pressable_scale.dart`), que aplica compresión elástica (`Curves.easeOutCubic` / `Curves.elasticOut`) y dispara `AppHaptics.light()` al presionar.
-   - `AppCard` con `onTap != null` y `PrimaryButton` ya integran compresión elástica y hápticos por defecto (`glow: true` en `PrimaryButton` proyecta sombra difusa del color de acento).
+   - **Nunca usar `GestureDetector` plano sin feedback visual** en tarjetas, píldoras, botones o chips interactivos. Envolver siempre en `PressableScale` (`lib/core/widgets/pressable_scale.dart`), que aplica compresión elástica (`Curves.easeOutCubic` / `Curves.elasticOut`).
+   - **Regla de Vibraciones Hápticas**: `PressableScale` tiene `enableHaptic: false` por defecto — **NO usar vibración háptica en navegaciones hacia atrás ni en navegaciones hacia adelante genéricas** (con **excepción del tap en tarjetas de Aliados / Club de beneficios y cupones**, que sí llevan `enableHaptic: true` / `AppHaptics`). Reservar las vibraciones exclusivamente para **recompensas importantes y acciones de valor** (tap en aliados/beneficios, canje de recompensas y cupones, cumplimiento de meta semanal, marcar sede favorita ❤️, seguir/dejar de seguir entrenador, abrir pase QR, confirmar pago y confirmar cierre de sesión).
 3. **Jerarquía de respuestas hápticas (`lib/core/utils/haptics.dart`)**:
-   - `AppHaptics.light()`: Taps en tarjetas, filas de acción, abrir modales secundarios.
-   - `AppHaptics.selection()`: Cambios de pestaña en `MainBottomBar`, filtros de categoría, selector de días en calendario, ajuste de meta semanal (`+/-`), copiar códigos al portapapeles.
-   - `AppHaptics.medium()`: Acciones principales (`PrimaryButton`), abrir el pase QR (`CheckInSheet`, `CouponQrSheet`), reservar clase, confirmar canje de recompensa.
-   - `AppHaptics.heavy()`: Éxito de vinculación/check-in (`AuthSuccessScreen`), cumplimiento de meta semanal, o error con sacudida horizontal (shake en `ClaimMemberScreen`).
+   - `AppHaptics.light()` / `enableHaptic: true`: Tap en tarjetas de Aliados (`SponsorCarousel`, `_AllyCard`, `CouponCard`).
+   - `AppHaptics.selection()`: Ajuste de meta semanal (`2–6`), copiar códigos de recompensa o cupón al portapapeles.
+   - `AppHaptics.medium()`: Acciones de valor (canjear beneficio/recompensa, abrir pase QR `CheckInSheet` / `CouponQrSheet`, marcar sede favorita, seguir entrenador, reservar clase).
+   - `AppHaptics.heavy()`: Éxito de vinculación/check-in (`AuthSuccessScreen`), pago completado, canje de recompensa confirmado, confirmación de cierre de sesión, o error con sacudida horizontal (`ClaimMemberScreen`).
 4. **Bottom Navigation (`MainShell` + `MainBottomBar`)**:
-   - Barra fija de 5 tabs con cristal esmerilado (`ClipRect` + `BackdropFilter(ImageFilter.blur(sigmaX: 24, sigmaY: 24))` + superficie translúcida `alpha: 0.82`).
-   - Íconos `outlined` en reposo que transicionan a `filled` al activarse, con escala elástica y punto luminoso inferior (`BoxShadow` con `brand.accent`).
-   - Transición suave entre pestañas (`FadeTransition` + `SlideTransition` sutil de `180ms`).
+   - Barra fija de 5 tabs con cristal esmerilado (`ClipRRect` + `BackdropFilter(ImageFilter.blur(sigmaX: 18, sigmaY: 18))` + superficie translúcida `alpha: 0.92`).
+   - Íconos `outlined` en reposo que transicionan a `filled` al activarse con escala elástica (sin rayita inferior bajo el texto y **sin vibración háptica al cambiar de tab**).
+   - Transición suave entre pestañas (`FadeTransition` + `SlideTransition` sutil).
 5. **Indicadores vivos y contadores animados**:
    - **Pulso en vivo**: Las sedes abiertas (`BranchCard`) y el estado activo del QR (`CheckInSheet`) muestran un punto con halo respiratorio (`AnimationController` en repeat reverse).
    - **Contadores numéricos (`TweenAnimationBuilder`)**: Los números de visitas semanales (`WeeklySummarySection`) y el saldo de puntos (`RewardsScreen`) animan su conteo progresivo y destellan cuando suben.
@@ -215,6 +215,8 @@ Toda nueva pantalla, modal o componente en la app **debe mantener el estándar v
   `SnackBar` genérico en español ("No se pudo completar la reserva").
 - Branding: `context.brand` da `brand.accent/surface/cardBorder/...` —
   no hardcodear colores.
+- **Contraste en colores de marca de aliados (`ad.brandColor` / `brand.allyAccent`)**:
+  Un anunciante puede elegir tonos oscuros o terrosos (ej. café, verde olivo, azul marino). **Nunca pintar textos ni íconos directamente con `allyColor` sobre fondos oscuros** porque se pierden: usar siempre **`Colors.white`** (o `brand.readableOn(allyColor)` sobre rellenos sólidos) para íconos y textos, y reservar el `allyColor` para **rellenos de píldoras/botones (`Color.alphaBlend`), bordes iluminados, sombras y halos ambientales**.
 - Locale México (`es-MX`), fechas de ocurrencia en `YYYY-MM-DD` (la
   misma llave que el server calcula en `America/Mexico_City`).
 
@@ -224,6 +226,11 @@ Toda nueva pantalla, modal o componente en la app **debe mantener el estándar v
   `POST /api/payments/intent` → `Stripe.instance.initPaymentSheet` +
   `presentPaymentSheet` → éxito muestra confirmación; el webhook del B2B
   activa la membresía y el stream de `users/{uid}` la refleja en vivo.
+- **Regla de Nivel / Upgrade para Membresías Activas**:
+  - El nivel de un plan lo define su `price` (orden ascendente en `plansProvider`).
+  - Si la membresía del socio está **activa y vigente** (`membershipStatus == ACTIVE` y no vencida), **solo puede subir de nivel (upgrade)** (`plan.price > currentPlan.price`).
+  - Los planes de menor nivel (`plan.price < currentPlan.price`) y su plan actual (`plan.id == currentPlan.id` o `plan.price == currentPlan.price`) aparecen bloqueados en `MembershipCheckoutScreen` (`NIVEL INFERIOR` / `TU PLAN ACTUAL`), y `POST /api/payments/intent` en el B2B rechaza con `400` cualquier intento de pagar un plan de precio menor o igual mientras la membresía siga vigente.
+  - Cuando la membresía está vencida (`EXPIRED` o fecha pasada), el socio puede elegir libremente cualquier plan para renovar.
 - `membershipProvider` deriva plan/status/expira de `users/{uid}`;
   `plansProvider` lee `/plans` (Firestore, `active == true`).
 - Android: `MainActivity` extiende `FlutterFragmentActivity` y los temas

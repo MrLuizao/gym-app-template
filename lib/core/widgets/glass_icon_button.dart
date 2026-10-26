@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../branding/brand.dart';
+import 'pressable_scale.dart';
 
 class GlassIconButton extends StatelessWidget {
   const GlassIconButton({
@@ -17,7 +18,8 @@ class GlassIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    return GestureDetector(
+    return PressableScale(
+      pressedScale: 0.90,
       onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,

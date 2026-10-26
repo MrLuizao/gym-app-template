@@ -28,6 +28,152 @@ class ProfileScreen extends ConsumerWidget {
         '${date.year}';
   }
 
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    AppHaptics.medium();
+    final brand = context.brand;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 26, 24, 22),
+            decoration: BoxDecoration(
+              color: brand.surface,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: brand.occupancyHigh.withValues(alpha: 0.28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 32,
+                  offset: const Offset(0, 16),
+                ),
+                BoxShadow(
+                  color: brand.occupancyHigh.withValues(alpha: 0.14),
+                  blurRadius: 28,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: brand.occupancyHigh.withValues(alpha: 0.14),
+                    border: Border.all(
+                      color: brand.occupancyHigh.withValues(alpha: 0.38),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.logout_rounded,
+                    size: 26,
+                    color: brand.occupancyHigh,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  '¿Cerrar sesión?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    color: brand.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tendrás que volver a iniciar sesión para acceder a tu pase digital, reservas y recompensas.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: brand.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PressableScale(
+                        onTap: () => Navigator.of(dialogContext).pop(false),
+                        child: Container(
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: brand.background,
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(color: brand.cardBorder),
+                          ),
+                          child: Text(
+                            'Cancelar',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: brand.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: PressableScale(
+                        enableHaptic: false,
+                        onTap: () {
+                          AppHaptics.heavy();
+                          Navigator.of(dialogContext).pop(true);
+                        },
+                        child: Container(
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: brand.occupancyHigh,
+                            borderRadius: BorderRadius.circular(99),
+                            boxShadow: [
+                              BoxShadow(
+                                color: brand.occupancyHigh.withValues(
+                                  alpha: 0.35,
+                                ),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'Cerrar sesión',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+    await ref.read(authControllerProvider).signOut();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
@@ -238,7 +384,7 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.logout_rounded,
                   label: 'Cerrar sesión',
                   labelColor: brand.occupancyHigh,
-                  onTap: () => ref.read(authControllerProvider).signOut(),
+                  onTap: () => _confirmSignOut(context, ref),
                 ),
               ],
             ],
@@ -324,12 +470,7 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final brand = context.brand;
     return InkWell(
-      onTap: onTap == null
-          ? null
-          : () {
-              AppHaptics.light();
-              onTap!();
-            },
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
@@ -342,7 +483,7 @@ class _ActionRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: brand.cardBorder),
               ),
-              child: Icon(icon, size: 16, color: brand.accent),
+              child: Icon(icon, size: 16, color: labelColor ?? brand.accent),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -135,85 +135,90 @@ class _RootGateState extends State<RootGate> {
   }
 }
 
-/// Splash reveal estilo Spotify: emblema que respira sobre halo radial.
+/// Splash reveal al iniciar la app: centrado absoluto con el wordmark
+/// RIRHUB y los tonos/gradiente oficiales del landing (#6d5df1 -> #8b5cf6 -> #ec4899).
 class _LuxurySplashView extends StatelessWidget {
   const _LuxurySplashView({super.key});
+
+  static const _indigo = Color(0xFF6D5DF1);
+  static const _violet = Color(0xFF8B5CF6);
+  static const _pink = Color(0xFFEC4899);
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
     return Scaffold(
       backgroundColor: brand.background,
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  brand.accent.withValues(alpha: 0.24),
-                  brand.accent.withValues(alpha: 0),
-                ],
-              ),
-            ),
-          )
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scale(
-                begin: const Offset(0.85, 0.85),
-                end: const Offset(1.15, 1.15),
-                duration: 900.ms,
-                curve: Curves.easeInOut,
-              ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  color: brand.accent,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: brand.accent.withValues(alpha: 0.45),
-                      blurRadius: 36,
-                      offset: const Offset(0, 8),
-                    ),
+      body: SizedBox.expand(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    _indigo.withValues(alpha: 0.24),
+                    _violet.withValues(alpha: 0.10),
+                    Colors.transparent,
                   ],
                 ),
-                child: Icon(
-                  Icons.fitness_center_rounded,
-                  color: brand.readableOn(brand.accent),
-                  size: 34,
+              ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(0.88, 0.88),
+                  end: const Offset(1.14, 1.14),
+                  duration: 900.ms,
+                  curve: Curves.easeInOut,
                 ),
-              )
-                  .animate()
-                  .scale(
-                    begin: const Offset(0.65, 0.65),
-                    end: const Offset(1, 1),
-                    duration: 480.ms,
-                    curve: Curves.easeOutBack,
-                  )
-                  .fadeIn(duration: 280.ms),
-              const SizedBox(height: 20),
-              Text(
-                brand.appName,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4.2,
-                  color: brand.textPrimary,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'RIR',
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.2,
+                    height: 1.0,
+                    color: Colors.white,
+                  ),
                 ),
-              )
-                  .animate(delay: 140.ms)
-                  .fadeIn(duration: 320.ms)
-                  .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-            ],
-          ),
-        ],
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [_indigo, _violet, _pink],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ).createShader(
+                    Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                  ),
+                  child: const Text(
+                    'HUB',
+                    style: TextStyle(
+                      fontSize: 42,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.2,
+                      height: 1.0,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            )
+                .animate()
+                .scale(
+                  begin: const Offset(0.82, 0.82),
+                  end: const Offset(1, 1),
+                  duration: 480.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .fadeIn(duration: 300.ms),
+          ],
+        ),
       ),
     );
   }

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/push_notification_service.dart';
-import '../../core/utils/haptics.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../allies/allies_screen.dart';
 import '../explore/explore_screen.dart';
@@ -145,10 +144,7 @@ class _MainShellState extends ConsumerState<MainShell>
         index: index,
         onChanged: (newIdx) {
           if (newIdx != index) {
-            AppHaptics.selection();
             ref.read(bottomNavIndexProvider.notifier).go(newIdx);
-          } else {
-            AppHaptics.light();
           }
         },
       ),
@@ -318,26 +314,6 @@ class _BarItemState extends State<_BarItem> {
                 fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
                 color: selected ? brand.textPrimary : brand.textSecondary,
                 letterSpacing: selected ? 0.2 : 0,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Punto luminoso estilo Spotify bajo la pestaña activa
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              width: selected ? 14 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                color: selected ? brand.accent : Colors.transparent,
-                borderRadius: BorderRadius.circular(99),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: brand.accent.withValues(alpha: 0.65),
-                          blurRadius: 8,
-                        ),
-                      ]
-                    : null,
               ),
             ),
           ],
