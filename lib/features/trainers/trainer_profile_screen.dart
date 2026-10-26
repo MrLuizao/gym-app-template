@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/glass_icon_button.dart';
 import '../../core/widgets/pressable_scale.dart';
@@ -22,9 +23,12 @@ class TrainerProfileScreen extends ConsumerWidget {
     final following = ref.watch(followingTrainersProvider).contains(trainer.id);
     return Scaffold(
       backgroundColor: brand.background,
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
+      body: Stack(
+        children: [
+          const AmbientTopGlow(),
+          SafeArea(
+            bottom: false,
+            child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
           children: [
             Row(
@@ -65,10 +69,10 @@ class TrainerProfileScreen extends ConsumerWidget {
                     height: 116,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: brand.accent, width: 2.5),
+                      border: Border.all(color: BrandConfig.logoViolet, width: 2.5),
                       boxShadow: [
                         BoxShadow(
-                          color: brand.accent.withValues(alpha: 0.25),
+                          color: BrandConfig.logoViolet.withValues(alpha: 0.35),
                           blurRadius: 28,
                           spreadRadius: 2,
                         ),
@@ -261,7 +265,9 @@ class TrainerProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 }
 

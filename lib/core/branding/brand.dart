@@ -32,6 +32,16 @@ class BrandConfig extends ThemeExtension<BrandConfig> {
   final Color occupancyMedium;
   final Color occupancyHigh;
 
+  static const Color logoIndigo = Color(0xFF6D5DF1);
+  static const Color logoViolet = Color(0xFF8B5CF6);
+  static const Color logoPink = Color(0xFFEC4899);
+
+  static const List<Color> logoGradientColors = [
+    logoIndigo,
+    logoViolet,
+    logoPink,
+  ];
+
   Color occupancyFor(double ratio) {
     if (ratio < 0.5) return occupancyLow;
     if (ratio <= 0.8) return occupancyMedium;

@@ -5,6 +5,7 @@ import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/auth_provider.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/member_avatar.dart';
@@ -190,26 +191,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: Stack(
         children: [
-          Positioned(
-            top: -80,
-            left: -40,
-            right: -40,
-            height: 280,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.5),
-                    radius: 0.9,
-                    colors: [
-                      brand.accent.withValues(alpha: 0.16),
-                      brand.background.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AmbientTopGlow(),
           ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
             children: [

@@ -7,6 +7,7 @@ import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/firebase/api_client.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/glass_icon_button.dart';
 import '../../core/widgets/pressable_scale.dart';
@@ -143,15 +144,24 @@ class _MembershipCheckoutScreenState
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          brand.accent.withValues(alpha: 0.3),
-                          brand.accent.withValues(alpha: 0),
+                          BrandConfig.logoIndigo.withValues(alpha: 0.35),
+                          BrandConfig.logoPink.withValues(alpha: 0.12),
+                          Colors.transparent,
                         ],
                       ),
                     ),
-                    child: Icon(
-                      Icons.check_circle_rounded,
-                      size: 72,
-                      color: brand.accent,
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: BrandConfig.logoGradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        size: 72,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -184,26 +194,7 @@ class _MembershipCheckoutScreenState
       backgroundColor: brand.background,
       body: Stack(
         children: [
-          Positioned(
-            top: -80,
-            left: -40,
-            right: -40,
-            height: 260,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.5),
-                    radius: 0.9,
-                    colors: [
-                      brand.accent.withValues(alpha: 0.14),
-                      brand.background.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AmbientTopGlow(),
           SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),

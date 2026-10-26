@@ -110,8 +110,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accent.withValues(alpha: 0.3),
-                    brand.accent.withValues(alpha: 0),
+                    _indigo.withValues(alpha: 0.28),
+                    _violet.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),
@@ -127,8 +128,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accentDark.withValues(alpha: 0.35),
-                    brand.accentDark.withValues(alpha: 0),
+                    _pink.withValues(alpha: 0.28),
+                    _violet.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),

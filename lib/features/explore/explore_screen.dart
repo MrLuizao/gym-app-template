@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/pressable_scale.dart';
 import '../../data/models/branch.dart';
 import '../home/providers/branch_providers.dart';
@@ -42,33 +43,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final brand = context.brand;
     final branchesAsync = ref.watch(branchesProvider);
     final favorites = ref.watch(favoriteBranchesProvider);
 
     return Stack(
       children: [
-        Positioned(
-          top: -90,
-          left: -60,
-          right: -60,
-          height: 290,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.55),
-                  radius: 1.05,
-                  colors: [
-                    brand.accent.withValues(alpha: 0.18),
-                    brand.accent.withValues(alpha: 0.05),
-                    brand.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        const AmbientTopGlow(),
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
           children: [

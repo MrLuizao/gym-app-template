@@ -3,16 +3,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
-import '../../core/config/app_config.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/skeleton_box.dart';
-import '../../data/repositories/gym_repositories.dart';
 import '../checkin/widgets/checkin_sheet.dart';
-import '../rewards/providers/loyalty_providers.dart';
 import '../trainers/providers/following_trainers_provider.dart';
 import '../trainers/trainer_profile_screen.dart';
 import 'providers/branch_providers.dart';
@@ -29,46 +27,11 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final brand = context.brand;
     final branchesAsync = ref.watch(branchesProvider);
-    final member = ref.watch(memberProvider).value;
-    final goal = AppConfig.firebaseActive
-        ? (member?.weeklyGoal ?? 4)
-        : ref.watch(demoWeeklyGoalProvider);
-    final visited = ref.watch(weekVisitedDaysProvider);
-    final todayIndex = DateTime.now().weekday - 1;
-    final visits = visited.where((d) => d <= todayIndex).length;
-    final goalMet = visits >= goal;
-
-    // Color ambiental tipo Spotify en el tope del Home:
-    // brilla en esmeralda/acento intenso al cumplir la meta semanal.
-    final ambientColor = goalMet ? brand.occupancyLow : brand.accent;
 
     return Stack(
       children: [
-        Positioned(
-          top: -90,
-          left: -60,
-          right: -60,
-          height: 310,
-          child: IgnorePointer(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.55),
-                  radius: 1.05,
-                  colors: [
-                    ambientColor.withValues(alpha: 0.22),
-                    ambientColor.withValues(alpha: 0.06),
-                    brand.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        const AmbientTopGlow(height: 330),
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
           children: [
@@ -267,15 +230,24 @@ class _MyTrainersSection extends ConsumerWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          brand.accent.withValues(alpha: 0.22),
-                          brand.accent.withValues(alpha: 0),
+                          BrandConfig.logoIndigo.withValues(alpha: 0.32),
+                          BrandConfig.logoViolet.withValues(alpha: 0.12),
+                          Colors.transparent,
                         ],
                       ),
                     ),
-                    child: Icon(
-                      Icons.sports_rounded,
-                      size: 40,
-                      color: brand.accent,
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: BrandConfig.logoGradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: const Icon(
+                        Icons.sports_rounded,
+                        size: 40,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -414,15 +386,24 @@ class _EmptyFavoritesCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accent.withValues(alpha: 0.22),
-                    brand.accent.withValues(alpha: 0),
+                    BrandConfig.logoPink.withValues(alpha: 0.32),
+                    BrandConfig.logoViolet.withValues(alpha: 0.12),
+                    Colors.transparent,
                   ],
                 ),
               ),
-              child: Icon(
-                Icons.favorite_rounded,
-                size: 40,
-                color: brand.accent,
+              child: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: BrandConfig.logoGradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  size: 40,
+                  color: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 14),

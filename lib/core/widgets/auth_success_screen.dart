@@ -80,8 +80,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        _indigo.withValues(alpha: 0.24),
-                        _violet.withValues(alpha: 0.10),
+                        _indigo.withValues(alpha: 0.26),
+                        _violet.withValues(alpha: 0.12),
+                        _pink.withValues(alpha: 0.05),
                         Colors.transparent,
                       ],
                     ),

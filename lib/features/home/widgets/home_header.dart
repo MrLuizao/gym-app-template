@@ -14,13 +14,6 @@ import 'ai_coach_chat_sheet.dart';
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
-  String _greeting() {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'BUENOS DÍAS';
-    if (h < 19) return 'BUENAS TARDES';
-    return 'BUENAS NOCHES';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../data/repositories/gym_repositories.dart';
 import '../home/providers/sponsor_ads_provider.dart';
 import '../home/widgets/sponsor_carousel.dart';
@@ -30,26 +31,7 @@ class PromotionsScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        Positioned(
-          top: -90,
-          left: -40,
-          right: -40,
-          height: 280,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.55),
-                  radius: 0.9,
-                  colors: [
-                    brand.accent.withValues(alpha: 0.14),
-                    brand.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        const AmbientTopGlow(),
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
           children: [

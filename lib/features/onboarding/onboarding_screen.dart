@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../app.dart';
 import '../../core/branding/brand.dart';
-import '../../core/utils/haptics.dart';
 import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/primary_button.dart';
-import 'registration_screen.dart';
 
 class _SlideData {
   const _SlideData(this.icon, this.badge, this.title, this.subtitle);
@@ -44,7 +43,9 @@ const _slides = <_SlideData>[
 ];
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, this.onDone});
+
+  final VoidCallback? onDone;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -77,14 +78,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Future<void> _finish() async {
-    AppHaptics.medium();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_done', true);
     if (!mounted) return;
+    if (widget.onDone != null) {
+      widget.onDone!();
+      return;
+    }
     Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 420),
-        pageBuilder: (_, _, _) => const RegistrationScreen(),
+        pageBuilder: (_, _, _) => const AuthGate(),
         transitionsBuilder: (_, animation, _, child) {
           final curved = CurvedAnimation(
             parent: animation,
@@ -110,7 +114,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       _finish();
       return;
     }
-    AppHaptics.selection();
     _pageController.nextPage(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
@@ -142,8 +145,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          brand.accent.withValues(alpha: 0.34),
-                          brand.accent.withValues(alpha: 0),
+                          BrandConfig.logoPink.withValues(alpha: 0.32),
+                          BrandConfig.logoViolet.withValues(alpha: 0.10),
+                          Colors.transparent,
                         ],
                       ),
                     ),
@@ -159,8 +163,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          brand.accentDark.withValues(alpha: 0.38),
-                          brand.accentDark.withValues(alpha: 0),
+                          BrandConfig.logoIndigo.withValues(alpha: 0.35),
+                          BrandConfig.logoViolet.withValues(alpha: 0.12),
+                          Colors.transparent,
                         ],
                       ),
                     ),
@@ -190,14 +195,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(99),
                                     color: i <= _page
-                                        ? brand.accent
+                                        ? BrandConfig.logoViolet
                                         : Colors.white.withValues(alpha: 0.14),
                                     boxShadow: i == _page
                                         ? [
                                             BoxShadow(
-                                              color: brand.accent.withValues(
-                                                alpha: 0.55,
-                                              ),
+                                              color: BrandConfig.logoViolet
+                                                  .withValues(alpha: 0.55),
                                               blurRadius: 8,
                                             ),
                                           ]
@@ -236,7 +240,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     physics: const BouncingScrollPhysics(),
                     onPageChanged: (idx) {
                       if (idx != _page) {
-                        AppHaptics.selection();
                         setState(() => _page = idx);
                       }
                     },
@@ -267,14 +270,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                       shape: BoxShape.circle,
                                       gradient: RadialGradient(
                                         colors: [
-                                          brand.accent.withValues(alpha: 0.26),
-                                          brand.accent.withValues(alpha: 0.04),
-                                          brand.accent.withValues(alpha: 0),
+                                          BrandConfig.logoViolet.withValues(alpha: 0.28),
+                                          BrandConfig.logoIndigo.withValues(alpha: 0.08),
+                                          Colors.transparent,
                                         ],
                                       ),
                                       border: Border.all(
-                                        color: brand.accent.withValues(
-                                          alpha: 0.22,
+                                        color: BrandConfig.logoViolet.withValues(
+                                          alpha: 0.35,
                                         ),
                                       ),
                                     ),
@@ -286,23 +289,31 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                           shape: BoxShape.circle,
                                           color: brand.surface,
                                           border: Border.all(
-                                            color: brand.accent.withValues(
-                                              alpha: 0.45,
+                                            color: BrandConfig.logoViolet.withValues(
+                                              alpha: 0.55,
                                             ),
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: brand.accent.withValues(
-                                                alpha: 0.25,
+                                              color: BrandConfig.logoViolet.withValues(
+                                                alpha: 0.35,
                                               ),
                                               blurRadius: 28,
                                             ),
                                           ],
                                         ),
-                                        child: Icon(
-                                          slide.icon,
-                                          size: 40,
-                                          color: brand.accent,
+                                        child: ShaderMask(
+                                          blendMode: BlendMode.srcIn,
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: BrandConfig.logoGradientColors,
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ).createShader(bounds),
+                                          child: Icon(
+                                            slide.icon,
+                                            size: 40,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -314,23 +325,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                       vertical: 5,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: brand.accent.withValues(
-                                        alpha: 0.12,
+                                      color: BrandConfig.logoViolet.withValues(
+                                        alpha: 0.14,
                                       ),
                                       borderRadius: BorderRadius.circular(99),
                                       border: Border.all(
-                                        color: brand.accent.withValues(
-                                          alpha: 0.3,
+                                        color: BrandConfig.logoViolet.withValues(
+                                          alpha: 0.35,
                                         ),
                                       ),
                                     ),
                                     child: Text(
                                       slide.badge,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w900,
                                         letterSpacing: 1.6,
-                                        color: brand.accent,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),

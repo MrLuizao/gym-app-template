@@ -29,7 +29,7 @@ class MembersApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gym Members',
+      title: 'RIRHUB',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.fromBrand(rirHub),
       home: const RootGate(),
@@ -130,7 +130,10 @@ class _RootGateState extends State<RootGate> {
           ? const _LuxurySplashView(key: ValueKey('splash'))
           : ((done || signedIn)
                 ? const AuthGate(key: ValueKey('auth_gate'))
-                : const OnboardingScreen(key: ValueKey('onboarding'))),
+                : OnboardingScreen(
+                    key: const ValueKey('onboarding'),
+                    onDone: () => setState(() => _onboardingDone = true),
+                  )),
     );
   }
 }
@@ -160,8 +163,9 @@ class _LuxurySplashView extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    _indigo.withValues(alpha: 0.24),
-                    _violet.withValues(alpha: 0.10),
+                    _indigo.withValues(alpha: 0.26),
+                    _violet.withValues(alpha: 0.12),
+                    _pink.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),

@@ -149,8 +149,9 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accent.withValues(alpha: 0.25),
-                    brand.accent.withValues(alpha: 0),
+                    BrandConfig.logoIndigo.withValues(alpha: 0.28),
+                    BrandConfig.logoViolet.withValues(alpha: 0.10),
+                    Colors.transparent,
                   ],
                 ),
               ),
@@ -168,19 +169,27 @@ class _ClaimMemberScreenState extends ConsumerState<ClaimMemberScreen>
                       shape: BoxShape.circle,
                       color: brand.surface,
                       border: Border.all(
-                        color: brand.accent.withValues(alpha: 0.4),
+                        color: BrandConfig.logoViolet.withValues(alpha: 0.45),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: brand.accent.withValues(alpha: 0.22),
+                          color: BrandConfig.logoViolet.withValues(alpha: 0.3),
                           blurRadius: 24,
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.badge_rounded,
-                      size: 32,
-                      color: brand.accent,
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: BrandConfig.logoGradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: const Icon(
+                        Icons.badge_rounded,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ).animate().scale(

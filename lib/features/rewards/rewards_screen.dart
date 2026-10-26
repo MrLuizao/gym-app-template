@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/branding/brand.dart';
 import '../../core/config/app_config.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/pressable_scale.dart';
@@ -41,31 +42,7 @@ class RewardsScreen extends ConsumerWidget {
     final brand = context.brand;
     final body = Stack(
       children: [
-        Positioned(
-          top: -90,
-          left: -60,
-          right: -60,
-          height: 290,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.55),
-                  radius: 1.05,
-                  colors: [
-                    (awarded ? brand.occupancyLow : brand.accent).withValues(
-                      alpha: 0.2,
-                    ),
-                    (awarded ? brand.occupancyLow : brand.accent).withValues(
-                      alpha: 0.05,
-                    ),
-                    brand.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        const AmbientTopGlow(),
         ListView(
           padding: EdgeInsets.fromLTRB(
             20,
@@ -135,15 +112,24 @@ class _PointsCard extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  brand.accent.withValues(alpha: 0.3),
-                  brand.accent.withValues(alpha: 0),
+                  BrandConfig.logoIndigo.withValues(alpha: 0.35),
+                  BrandConfig.logoViolet.withValues(alpha: 0.12),
+                  Colors.transparent,
                 ],
               ),
             ),
-            child: Icon(
-              Icons.emoji_events_rounded,
-              size: 30,
-              color: brand.accent,
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: BrandConfig.logoGradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                size: 30,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(width: 14),

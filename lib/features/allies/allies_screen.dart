@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/branding/brand.dart';
+import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/badge_chip.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/pressable_scale.dart';
@@ -76,27 +77,7 @@ class AlliesScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        Positioned(
-          top: -90,
-          left: -60,
-          right: -60,
-          height: 290,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.55),
-                  radius: 1.05,
-                  colors: [
-                    brand.accent.withValues(alpha: 0.18),
-                    brand.accent.withValues(alpha: 0.05),
-                    brand.background.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        const AmbientTopGlow(),
         ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
           children: [

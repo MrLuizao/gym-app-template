@@ -130,8 +130,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    brand.accentDark.withValues(alpha: 0.32),
-                    brand.accentDark.withValues(alpha: 0),
+                    _pink.withValues(alpha: 0.28),
+                    _violet.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),
