@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/branding/brand.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/ambient_glow.dart';
+import '../../core/widgets/branch_plan_restricted_sheet.dart';
 import '../../core/widgets/pressable_scale.dart';
 import '../../data/models/branch.dart';
+import '../../data/repositories/gym_repositories.dart';
 import '../home/providers/branch_providers.dart';
 import '../home/providers/favorite_branches_provider.dart';
 import '../home/widgets/branch_card.dart';
+import '../payments/providers/membership_provider.dart';
 
 enum _ExploreFilter { all, open, leastBusy }
 
@@ -45,6 +48,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget build(BuildContext context) {
     final branchesAsync = ref.watch(branchesProvider);
     final favorites = ref.watch(favoriteBranchesProvider);
+    final member = ref.watch(memberProvider).value;
+    final membership = ref.watch(membershipProvider);
+    final memberBranch = member?.branchId;
+    final planAllBranches = membership.allBranches;
+    final branchesList = branchesAsync.value ?? const <Branch>[];
+    final memberBranchName = memberBranch != null
+        ? branchesList
+            .where((b) => b.id == memberBranch)
+            .firstOrNull
+            ?.name
+        : null;
+    final currentPlanName = planNameFor(member?.planId ?? '');
 
     return Stack(
       children: [
@@ -120,46 +135,64 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       : Column(
                           key: ValueKey(_filter),
                           children: [
-                            for (var i = 0; i < visible.length; i++)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child:
-                                    BranchCard(
-                                          branch: visible[i],
-                                          isFavorite: favorites.contains(
-                                            visible[i].id,
-                                          ),
-                                          onToggleFavorite: () => ref
-                                              .read(
-                                                favoriteBranchesProvider
-                                                    .notifier,
-                                              )
-                                              .toggle(visible[i].id),
-                                          onTap: () =>
-                                              Navigator.of(context).pushNamed(
-                                                '/branch',
-                                                arguments: visible[i],
+                            for (var i = 0; i < visible.length; i++) ...[
+                              Builder(
+                                builder: (context) {
+                                  final isOutOfScope = !planAllBranches &&
+                                      memberBranch != null &&
+                                      visible[i].id != memberBranch;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child:
+                                        BranchCard(
+                                              branch: visible[i],
+                                              isFavorite: favorites.contains(
+                                                visible[i].id,
                                               ),
-                                        )
-                                        .animate(
-                                          delay: Duration(
-                                            milliseconds: 70 + i * 75,
-                                          ),
-                                        )
-                                        .fadeIn(
-                                          duration: const Duration(
-                                            milliseconds: 360,
-                                          ),
-                                        )
-                                        .slideY(
-                                          begin: 0.05,
-                                          end: 0,
-                                          duration: const Duration(
-                                            milliseconds: 420,
-                                          ),
-                                          curve: Curves.easeOutCubic,
-                                        ),
+                                              outOfScope: isOutOfScope,
+                                              onToggleFavorite: () {
+                                                if (isOutOfScope) {
+                                                  BranchPlanRestrictedSheet.show(
+                                                    context,
+                                                    branch: visible[i],
+                                                    memberBranchName:
+                                                        memberBranchName,
+                                                    currentPlanName:
+                                                        currentPlanName,
+                                                  );
+                                                } else {
+                                                  ref
+                                                      .read(
+                                                        favoriteBranchesProvider
+                                                            .notifier,
+                                                      )
+                                                      .toggle(visible[i].id);
+                                                }
+                                              },
+                                              onTap: () => Navigator.of(context)
+                                                  .pushNamed(
+                                                    '/branch',
+                                                    arguments: visible[i],
+                                                  ),
+                                            )
+                                            .animate(
+                                              delay: Duration(
+                                                milliseconds: 70 + i * 75,
+                                              ),
+                                            )
+                                            .fadeIn(
+                                              duration: const Duration(
+                                                milliseconds: 360,
+                                              ),
+                                            )
+                                            .slideY(
+                                              begin: 0.05,
+                                              curve: Curves.easeOutCubic,
+                                            ),
+                                  );
+                                },
                               ),
+                            ],
                           ],
                         ),
                 );

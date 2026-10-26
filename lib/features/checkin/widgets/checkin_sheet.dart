@@ -5,13 +5,19 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/branding/brand.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../data/models/branch.dart';
 import '../../../data/repositories/gym_repositories.dart';
+import '../../payments/checkout_screen.dart';
+import '../../payments/providers/membership_provider.dart';
 import 'vip_member_card.dart';
 
 class CheckInSheet extends ConsumerWidget {
-  const CheckInSheet({super.key});
+  const CheckInSheet({super.key, this.branch});
 
-  static Future<void> show(BuildContext context) {
+  final Branch? branch;
+
+  static Future<void> show(BuildContext context, {Branch? branch}) {
     final brand = context.brand;
     HapticFeedback.mediumImpact();
     return showModalBottomSheet<void>(
@@ -21,7 +27,7 @@ class CheckInSheet extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (_) => const CheckInSheet(),
+      builder: (_) => CheckInSheet(branch: branch),
     );
   }
 
@@ -29,6 +35,99 @@ class CheckInSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = context.brand;
     final memberAsync = ref.watch(memberProvider);
+    final member = memberAsync.value;
+    final membership = ref.watch(membershipProvider);
+    final memberBranch = member?.branchId;
+    final isOutOfScope = branch != null &&
+        !membership.allBranches &&
+        memberBranch != null &&
+        branch!.id != memberBranch;
+
+    if (isOutOfScope) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: brand.cardBorder,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: BrandConfig.logoViolet.withValues(alpha: 0.16),
+                  border: Border.all(
+                    color: BrandConfig.logoViolet.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (b) => const LinearGradient(
+                      colors: BrandConfig.logoGradientColors,
+                    ).createShader(b),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      size: 32,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Sede No Incluida',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tu plan ${planNameFor(member?.planId ?? '')} solo permite check-in en tu sede de registro. Para ingresar a ${branch!.name}, actualiza a un plan multisede.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: brand.textSecondary,
+                    ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  label: 'MEJORAR MI PLAN',
+                  icon: Icons.stars_rounded,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamed(
+                      MembershipCheckoutScreen.routeName,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Cerrar',
+                  style: TextStyle(
+                    color: brand.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -59,6 +158,42 @@ class CheckInSheet extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
+            if (!membership.allBranches && memberBranch != null) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: brand.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: brand.cardBorder),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 13,
+                        color: brand.accent,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Pase válido exclusivamente en tu sede de registro',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: brand.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             VipMemberCard(member: memberAsync.value),
             const SizedBox(height: 18),

@@ -11,6 +11,40 @@ import '../../../data/repositories/gym_repositories.dart';
 String dateKey(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+/// Puntos base por cumplir la meta semanal según la meta ajustada por el socio.
+int getGoalBonusPoints(int goal) {
+  const map = {
+    1: 15,
+    2: 25,
+    3: 35,
+    4: 50,
+    5: 65,
+    6: 80,
+    7: 100,
+  };
+  final clamped = goal.clamp(1, 7);
+  return map[clamped] ?? (clamped * 12.5).round();
+}
+
+/// Bonos base por racha para meta estándar (4 días).
+const baseStreakBonuses = <int, int>{
+  2: 25,
+  4: 50,
+  8: 100,
+  12: 150,
+};
+
+/// Calcula el bono de racha escalado a la meta ajustada del socio (proporcional a goal / 4).
+int getStreakBonus(int streakWeeks, int goal) {
+  final base = baseStreakBonuses[streakWeeks];
+  if (base == null) return 0;
+  final multiplier = goal.clamp(1, 7) / 4.0;
+  return (base * multiplier).round();
+}
+
+/// Bono máximo de racha (12 semanas) para la meta dada.
+int getMaxStreakBonus(int goal) => getStreakBonus(12, goal);
+
 /// Lunes de la semana actual (la semana de lealtad empieza en lunes,
 /// como la calcula `weekBounds` en el server).
 DateTime weekMonday() {

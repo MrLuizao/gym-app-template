@@ -15,12 +15,14 @@ class BranchCard extends StatelessWidget {
     this.onTap,
     this.isFavorite = false,
     this.onToggleFavorite,
+    this.outOfScope = false,
   });
 
   final Branch branch;
   final VoidCallback? onTap;
   final bool isFavorite;
   final VoidCallback? onToggleFavorite;
+  final bool outOfScope;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +86,43 @@ class BranchCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (outOfScope) ...[
+                          const SizedBox(height: 5),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: BrandConfig.logoViolet
+                                    .withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.lock_rounded,
+                                  size: 10,
+                                  color: BrandConfig.logoViolet,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'REQUIERE MULTISEDE',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    color: BrandConfig.logoViolet,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -106,9 +145,11 @@ class BranchCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: Colors.black.withValues(alpha: 0.55),
                       border: Border.all(
-                        color: isFavorite
-                            ? brand.accent.withValues(alpha: 0.6)
-                            : Colors.white.withValues(alpha: 0.14),
+                        color: outOfScope
+                            ? BrandConfig.logoViolet.withValues(alpha: 0.4)
+                            : (isFavorite
+                                ? brand.accent.withValues(alpha: 0.6)
+                                : Colors.white.withValues(alpha: 0.14)),
                       ),
                     ),
                     child: AnimatedScale(
@@ -116,11 +157,15 @@ class BranchCard extends StatelessWidget {
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeOutBack,
                       child: Icon(
-                        isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
+                        outOfScope
+                            ? Icons.lock_outline_rounded
+                            : (isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded),
                         size: 16,
-                        color: isFavorite ? brand.accent : Colors.white,
+                        color: outOfScope
+                            ? Colors.white.withValues(alpha: 0.65)
+                            : (isFavorite ? brand.accent : Colors.white),
                       ),
                     ),
                   ),

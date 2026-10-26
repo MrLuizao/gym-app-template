@@ -7,10 +7,14 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/ambient_glow.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge_chip.dart';
+import '../../core/widgets/branch_plan_restricted_sheet.dart';
 import '../../core/widgets/coach_avatar.dart';
 import '../../core/widgets/pressable_scale.dart';
 import '../../core/widgets/skeleton_box.dart';
+import '../../data/models/branch.dart';
+import '../../data/repositories/gym_repositories.dart';
 import '../checkin/widgets/checkin_sheet.dart';
+import '../payments/providers/membership_provider.dart';
 import '../trainers/providers/following_trainers_provider.dart';
 import '../trainers/trainer_profile_screen.dart';
 import 'providers/branch_providers.dart';
@@ -62,48 +66,96 @@ class HomeScreen extends ConsumerWidget {
           ),
           data: (branches) {
             final favorites = ref.watch(favoriteBranchesProvider);
-            final favoriteBranches = branches
-                .where((branch) => favorites.contains(branch.id))
-                .toList();
-            if (favoriteBranches.isEmpty) {
+            final member = ref.watch(memberProvider).value;
+            final membership = ref.watch(membershipProvider);
+            final memberBranch = member?.branchId;
+            final planAllBranches = membership.allBranches;
+            final currentPlanName = planNameFor(member?.planId ?? '');
+            final memberBranchName = memberBranch != null
+                ? branches
+                    .where((b) => b.id == memberBranch)
+                    .firstOrNull
+                    ?.name
+                : null;
+
+            // Si el socio tiene plan mono-sede, solo su sede de registro es válida:
+            final List<Branch> effectiveBranches;
+            if (!planAllBranches &&
+                memberBranch != null &&
+                memberBranch.isNotEmpty) {
+              final home = branches
+                  .where((b) => b.id == memberBranch)
+                  .firstOrNull;
+              effectiveBranches = home != null ? [home] : const <Branch>[];
+            } else {
+              effectiveBranches = branches
+                  .where((branch) => favorites.contains(branch.id))
+                  .toList();
+            }
+
+            if (effectiveBranches.isEmpty) {
               return _EmptyFavoritesCard(
                 onTap: () => ref.read(bottomNavIndexProvider.notifier).go(1),
               );
             }
             return Column(
               children: [
-                for (var i = 0; i < favoriteBranches.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child:
-                        Column(
-                              children: [
-                                BranchCard(
-                                  branch: favoriteBranches[i],
-                                  onTap: () => Navigator.of(context).pushNamed(
-                                    '/branch',
-                                    arguments: favoriteBranches[i],
-                                  ),
+                for (var i = 0; i < effectiveBranches.length; i++) ...[
+                  Builder(
+                    builder: (context) {
+                      final isOutOfScope = !planAllBranches &&
+                          memberBranch != null &&
+                          effectiveBranches[i].id != memberBranch;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child:
+                            Column(
+                                  children: [
+                                    BranchCard(
+                                      branch: effectiveBranches[i],
+                                      outOfScope: isOutOfScope,
+                                      onTap: () => Navigator.of(context).pushNamed(
+                                        '/branch',
+                                        arguments: effectiveBranches[i],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _BranchCheckInButton(
+                                      branchName: effectiveBranches[i].name,
+                                      isOpen: effectiveBranches[i].isOpen,
+                                      isOutOfScope: isOutOfScope,
+                                      onTap: () {
+                                        if (isOutOfScope) {
+                                          BranchPlanRestrictedSheet.show(
+                                            context,
+                                            branch: effectiveBranches[i],
+                                            memberBranchName: memberBranchName,
+                                            currentPlanName: currentPlanName,
+                                          );
+                                        } else {
+                                          CheckInSheet.show(
+                                            context,
+                                            branch: effectiveBranches[i],
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                )
+                                .animate(
+                                  delay: Duration(milliseconds: 140 + i * 100),
+                                )
+                                .fadeIn(duration: const Duration(milliseconds: 420))
+                                .slideY(
+                                  begin: 0.07,
+                                  end: 0,
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeOutCubic,
                                 ),
-                                const SizedBox(height: 8),
-                                _BranchCheckInButton(
-                                  branchName: favoriteBranches[i].name,
-                                  isOpen: favoriteBranches[i].isOpen,
-                                  onTap: () => CheckInSheet.show(context),
-                                ),
-                              ],
-                            )
-                            .animate(
-                              delay: Duration(milliseconds: 140 + i * 100),
-                            )
-                            .fadeIn(duration: const Duration(milliseconds: 420))
-                            .slideY(
-                              begin: 0.07,
-                              end: 0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeOutCubic,
-                            ),
+                      );
+                    },
                   ),
+                ],
               ],
             );
           },
@@ -518,18 +570,23 @@ class _BranchCheckInButton extends StatelessWidget {
     required this.branchName,
     required this.isOpen,
     required this.onTap,
+    this.isOutOfScope = false,
   });
 
   final String branchName;
   final bool isOpen;
   final VoidCallback onTap;
+  final bool isOutOfScope;
 
   @override
   Widget build(BuildContext context) {
     final brand = context.brand;
-    final fg = isOpen ? brand.accent : brand.textSecondary;
+    final canTap = isOutOfScope || isOpen;
+    final fg = isOutOfScope
+        ? BrandConfig.logoViolet
+        : (isOpen ? brand.accent : brand.textSecondary);
     return PressableScale(
-      onTap: isOpen
+      onTap: canTap
           ? () {
               AppHaptics.medium();
               onTap();
@@ -539,30 +596,38 @@ class _BranchCheckInButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isOpen ? brand.accent.withValues(alpha: 0.12) : brand.surface,
+          color: isOutOfScope
+              ? brand.surface
+              : (isOpen ? brand.accent.withValues(alpha: 0.12) : brand.surface),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isOpen
-                ? brand.accent.withValues(alpha: 0.35)
-                : brand.cardBorder,
+            color: isOutOfScope
+                ? BrandConfig.logoViolet.withValues(alpha: 0.45)
+                : (isOpen
+                    ? brand.accent.withValues(alpha: 0.35)
+                    : brand.cardBorder),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isOpen
-                  ? Icons.qr_code_scanner_rounded
-                  : Icons.lock_outline_rounded,
+              isOutOfScope
+                  ? Icons.lock_outline_rounded
+                  : (isOpen
+                      ? Icons.qr_code_scanner_rounded
+                      : Icons.lock_outline_rounded),
               size: 16,
               color: fg,
             ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                isOpen
-                    ? 'CHECK-IN · ${branchName.toUpperCase()}'
-                    : 'CERRADA · ${branchName.toUpperCase()}',
+                isOutOfScope
+                    ? 'TU PLAN NO CUBRE ESTA SEDE'
+                    : (isOpen
+                        ? 'CHECK-IN · ${branchName.toUpperCase()}'
+                        : 'CERRADA · ${branchName.toUpperCase()}'),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,

@@ -67,6 +67,8 @@ class RewardsScreen extends ConsumerWidget {
         _PointsCard(points: points),
         const SizedBox(height: 16),
         _GoalCard(goal: goal, visited: visited, awarded: awarded),
+        const SizedBox(height: 16),
+        _StreakBonusesCard(streak: member?.goalStreak ?? 0, goal: goal),
         const SizedBox(height: 24),
         Text('Recompensas', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
@@ -241,11 +243,11 @@ class _GoalCard extends ConsumerWidget {
               Expanded(
                 child: Text(
                   awarded
-                      ? 'Meta cumplida — +50 pts ganados esta semana'
+                      ? 'Meta cumplida — +${getGoalBonusPoints(goal)} pts ganados esta semana'
                       : remaining == 0
                       ? 'Meta cumplida — buen trabajo'
                       : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} '
-                            'para ganar 50 pts',
+                            'para ganar ${getGoalBonusPoints(goal)} pts',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -329,6 +331,201 @@ class _GoalCard extends ConsumerWidget {
                 ),
               ],
             ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: brand.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: brand.cardBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: BrandConfig.logoViolet.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.stars_rounded,
+                    size: 16,
+                    color: BrandConfig.logoViolet,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recompensa: +${getGoalBonusPoints(goal)} pts semanales',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: brand.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Tus bonos por racha escalan proporcionalmente a tu meta semanal.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: brand.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StreakBonusesCard extends StatelessWidget {
+  const _StreakBonusesCard({required this.streak, required this.goal});
+
+  final int streak;
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    const milestones = [2, 4, 8, 12];
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                size: 20,
+                color: BrandConfig.logoPink,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Bonos por Racha Continua',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: brand.textPrimary,
+                  ),
+                ),
+              ),
+              if (streak > 0)
+                BadgeChip(
+                  label: '$streak SEMANAS',
+                  color: BrandConfig.logoPink,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Los premios crecen según tu meta de $goal visitas semanales:',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: brand.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              for (var i = 0; i < milestones.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _MilestonePill(
+                    weeks: milestones[i],
+                    points: getStreakBonus(milestones[i], goal),
+                    reached: streak >= milestones[i],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MilestonePill extends StatelessWidget {
+  const _MilestonePill({
+    required this.weeks,
+    required this.points,
+    required this.reached,
+  });
+
+  final int weeks;
+  final int points;
+  final bool reached;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      decoration: BoxDecoration(
+        color: reached
+            ? BrandConfig.logoViolet.withValues(alpha: 0.16)
+            : brand.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: reached
+              ? BrandConfig.logoViolet.withValues(alpha: 0.6)
+              : brand.cardBorder,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                reached
+                    ? Icons.check_circle_rounded
+                    : Icons.local_fire_department_rounded,
+                size: 13,
+                color: reached
+                    ? BrandConfig.logoViolet
+                    : brand.textSecondary.withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 3),
+              Text(
+                '${weeks}s',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: reached ? BrandConfig.logoViolet : brand.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '+$points',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: reached ? brand.textPrimary : brand.textSecondary,
+            ),
+          ),
+          Text(
+            'pts',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: brand.textSecondary,
+            ),
           ),
         ],
       ),

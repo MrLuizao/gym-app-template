@@ -18,7 +18,9 @@ import '../payments/providers/membership_provider.dart';
 import 'providers/catalog_providers.dart';
 import 'providers/reservation_provider.dart';
 import '../checkin/widgets/checkin_sheet.dart';
+import '../home/providers/branch_providers.dart';
 import '../home/providers/favorite_branches_provider.dart';
+import '../../core/widgets/branch_plan_restricted_sheet.dart';
 import 'widgets/class_detail_sheet.dart';
 import 'widgets/class_tile.dart';
 import 'widgets/trainer_card.dart';
@@ -63,9 +65,17 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
 
     /// Planes mono-sede: esta sede no la cubre su plan — los tiles se
     /// marcan y el botón de reserva queda bloqueado (server lo valida).
-    final memberBranch = ref.watch(
-      memberProvider.select((m) => m.value?.branchId),
-    );
+    final member = ref.watch(memberProvider).value;
+    final memberBranch = member?.branchId;
+    final currentPlanName = planNameFor(member?.planId ?? '');
+    final allBranchesList =
+        ref.watch(branchesProvider).value ?? const <Branch>[];
+    final memberBranchName = memberBranch != null
+        ? allBranchesList
+            .where((b) => b.id == memberBranch)
+            .firstOrNull
+            ?.name
+        : null;
     final planAllBranches = ref.watch(
       membershipProvider.select((m) => m.allBranches),
     );
@@ -107,6 +117,15 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                   pressedScale: 0.86,
                   onTap: () {
                     AppHaptics.medium();
+                    if (outOfScope) {
+                      BranchPlanRestrictedSheet.show(
+                        context,
+                        branch: branch,
+                        memberBranchName: memberBranchName,
+                        currentPlanName: currentPlanName,
+                      );
+                      return;
+                    }
                     ref
                         .read(favoriteBranchesProvider.notifier)
                         .toggle(branch.id);
@@ -126,12 +145,16 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
                       transitionBuilder: (child, animation) =>
                           ScaleTransition(scale: animation, child: child),
                       child: Icon(
-                        isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        key: ValueKey<bool>(isFavorite),
+                        outOfScope
+                            ? Icons.lock_outline_rounded
+                            : (isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded),
+                        key: ValueKey<String>('${outOfScope}_$isFavorite'),
                         size: 17,
-                        color: isFavorite ? brand.accent : Colors.white,
+                        color: outOfScope
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : (isFavorite ? brand.accent : Colors.white),
                       ),
                     ),
                   ),
@@ -576,7 +599,29 @@ class _OccupancyCard extends ConsumerWidget {
           const SizedBox(height: 14),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: canCheckIn ? () => CheckInSheet.show(context) : null,
+            onTap: () {
+              if (outOfScope) {
+                final member = ref.read(memberProvider).value;
+                final currentPlanName = planNameFor(member?.planId ?? '');
+                final branches =
+                    ref.read(branchesProvider).value ?? const <Branch>[];
+                final memberBranch = member?.branchId;
+                final memberBranchName = memberBranch != null
+                    ? branches
+                        .where((b) => b.id == memberBranch)
+                        .firstOrNull
+                        ?.name
+                    : null;
+                BranchPlanRestrictedSheet.show(
+                  context,
+                  branch: branch,
+                  memberBranchName: memberBranchName,
+                  currentPlanName: currentPlanName,
+                );
+              } else if (canCheckIn) {
+                CheckInSheet.show(context, branch: branch);
+              }
+            },
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),

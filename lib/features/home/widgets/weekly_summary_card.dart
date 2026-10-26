@@ -153,8 +153,8 @@ class _WeeklySummarySectionState extends ConsumerState<WeeklySummarySection> {
               Expanded(
                 child: Text(
                   remaining == 0
-                      ? 'Meta semanal cumplida — ¡Bono de +50 pts asegurado!'
-                      : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} para tu meta de $goal por semana',
+                      ? 'Meta semanal cumplida — ¡Bono de +${getGoalBonusPoints(goal)} pts asegurado!'
+                      : 'Te ${remaining == 1 ? 'falta 1 visita' : 'faltan $remaining visitas'} para tu meta de $goal por semana (+${getGoalBonusPoints(goal)} pts)',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: remaining == 0
                             ? brand.accent
